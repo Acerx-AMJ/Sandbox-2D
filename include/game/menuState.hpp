@@ -8,8 +8,14 @@
 // Menu state class
 
 class MenuState : public State {
+   enum class Phase { fadingIn, updating, fadingOut };
+
+   Phase phase = Phase::fadingIn;
+   float fadeTimer = 0.f;
+   float alpha = 0.f;
+   
 public:
-   MenuState();
+   MenuState() = default;
    ~MenuState() = default;
 
    static StatePtr make() {
@@ -19,6 +25,9 @@ public:
    // Update
 
    void update() override;
+   void updateFadingIn();
+   void updateUpdating(); // Complex calculations
+   void updateFadingOut();
 
    // Other functions
 
