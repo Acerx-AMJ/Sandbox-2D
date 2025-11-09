@@ -14,6 +14,7 @@ class LoadingState : public State {
    enum class Phase { fadingIn, loading, fadingOut };
    enum class Load { fonts, textures, sounds, music, count };
 
+   std::string splash;
    std::string text = "Loading Fonts... "s;
    Phase phase = Phase::fadingIn;
    Load load = Load::fonts;
@@ -23,7 +24,7 @@ class LoadingState : public State {
    float rotation = 0.f;
 
 public:
-   LoadingState() = default;
+   LoadingState();
    ~LoadingState() = default;
 
    static StatePtr make() {
@@ -41,6 +42,7 @@ public:
 
    void render() override;
    void change(States& states) override;
+   std::string getSplashMessage();
 };
 
 #endif
