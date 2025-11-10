@@ -13,13 +13,6 @@
 #include "util/random.hpp"
 #include "util/render.hpp"
 
-// Constants
-
-namespace {
-   constexpr float fadeTime = .5f;
-   constexpr float waitTime = 1.f;
-}
-
 // Constructors
 
 LoadingState::LoadingState() {
@@ -33,24 +26,7 @@ LoadingState::LoadingState() {
 
 void LoadingState::update() {
    rotation += GetFrameTime() * 360.f;
-   switch (phase) {
-   case Phase::fadingIn:  updateFadingIn();  break;
-   case Phase::loading:   updateLoading();   break;
-   case Phase::fadingOut: updateFadingOut(); break;
-   }
-}
 
-void LoadingState::updateFadingIn() {
-   fadeTimer += GetFrameTime();
-   alpha = 1.f - fadeTimer / fadeTime;
-
-   if (fadeTimer >= fadeTime) {
-      fadeTimer = alpha = 0.f;
-      phase = Phase::loading;
-   }
-}
-
-void LoadingState::updateLoading() {
    if (load == Load::fonts) {
       text = "Loading Fonts... "s;
       ResourceManager::get().loadFonts();
@@ -71,42 +47,26 @@ void LoadingState::updateLoading() {
    } else if (load == Load::music) {
       text = "Loading Music... "s;
       SoundManager::get().loadMusic();
-      phase = Phase::fadingOut;
       SoundManager::get().play("load"s);
-   }
-}
-
-void LoadingState::updateFadingOut() {
-   waitTimer += GetFrameTime();
-   if (waitTimer < waitTime) {
-      return;
-   }
-
-   fadeTimer += GetFrameTime();
-   alpha = fadeTimer / fadeTime;
-
-   if (fadeTimer >= fadeTime) {
-      alpha = 1.f;
-      quitState = true;
+      load = Load::count;
+   } else if (load == Load::count) {
+      waitTimer += GetFrameTime();
+      fadingOut = (waitTimer >= 1.f);
    }
 }
 
 // Other functions
 
 void LoadingState::render() {
-   BeginDrawing();
-      ClearBackground(BLACK);
-      auto& tex = ResourceManager::get().getTexture("loading"s);
-      std::string ltext = "Loading Done!"s;
-      if (phase != Phase::fadingOut) {
-         ltext = text + std::to_string((int)load) + "/"s + std::to_string((int)Load::count);
-      }
+   auto& tex = ResourceManager::get().getTexture("loading"s);
+   std::string ltext = "Loading Done!"s;
+   if (load != Load::count) {
+      ltext = text + std::to_string((int)load) + "/"s + std::to_string((int)Load::count);
+   }
 
-      drawText(getScreenCenter(0.f, -175.f), ltext.c_str(), 80);
-      drawText(getScreenCenter(0.f, 100.f), splash.c_str(), 40);
-      drawTexture(tex, getScreenCenter(), {70.f, 70.f}, rotation);
-      drawRect(Fade(BLACK, alpha));
-   EndDrawing();
+   drawText(getScreenCenter(0.f, -175.f), ltext.c_str(), 80);
+   drawText(getScreenCenter(0.f, 100.f), splash.c_str(), 40);
+   drawTexture(tex, getScreenCenter(), {70.f, 70.f}, rotation);
 }
 
 void LoadingState::change(States& states) {

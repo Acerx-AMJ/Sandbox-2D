@@ -8,13 +8,9 @@
 
 // Menu state class
 
-class MenuState : public State {
-   enum class Phase { fadingIn, updating, fadingOut };
-
+class MenuState: public State {
    Button playButton, optionsButton, quitButton;
-   Phase phase = Phase::fadingIn;
-   float fadeTimer = 0.f;
-   float alpha = 0.f;
+   bool playing = false;
    
 public:
    MenuState();
@@ -27,9 +23,6 @@ public:
    // Update
 
    void update() override;
-   void updateFadingIn();
-   void updateUpdating(); // Complex calculations
-   void updateFadingOut();
 
    // Other functions
 

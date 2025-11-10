@@ -10,16 +10,12 @@ using namespace std::string_literals;
 
 // Loading state class
 
-class LoadingState : public State {
-   enum class Phase { fadingIn, loading, fadingOut };
+class LoadingState: public State {
    enum class Load { fonts, textures, sounds, soundSetup, music, count };
 
    std::string splash;
    std::string text = "Loading Fonts... "s;
-   Phase phase = Phase::fadingIn;
    Load load = Load::fonts;
-   float alpha = 1.f;
-   float fadeTimer = 0.f;
    float waitTimer = 0.f;
    float rotation = 0.f;
 
@@ -34,9 +30,6 @@ public:
    // Update functions
 
    void update() override;
-   void updateFadingIn();
-   void updateLoading();
-   void updateFadingOut();
 
    // Other functions
 

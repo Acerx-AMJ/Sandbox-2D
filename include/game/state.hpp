@@ -17,6 +17,9 @@ using States = std::deque<StatePtr>;
 class State {
 public:
    bool quitState = false;
+   bool fadingIn = true, fadingOut = false;
+   float fadeTimer = 0.f;
+   float alpha = 0.f;
 
    State() = default;
    virtual ~State() = default;
@@ -24,6 +27,10 @@ public:
    virtual void update() = 0;
    virtual void render() = 0;
    virtual void change(States& states) = 0;
+
+   void updateStateLogic();
+   void updateFadingIn();
+   void updateFadingOut();
 };
 
 #endif

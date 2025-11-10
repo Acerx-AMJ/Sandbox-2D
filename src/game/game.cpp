@@ -6,6 +6,7 @@
 #include <raylib.h>
 #include "game/loadingState.hpp"
 #include "mngr/sound.hpp"
+#include "util/render.hpp"
 
 // Constructors
 
@@ -39,7 +40,12 @@ void Game::run() {
       }
 
       SoundManager::get().update();
-      states.front()->update();
-      states.front()->render();
+      states.front()->updateStateLogic();
+
+      BeginDrawing();
+         ClearBackground(BLACK);
+         states.front()->render();
+         drawRect(Fade(BLACK, states.front()->alpha));
+      EndDrawing();
    }
 }

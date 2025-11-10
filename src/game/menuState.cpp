@@ -2,17 +2,11 @@
 
 // Includes
 
-#include <raylib.h>
+#include "game/gameState.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
 
 using namespace std::string_literals;
-
-// Constants
-
-namespace {
-   constexpr float fadeTime = .25f;
-}
 
 // Constructors
 
@@ -28,30 +22,12 @@ MenuState::MenuState() {
 // Update
 
 void MenuState::update() {
-   switch (phase) {
-   case Phase::fadingIn:  updateFadingIn();  break;
-   case Phase::updating:  updateUpdating();  break;
-   case Phase::fadingOut: updateFadingOut(); break;
-   }
-}
-
-void MenuState::updateFadingIn() {
-   fadeTimer += GetFrameTime();
-   alpha = 1.f - fadeTimer / fadeTime;
-
-   if (fadeTimer >= fadeTime) {
-      fadeTimer = alpha = 0.f;
-      phase = Phase::updating;
-   }
-}
-
-void MenuState::updateUpdating() {
    playButton.update();
    optionsButton.update();
    quitButton.update();
 
    if (playButton.clicked) {
-      phase = Phase::fadingOut;
+      fadingOut = playing = true;
    }
 
    if (optionsButton.clicked) {
@@ -59,33 +35,21 @@ void MenuState::updateUpdating() {
    }
 
    if (quitButton.clicked) {
-      phase = Phase::fadingOut;
-   }
-}
-
-void MenuState::updateFadingOut() {
-   fadeTimer += GetFrameTime();
-   alpha = fadeTimer / fadeTime;
-
-   if (fadeTimer >= fadeTime) {
-      alpha = 1.f;
-      quitState = true;
+      fadingOut = true;
    }
 }
 
 // Other functions
 
 void MenuState::render() {
-   BeginDrawing();
-      ClearBackground(BLACK);
-      drawText(getScreenCenter(0.f, -200.f), "TERRARIA", 180);
-      playButton.render();
-      optionsButton.render();
-      quitButton.render();
-      drawRect(Fade(BLACK, alpha));
-   EndDrawing();
+   drawText(getScreenCenter(0.f, -200.f), "TERRARIA", 180);
+   playButton.render();
+   optionsButton.render();
+   quitButton.render();
 }
 
 void MenuState::change(States& states) {
-   
+   if (playing) {
+      states.push_back(GameState::make());
+   }
 }
