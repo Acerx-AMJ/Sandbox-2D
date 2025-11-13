@@ -9,6 +9,7 @@
 
 struct Block {
    Texture* tex = nullptr;
+   unsigned char a;
 };
 
 #endif
