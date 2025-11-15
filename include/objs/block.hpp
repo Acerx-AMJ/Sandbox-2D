@@ -1,8 +1,6 @@
 #ifndef OBJS_BLOCK_HPP
 #define OBJS_BLOCK_HPP
 
-// Includes
-
 #include <string>
 #include <raylib.h>
 

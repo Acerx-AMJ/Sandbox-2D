@@ -1,7 +1,4 @@
 #include "mngr/resource.hpp"
-
-// Includes
-
 #include "util/format.hpp"
 
 // Load functions
@@ -13,7 +10,7 @@ Texture& ResourceManager::loadTexture(const std::string& name, const std::filesy
 
    Texture texture = LoadTexture(path.c_str());
    if (texture.id == 0) {
-      fmt::warn("Failed to load texture from file '{}'.", path.string());
+      warn("Failed to load texture from file '{}'.", path.string());
       return getFallbackTexture();
    }
    textures.insert({name, texture});
@@ -28,7 +25,7 @@ Font& ResourceManager::loadFont(const std::string& name, const std::filesystem::
    Font font = LoadFontEx(path.c_str(), 120, nullptr, 0);
    SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
    if (font.texture.id == 0) {
-      fmt::warn("Failed to load font from file '{}'.", path.string());
+      warn("Failed to load font from file '{}'.", path.string());
       return getFallbackFont();
    }
    fonts.insert({name, font});
@@ -51,7 +48,7 @@ void ResourceManager::loadFonts() {
 
 Texture& ResourceManager::getTexture(const std::string& name) {
    if (not textureExists(name)) {
-      fmt::warn("Texture '{}' does not exist, using fallback texture.", name);
+      warn("Texture '{}' does not exist, using fallback texture.", name);
       return getFallbackTexture();
    }
    return textures[name];
@@ -59,7 +56,7 @@ Texture& ResourceManager::getTexture(const std::string& name) {
 
 Font& ResourceManager::getFont(const std::string& name) {
    if (not fontExists(name)) {
-      fmt::warn("Font '{}' does not exist, using fallback font.", name);
+      warn("Font '{}' does not exist, using fallback font.", name);
       return getFallbackFont();
    }
    return fonts[name];

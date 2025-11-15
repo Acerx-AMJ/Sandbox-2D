@@ -1,8 +1,6 @@
 #ifndef MNGR_RESOURCE_HPP
 #define MNGR_RESOURCE_HPP
 
-// Includes
-
 #include <filesystem>
 #include <string>
 #include <unordered_map>

@@ -1,16 +1,9 @@
+#include "mngr/resource.hpp"
 #include "util/text.hpp"
 
-// Includes
-
-#include "mngr/resource.hpp"
-
-using namespace std::string_literals;
-
-// Text functions
-
 void wrapText(std::string& string, float maxWidth, float fontSize, float spacing) {
-   auto& font = ResourceManager::get().getFont("andy"s);
-   
+   auto& font = ResourceManager::get().getFont("andy");
+
    if (MeasureTextEx(font, string.c_str(), fontSize, spacing).x <= maxWidth) {
       return;
    }
@@ -26,7 +19,7 @@ void wrapText(std::string& string, float maxWidth, float fontSize, float spacing
       while (left < right) {
          size_t mid = (left + right) / 2;
          truncated = split.substr(0, mid);
-         string = std::string(truncated) + "-"s;
+         string = std::string(truncated) + "-";
 
          if (MeasureTextEx(font, string.c_str(), fontSize, spacing).x > maxWidth) {
             right = mid;
@@ -38,7 +31,7 @@ void wrapText(std::string& string, float maxWidth, float fontSize, float spacing
       split = split.substr(left - 1);
 
       bool dash = isalpha(truncated.back()) and isalpha(split.front());
-      result << truncated << (dash ? "-\n"s : "\n"s);
+      result << truncated << (dash ? "-\n" : "\n");
       string = std::string(split);
 
       if (MeasureTextEx(font, string.c_str(), fontSize, spacing).x <= maxWidth) {

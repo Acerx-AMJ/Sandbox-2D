@@ -1,8 +1,6 @@
 #ifndef GAME_MENUSTATE_HPP
 #define GAME_MENUSTATE_HPP
 
-// Includes
-
 #include "game/state.hpp"
 #include "util/button.hpp"
 

@@ -1,7 +1,4 @@
 #include "mngr/sound.hpp"
-
-// Includes
-
 #include "util/format.hpp" // IWYU pragma: export
 #include "util/random.hpp"
 
@@ -20,7 +17,7 @@ void SoundManager::loadMusic(const std::string& name, const std::filesystem::pat
 void SoundManager::saveSound(const std::string& name, const std::vector<std::string>& sounds) {
    std::vector<Sound*> saved;
    for (const auto& identifier: sounds) {
-      fmt::assert(this->sounds.count(identifier), "Sound '{}' does not exist.", identifier);
+      assert(this->sounds.count(identifier), "Sound '{}' does not exist.", identifier);
       saved.push_back(&this->sounds[identifier]);
    }
    savedSounds[name] = saved;
@@ -41,7 +38,7 @@ void SoundManager::loadMusic() {
 // Play functions
 
 void SoundManager::play(const std::string& name) {
-   fmt::assert(soundExists(name), "Sound '{}' does not exist.", name);
+   assert(soundExists(name), "Sound '{}' does not exist.", name);
    Sound* sound = nullptr;
    
    if (savedSounds.count(name)) {
@@ -54,19 +51,19 @@ void SoundManager::play(const std::string& name) {
 }
 
 void SoundManager::playMusic(const std::string& name) {
-   fmt::assert(musicExists(name), "Music '{}' does not exist.", name);
+   assert(musicExists(name), "Music '{}' does not exist.", name);
    currentMusic = &music[name];
 }
 
 // Get functions
 
 Sound& SoundManager::getSound(const std::string& name) {
-   fmt::assert(soundExists(name), "Sound '{}' does not exist.", name);
+   assert(soundExists(name), "Sound '{}' does not exist.", name);
    return sounds[name];
 }
 
 Music& SoundManager::getMusic(const std::string& name) {
-   fmt::assert(musicExists(name), "Music '{}' does not exist.", name);
+   assert(musicExists(name), "Music '{}' does not exist.", name);
    return music[name];
 }
 

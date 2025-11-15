@@ -1,8 +1,6 @@
 #ifndef UTIL_RANDOM_HPP
 #define UTIL_RANDOM_HPP
 
-// Includes
-
 #include <cstdlib>
 #include <vector>
 

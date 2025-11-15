@@ -1,13 +1,8 @@
-#include "game/gameState.hpp"
-
-// Includes
-
 #include <algorithm>
 #include <cmath>
+#include "game/gameState.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
-
-using namespace std::string_literals;
 
 // Constants
 

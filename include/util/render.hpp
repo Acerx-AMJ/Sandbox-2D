@@ -1,8 +1,6 @@
 #ifndef UTIL_RENDER_HPP
 #define UTIL_RENDER_HPP
 
-// Includes
-
 #include <raylib.h>
 
 // Draw functions

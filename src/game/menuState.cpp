@@ -1,22 +1,17 @@
-#include "game/menuState.hpp"
-
-// Includes
-
 #include "game/gameState.hpp"
+#include "game/menuState.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
-
-using namespace std::string_literals;
 
 // Constructors
 
 MenuState::MenuState() {
    playButton.rectangle = {GetScreenWidth() / 2.f, GetScreenHeight() / 2.f, 210.f, 70.f};
-   playButton.text = "Play"s;
+   playButton.text = "Play";
    optionsButton.rectangle = {playButton.rectangle.x, playButton.rectangle.y + 90.f, 210.f, 70.f};
-   optionsButton.text = "Options"s;
+   optionsButton.text = "Options";
    quitButton.rectangle = {optionsButton.rectangle.x, optionsButton.rectangle.y + 90.f, 210.f, 70.f};
-   quitButton.text = "Quit"s;
+   quitButton.text = "Quit";
 }
 
 // Update

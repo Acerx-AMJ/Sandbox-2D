@@ -1,7 +1,7 @@
 # Terraria Clone
 Terraria Clone will be a 2D survival game heavily based off of Terraria. Fight off monsters, build a base and explore. The name is a work in progress and will be changed later in development.
 
-![Game Screenshot](assets/screenshots/2025-11-14_19-17.png)
+![Game Screenshot](assets/screenshots/2025-11-15_22-24.png)
 
 ## Table of Contents
 - [Features](#features)

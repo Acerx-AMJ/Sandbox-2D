@@ -1,11 +1,7 @@
-#include "util/button.hpp"
-
-// Includes
-
 #include "mngr/resource.hpp"
 #include "mngr/sound.hpp"
-
-using namespace std::string_literals;
+#include "util/button.hpp"
+#include "util/render.hpp"
 
 // Update function
 
@@ -24,22 +20,17 @@ void Button::update() {
    }
 
    if (not was_hovering and hovering) {
-      SoundManager::get().play("hover"s);
+      SoundManager::get().play("hover");
    }
 
    if (clicked) {
-      SoundManager::get().play("click"s);
+      SoundManager::get().play("click");
    }
 }
 
 // Render function
 
 void Button::render() {
-   auto& fon = ResourceManager::get().getFont("andy"s);
-   auto& tex = ResourceManager::get().getTexture("button"s);
-   float nw = rectangle.width * scale, nh = rectangle.height * scale;
-   Vector2 tsize = MeasureTextEx(fon, text.c_str(), 35 * scale, 1.f);
-
-   DrawTexturePro(tex, {0.f, 0.f, (float)tex.width, (float)tex.height}, {rectangle.x, rectangle.y, nw, nh}, {nw / 2.f, nh / 2.f}, 0.f, WHITE);
-   DrawTextPro(fon, text.c_str(), {rectangle.x, rectangle.y}, {tsize.x / 2.f, tsize.y / 2.f}, 0.f, 35 * scale, 1.f, WHITE);
+   drawTexture(ResourceManager::get().getTexture("button"), {rectangle.x, rectangle.y}, {rectangle.width * scale, rectangle.height * scale});
+   drawText({rectangle.x, rectangle.y}, text.c_str(), 35 * scale);
 }

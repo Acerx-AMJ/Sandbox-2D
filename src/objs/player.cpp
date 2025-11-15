@@ -1,12 +1,6 @@
-#include "objs/player.hpp"
-
-// Includes
-
 #include "mngr/resource.hpp"
-#include "util/format.hpp"
+#include "objs/player.hpp"
 #include "util/math.hpp"
-
-using namespace std::string_literals;
 
 // Constants
 
@@ -105,9 +99,6 @@ void Player::updateCollisions(Map& map) {
             onGround = (bounds.y + size.y <= y);
             collisionY = true;
          }
-         if (onGround) {
-            fmt::printf("X: {}, Y: {}, OX: {}, OY: {}.", collisionX, collisionY, overlapX, overlapY);
-         }
       }
    }
 
@@ -125,7 +116,7 @@ void Player::updateCollisions(Map& map) {
 // Render functions
 
 void Player::render() {
-   auto& tex = ResourceManager::get().getTexture("player"s);
+   auto& tex = ResourceManager::get().getTexture("player");
    DrawTexturePro(tex, {0.f, 0.f, float(facingRight ? tex.width : -tex.width), (float)tex.height}, {pos.x, pos.y, size.x, size.y}, {0, 0}, 0, WHITE);
 }
 

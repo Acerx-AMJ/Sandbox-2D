@@ -1,9 +1,6 @@
-#include "game/game.hpp"
-
-// Includes
-
 #include <cstdlib>
 #include <raylib.h>
+#include "game/game.hpp"
 #include "game/loadingState.hpp"
 #include "mngr/sound.hpp"
 #include "util/render.hpp"

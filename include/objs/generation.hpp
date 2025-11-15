@@ -1,8 +1,6 @@
 #ifndef OBJS_GENERATION_HPP
 #define OBJS_GENERATION_HPP
 
-// Includes
-
 #include <vector>
 #include "objs/block.hpp"
 

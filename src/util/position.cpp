@@ -1,10 +1,5 @@
-#include "util/position.hpp"
-
-// Includes
-
 #include "mngr/resource.hpp"
-
-using namespace std::string_literals;
+#include "util/position.hpp"
 
 // Screen position functions
 
@@ -27,7 +22,7 @@ Vector2 getOrigin(float x, float y) {
 }
 
 Vector2 getOrigin(const char* text, float fontSize, float spacing) {
-   return getOrigin(MeasureTextEx(ResourceManager::get().getFont("andy"s), text, fontSize, spacing));
+   return getOrigin(MeasureTextEx(ResourceManager::get().getFont("andy"), text, fontSize, spacing));
 }
 
 // Texture functions

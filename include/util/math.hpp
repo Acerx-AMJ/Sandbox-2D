@@ -1,8 +1,6 @@
 #ifndef UTIL_MATH_HPP
 #define UTIL_MATH_HPP
 
-// Math functions
-
 template<typename T>
 constexpr T min(T a, T b) {
    return (a > b ? b : a);

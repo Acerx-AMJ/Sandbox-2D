@@ -1,20 +1,15 @@
-#include "objs/block.hpp"
-
-// Includes
-
 #include <array>
 #include <unordered_map>
 #include "mngr/resource.hpp"
+#include "objs/block.hpp"
 #include "util/format.hpp" // IWYU pragma: export
-
-using namespace std::string_literals;
 
 // Constants
 
 constexpr int idCount = 8;
 
 static std::unordered_map<std::string, int> blockIds {
-   {"air"s, 0}, {"grass"s, 1}, {"dirt"s, 2}, {"clay"s, 3}, {"stone"s, 4}, {"sand"s, 5}, {"sandstone"s, 6}, {"water"s, 7} 
+   {"air", 0}, {"grass", 1}, {"dirt", 2}, {"clay", 3}, {"stone", 4}, {"sand", 5}, {"sandstone", 6}, {"water", 7} 
 };
 
 static std::array<Block::Type, idCount> blockTypes {{
@@ -30,7 +25,7 @@ static std::array<Color, idCount> blockColors {{
 // Set/get block functions
 
 void setBlock(Block& block, const std::string& name) {
-   fmt::assert(blockIds.find(name) != blockIds.end(), "Block with the name '{}' does not exist.", name);
+   assert(blockIds.find(name) != blockIds.end(), "Block with the name '{}' does not exist.", name);
    block.tex = &ResourceManager::get().getTexture(name);
    block.id = blockIds[name];
    block.type = blockTypes[block.id];

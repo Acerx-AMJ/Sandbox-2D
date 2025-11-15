@@ -1,8 +1,6 @@
 #ifndef OBJS_PLAYER_HPP
 #define OBJS_PLAYER_HPP
 
-// Includes
-
 #include "objs/generation.hpp"
 
 // Player

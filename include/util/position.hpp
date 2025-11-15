@@ -1,8 +1,6 @@
 #ifndef UTIL_POSITION_HPP
 #define UTIL_POSITION_HPP
 
-// Includes
-
 #include <raylib.h>
 
 // Screen position functions

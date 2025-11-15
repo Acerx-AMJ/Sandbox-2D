@@ -1,12 +1,8 @@
 #ifndef GAME_LOADINGSTATE_HPP
 #define GAME_LOADINGSTATE_HPP
 
-// Includes
-
 #include <string>
 #include "game/state.hpp"
-
-using namespace std::string_literals;
 
 // Loading state
 
@@ -32,7 +28,7 @@ private:
    enum class Load { fonts, textures, sounds, soundSetup, music, count };
 
    std::string splash;
-   std::string text = "Loading Fonts... "s;
+   std::string text = "Loading Fonts... ";
    Load load = Load::fonts;
    float waitTimer = 0.f;
    float rotation = 0.f;

@@ -1,8 +1,6 @@
 #ifndef MNGR_SOUND_HPP
 #define MNGR_SOUND_HPP
 
-// Includes
-
 #include <filesystem>
 #include <string>
 #include <unordered_map>

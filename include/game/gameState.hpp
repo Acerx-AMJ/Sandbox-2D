@@ -1,8 +1,6 @@
 #ifndef GAME_GAMESTATE_HPP
 #define GAME_GAMESTATE_HPP
 
-// Includes
-
 #include "game/state.hpp"
 #include "objs/player.hpp"
 

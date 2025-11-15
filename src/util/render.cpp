@@ -1,16 +1,11 @@
-#include "util/render.hpp"
-
-// Includes
-
 #include "mngr/resource.hpp"
 #include "util/position.hpp"
-
-using namespace std::string_literals;
+#include "util/render.hpp"
 
 // Render functions
 
 void drawText(const Vector2& position, const char* text, float fontSize, float rotation) {
-   auto& font = ResourceManager::get().getFont("andy"s);
+   auto& font = ResourceManager::get().getFont("andy");
    DrawTextPro(font, text, position, getOrigin(text, fontSize, 1.f), rotation, fontSize, 1.f, WHITE);
 }
 

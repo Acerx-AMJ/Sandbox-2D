@@ -1,12 +1,6 @@
-#include "objs/generation.hpp"
-
-// Includes
-
 #include "PerlinNoise.hpp"
+#include "objs/generation.hpp"
 #include "util/random.hpp"
-
-using namespace std::string_literals;
-using namespace siv;
 
 // Constants
 
@@ -23,21 +17,21 @@ constexpr int rockOffsetMax = 25;
 
 // Globals
 
-int sizeX = 0;
-int sizeY = 0;
+static int sizeX = 0;
+static int sizeY = 0;
 
 // Private functions
 
-inline float normalizedNoise2D(PerlinNoise& noise, int x, int y, float amplitude) {
+inline float normalizedNoise2D(siv::PerlinNoise& noise, int x, int y, float amplitude) {
    return (noise.octave2D(x * amplitude, y * amplitude, 4) + 1.f) / 2.f;
 }
 
 // Generate functions
 
-void generateMap(Map& map, int sizeX, int sizeY) {
+void generateMap(Map& map, int mapSizeX, int mapSizeY) {
+   sizeX = mapSizeX;
+   sizeY = mapSizeY;
    map = Map(sizeY, std::vector<Block>(sizeX, Block{}));
-   ::sizeX = sizeX;
-   ::sizeY = sizeY;
 
    generateTerrain(map);
    generateDebri(map);
@@ -45,7 +39,7 @@ void generateMap(Map& map, int sizeX, int sizeY) {
 }
 
 void generateTerrain(Map& map) {
-   PerlinNoise noise (rand());
+   siv::PerlinNoise noise (rand());
    int y = startY * sizeY;
    int rockOffset = rockOffsetStart;
 
@@ -87,9 +81,9 @@ void generateTerrain(Map& map) {
 
       // Generate grass, dirt and stone
 
-      setBlock(map[y][x], "grass"s);
+      setBlock(map[y][x], "grass");
       for (int yy = y + 1; yy < sizeY; ++yy) {
-         setBlock(map[yy][x], (yy - y < rockOffset ? "dirt"s : "stone"s));
+         setBlock(map[yy][x], (yy - y < rockOffset ? "dirt" : "stone"));
       }
    }
 }
@@ -98,14 +92,14 @@ void generateWater(Map& map) {
    int seaY = sizeY * seaLevel;
    for (int x = 0; x < sizeX; ++x) {
       for (int y = seaY; y < sizeY and map[y][x].type == Block::Type::air; ++y) {
-         setBlock(map[y][x], "water"s);
+         setBlock(map[y][x], "water");
       }
    }
 }
 
 void generateDebri(Map& map) {
-   PerlinNoise sandNoise (rand());
-   PerlinNoise dirtNoise (rand());
+   siv::PerlinNoise sandNoise (rand());
+   siv::PerlinNoise dirtNoise (rand());
 
    for (int x = 0; x < sizeX; ++x) {
       for (int y = 0; y < sizeY; ++y) {
@@ -115,11 +109,11 @@ void generateDebri(Map& map) {
 
          float value = normalizedNoise2D(dirtNoise, x, y, 0.04f);
          if (value >= .825f) {
-            setBlock(map[y][x], "clay"s);
+            setBlock(map[y][x], "clay");
          } else if (value <= .2f) {
-            setBlock(map[y][x], "dirt"s);
+            setBlock(map[y][x], "dirt");
          } else if (map[y][x].type != Block::Type::dirt and normalizedNoise2D(sandNoise, x, y, 0.04f) <= .15f) {
-            setBlock(map[y][x], "sand"s);
+            setBlock(map[y][x], "sand");
          }
       }
    }
