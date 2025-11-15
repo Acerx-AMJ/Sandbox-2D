@@ -46,10 +46,9 @@ void GameState::update() {
 
 void GameState::render() {
    drawRect(BLUE);
-   auto crect = getCameraBounds(camera);
-   int drew = 0, onScreen = 0;
-
    BeginMode2D(camera);
+
+   auto crect = getCameraBounds(camera);
    auto maxY = std::min(mapSizeY, int((crect.y + crect.height)) + 1);
    auto maxX = std::min(mapSizeX, int((crect.x + crect.width)) + 1);
 
@@ -59,27 +58,20 @@ void GameState::render() {
          if (block.type == Block::Type::air) {
             continue;
          }
+
          int ox = x;
-         while (x < maxX and blocks[y][x].id == block.id) {
-            ++x;
-         }
+         while (x < maxX and blocks[y][x].id == block.id) { ++x; }
 
          if (camera.zoom <= 12.5f) {
             DrawRectangle(ox, y, x - ox, 1, getBlockColor(block.id));
          } else {
             drawTextureBlock(*block.tex, {(float)ox, (float)y, float(x - ox), 1.f});
          }
-         onScreen += x - ox;
          --x;
-         drew++;
       }
    }
    player.render();
    EndMode2D();
-
-   drawText(getScreenCenter(), ("RECTANGLES RENDERED: "s + std::to_string(drew)).c_str(), 80);
-   drawText({getScreenCenter().x, getScreenCenter().y + 60.f}, ("ON SCREEN: "s + std::to_string(onScreen)).c_str(), 50);
-   drawText({getScreenCenter().x, getScreenCenter().y - 120.f}, ("FPS: "s + std::to_string(GetFPS())).c_str(), 30);
 }
 
 void GameState::change(States& states) {

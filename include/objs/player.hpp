@@ -9,7 +9,10 @@
 
 struct Player {
    Vector2 pos, vel;
-   bool onGround = false, canHoldJump = true;
+   bool onGround = false;
+   bool canHoldJump = true;
+   bool facingRight = true;
+   float waterMult = 1.f;
    float holdJumpTimer = 0.f;
 
    // Constructors
