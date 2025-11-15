@@ -28,8 +28,10 @@ struct GameState: public State {
 
 private:   
    std::vector<std::vector<Block>> blocks;
-   Image blockMap;
    Camera2D camera;
+   Vector2 playerPos, playerVel;
+   bool onGround = false, canHoldJump = true;
+   float holdJumpTimer = 0.f;
 };
 
 #endif

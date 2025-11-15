@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include "PerlinNoise.hpp"
+#include "util/math.hpp"
 #include "util/position.hpp"
 #include "util/random.hpp"
 #include "util/render.hpp"
@@ -14,20 +15,29 @@ using namespace std::string_literals;
 // Constants
 
 namespace {
-   constexpr int SIZE_Y = 500;
-   constexpr int SIZE_X = 5000;
+   constexpr int mapSizeX = 1250;
+   constexpr int mapSizeY = 500;
+
+   constexpr float speed = 20.f;
+   constexpr float jumpSpeed = -20.f;
+   constexpr float gravity = 15.f;
+   constexpr float maxGravity = 45.f;
+   constexpr float friction = 16.f;
+   constexpr float acceleration = 16.f;
+
+   constexpr float jumpHoldTime = .2f;
 }
 
 // Constructors
 
 GameState::GameState() {
-   blocks = std::vector<std::vector<Block>>(SIZE_Y, std::vector<Block>(SIZE_X, Block{}));
+   blocks = std::vector<std::vector<Block>>(mapSizeY, std::vector<Block>(mapSizeX, Block{}));
    siv::PerlinNoise perlin {(siv::PerlinNoise::seed_type)rand()};
 
-   int y = SIZE_Y * 0.5f;
+   int y = mapSizeY * 0.5f;
    int rockOffset = 12.f;
    
-   for (int x = 0; x < SIZE_X; ++x) {
+   for (int x = 0; x < mapSizeX; ++x) {
       if (blocks[y][x].tex) {
          continue;
       }
@@ -54,20 +64,20 @@ GameState::GameState() {
          rockOffset += random(0, 2);
       }
 
-      if (y < SIZE_Y * .3f) {
+      if (y < mapSizeY * .3f) {
          y++;
          rockOffset++;
-      } else if (y > SIZE_Y * .6f) {
+      } else if (y > mapSizeY * .6f) {
          y--;
          rockOffset--;
       }
-      y = std::clamp(y, int(SIZE_Y * .25f), int(SIZE_Y * 65.f));
+      y = std::clamp(y, int(mapSizeY * .25f), int(mapSizeY * 65.f));
       rockOffset = std::clamp(rockOffset, 5, 25);
       
       setBlock(blocks[y][x], "grass"s);
       int dirtDepth = 0;
 
-      for (int yy = y + 1; yy < SIZE_Y; ++yy) {
+      for (int yy = y + 1; yy < mapSizeY; ++yy) {
          if (dirtDepth < rockOffset) {
             dirtDepth++;
             setBlock(blocks[yy][x], "dirt"s);
@@ -81,10 +91,10 @@ GameState::GameState() {
    siv::PerlinNoise sandNoise {(siv::PerlinNoise::seed_type)rand()};
    siv::PerlinNoise dirtNoise {(siv::PerlinNoise::seed_type)rand()};
 
-   for (int x = 0; x < SIZE_X; ++x) {
-      for (int y = 0; y < SIZE_Y; ++y) {
+   for (int x = 0; x < mapSizeX; ++x) {
+      for (int y = 0; y < mapSizeY; ++y) {
          if (not blocks[y][x].tex) {
-            if (y >= SIZE_Y * .45f) {
+            if (y >= mapSizeY * .45f) {
                setBlock(blocks[y][x], "water"s);
             }
             continue;
@@ -108,24 +118,113 @@ GameState::GameState() {
          }
       }
    }
-   camera.target = {0.f, 0.f};
+
+   playerPos = {mapSizeX / 2.f, 0.f};
+   playerVel = {0, 0};
+
+   camera.target = playerPos;
    camera.offset = getScreenCenter();
    camera.rotation = 0.0f;
    camera.zoom = 50.f;
 }
 
 // Update functions
-
+static Color plrc = RED;
 void GameState::update() {
-   float speed = (IsKeyDown(KEY_LEFT_SHIFT) ? 1000.f : 500.f);
-   camera.offset.x += (IsKeyDown(KEY_A) - IsKeyDown(KEY_D)) * speed * GetFrameTime();
-   camera.offset.y += (IsKeyDown(KEY_W) - IsKeyDown(KEY_S)) * speed * GetFrameTime();
+
+   // Update player
+
+   playerVel.y = std::min(maxGravity * GetFrameTime(), playerVel.y + gravity * GetFrameTime());
+   auto dir = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
+
+   if (dir != 0) {
+      auto speedX = (onGround ? speed : speed * 1.4f);
+      playerVel.x = lerp(playerVel.x, dir * speed * GetFrameTime(), acceleration * GetFrameTime());
+   } else {
+      playerVel.x = lerp(playerVel.x, 0.0, friction * GetFrameTime());
+   }
+
+   if (IsKeyDown(KEY_SPACE) and canHoldJump) {
+      if (playerVel.y > 0.f) {
+         playerVel.y = 0.f;
+      }
+      playerVel.y += jumpSpeed * GetFrameTime();
+
+      holdJumpTimer += GetFrameTime();
+      if (holdJumpTimer >= jumpHoldTime) {
+         canHoldJump = false;
+      }
+   }
+
+   if (onGround) {
+      canHoldJump = true;
+      holdJumpTimer = 0.f;
+   } else if (not IsKeyDown(KEY_SPACE)) {
+      canHoldJump = false;
+   }
+
+   Rectangle bounds {playerPos.x + playerVel.x, playerPos.y + playerVel.y, 2.f, 3.f};
+   bool collisionX = false, collisionY = false;
+
+   auto maxY = std::min(mapSizeY, int((bounds.y + bounds.height)) + 1);
+   auto maxX = std::min(mapSizeX, int((bounds.x + bounds.width)) + 1);
+
+   for (int y = std::max(0, int(bounds.y)); y < maxY; ++y) {
+      for (int x = std::max(0, int(bounds.x)); x < maxX; ++x) {
+         auto& block = blocks[y][x];
+         if (block.type == Block::Type::air or block.type == Block::Type::water) {
+            continue;
+         }
+
+         if (not CheckCollisionRecs(bounds, {(float)x, (float)y, 1, 1})) {
+            continue;
+         }
+         auto overlapX = std::min((playerPos.x + 2.f) - x, (x + 1) - playerPos.x);
+         auto overlapY = std::min((playerPos.y + 3.f) - y, (y + 1) - playerPos.y);
+
+         if (overlapX == 0.f and overlapY == 0.f) {
+            continue;
+         }
+
+         if (overlapX < overlapY) {
+            if (x > playerPos.x) {
+               playerPos.x = x - 2.f;
+            } else {
+               playerPos.x = x + 1.f;
+            }
+            collisionX = true;
+         } else {
+            if (y > playerPos.y) {
+               playerPos.y = y - 3.f;
+               onGround = true;
+            } else {
+               playerPos.y = y + 1.f;
+            }
+            collisionY = true;
+         }
+
+         if (collisionX and collisionY) {
+            goto breakLoop;
+         }
+      }
+   }
+breakLoop:
+
+   if (not collisionX) {
+      playerPos.x += playerVel.x;
+   }
+
+   if (not collisionY) {
+      onGround = false;
+      playerPos.y += playerVel.y;
+   }
+
+   // Update camera/game   
+
+   camera.target = {playerPos.x + 2.f / 2.f, playerPos.y + 3.f / 2.f};
 
    float wheel = GetMouseWheelMove();
    if (wheel != 0.f) {
-      Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), camera);
-      camera.offset = GetMousePosition();
-      camera.target = mouseWorldPos;
       camera.zoom = std::clamp(std::exp(std::log(camera.zoom) + wheel * 0.2f), 1.f, 5000.f);
    }
 
@@ -139,17 +238,12 @@ void GameState::update() {
 void GameState::render() {
    drawRect(BLUE);
    auto crect = getCameraBounds(camera);
-   int drew = 0, onScreen = 0, total = 0;
+   int drew = 0, onScreen = 0;
 
    BeginMode2D(camera);
-   auto maxY = std::min(SIZE_Y, int((crect.y + crect.height)) + 1);
-   auto maxX = std::min(SIZE_X, int((crect.x + crect.width)) + 1);
+   auto maxY = std::min(mapSizeY, int((crect.y + crect.height)) + 1);
+   auto maxX = std::min(mapSizeX, int((crect.x + crect.width)) + 1);
 
-   for (int y = 0; y < SIZE_Y; ++y) {
-      for (int x = 0; x < SIZE_X; ++x) {
-         total += (blocks[y][x].tex != nullptr);
-      }
-   }
    for (int y = std::max(0, int(crect.y)); y < maxY; ++y) {
       for (int x = std::max(0, int(crect.x)); x < maxX; ++x) {
          auto& block = blocks[y][x];
@@ -172,10 +266,11 @@ void GameState::render() {
          drew++;
       }
    }
+
+   DrawRectanglePro({playerPos.x, playerPos.y, 2.f, 3.f}, {0.f, 0.f}, 0.f, plrc);
    EndMode2D();
    drawText(getScreenCenter(), ("RECTANGLES RENDERED: "s + std::to_string(drew)).c_str(), 80);
    drawText({getScreenCenter().x, getScreenCenter().y + 60.f}, ("ON SCREEN: "s + std::to_string(onScreen)).c_str(), 50);
-   drawText({getScreenCenter().x, getScreenCenter().y + 120.f}, ("BLOCKS: "s + std::to_string(total)).c_str(), 50);
    drawText({getScreenCenter().x, getScreenCenter().y - 120.f}, ("FPS: "s + std::to_string(GetFPS())).c_str(), 30);
 }
 
