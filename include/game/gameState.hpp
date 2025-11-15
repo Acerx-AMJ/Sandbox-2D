@@ -4,8 +4,7 @@
 // Includes
 
 #include "game/state.hpp"
-#include "objs/block.hpp"
-#include <vector>
+#include "objs/generation.hpp"
 
 // Game state
 
@@ -27,7 +26,7 @@ struct GameState: public State {
    void change(States& states) override;
 
 private:   
-   std::vector<std::vector<Block>> blocks;
+   Map blocks;
    Camera2D camera;
    Vector2 playerPos, playerVel;
    bool onGround = false, canHoldJump = true;

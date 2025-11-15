@@ -26,4 +26,10 @@ T* random(const std::vector<T*>& vector) {
    return vector[rand() % vector.size()];
 }
 
+// Chance functions
+
+inline bool chance(int percent) {
+   return random(0, 100) <= percent;
+}
+
 #endif

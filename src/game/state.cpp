@@ -6,9 +6,7 @@
 
 // Constants
 
-namespace {
-   constexpr float fadeTime = .4f;
-}
+constexpr float fadeTime = .4f;
 
 // Update functions
 

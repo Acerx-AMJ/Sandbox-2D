@@ -4,120 +4,117 @@
 
 #include <algorithm>
 #include <cmath>
-#include "PerlinNoise.hpp"
 #include "util/math.hpp"
 #include "util/position.hpp"
-#include "util/random.hpp"
 #include "util/render.hpp"
 
 using namespace std::string_literals;
 
 // Constants
 
-namespace {
-   constexpr int mapSizeX = 1250;
-   constexpr int mapSizeY = 500;
+constexpr int mapSizeX = 1250;
+constexpr int mapSizeY = 500;
 
-   constexpr float speed = 20.f;
-   constexpr float jumpSpeed = -20.f;
-   constexpr float gravity = 15.f;
-   constexpr float maxGravity = 45.f;
-   constexpr float friction = 16.f;
-   constexpr float acceleration = 16.f;
+constexpr float speed = 20.f;
+constexpr float jumpSpeed = -20.f;
+constexpr float gravity = 15.f;
+constexpr float maxGravity = 45.f;
+constexpr float friction = 16.f;
+constexpr float acceleration = 16.f;
 
-   constexpr float jumpHoldTime = .2f;
-}
+constexpr float jumpHoldTime = .2f;
 
 // Constructors
 
 GameState::GameState() {
-   blocks = std::vector<std::vector<Block>>(mapSizeY, std::vector<Block>(mapSizeX, Block{}));
-   siv::PerlinNoise perlin {(siv::PerlinNoise::seed_type)rand()};
+   generateMap(blocks, mapSizeX, mapSizeY);
+   // blocks = std::vector<std::vector<Block>>(mapSizeY, std::vector<Block>(mapSizeX, Block{}));
+   // siv::PerlinNoise perlin {(siv::PerlinNoise::seed_type)rand()};
 
-   int y = mapSizeY * 0.5f;
-   int rockOffset = 12.f;
+   // int y = mapSizeY * 0.5f;
+   // int rockOffset = 12.f;
    
-   for (int x = 0; x < mapSizeX; ++x) {
-      if (blocks[y][x].tex) {
-         continue;
-      }
-      float noise = (perlin.octave2D(x * 0.01f, y * 0.01f, 4) + 1.f) / 2.f;
+   // for (int x = 0; x < mapSizeX; ++x) {
+   //    if (blocks[y][x].tex) {
+   //       continue;
+   //    }
+   //    float noise = (perlin.octave2D(x * 0.01f, y * 0.01f, 4) + 1.f) / 2.f;
 
-      if (noise < .2f) {
-         y -= random(0, 3);
-         rockOffset -= random(0, 2);
-      } else if (noise < .4) {
-         y -= random(0, 2);
-         rockOffset -= random(0, 1);
-      } else if (noise < .65f) {
-         if (random(0, 100) >= 50) {
-            y += random(-1, 1);
-         }
-         if (random(0, 100) >= 80) {
-            rockOffset += random(-1, 1);
-         }
-      } else if (noise < .85f) {
-         y += random(0, 2);
-         rockOffset += random(0, 1);
-      } else {
-         y += random(0, 3);
-         rockOffset += random(0, 2);
-      }
+   //    if (noise < .2f) {
+   //       y -= random(0, 3);
+   //       rockOffset -= random(0, 2);
+   //    } else if (noise < .4) {
+   //       y -= random(0, 2);
+   //       rockOffset -= random(0, 1);
+   //    } else if (noise < .65f) {
+   //       if (random(0, 100) >= 50) {
+   //          y += random(-1, 1);
+   //       }
+   //       if (random(0, 100) >= 80) {
+   //          rockOffset += random(-1, 1);
+   //       }
+   //    } else if (noise < .85f) {
+   //       y += random(0, 2);
+   //       rockOffset += random(0, 1);
+   //    } else {
+   //       y += random(0, 3);
+   //       rockOffset += random(0, 2);
+   //    }
 
-      if (y < mapSizeY * .3f) {
-         y++;
-         rockOffset++;
-      } else if (y > mapSizeY * .6f) {
-         y--;
-         rockOffset--;
-      }
-      y = std::clamp(y, int(mapSizeY * .25f), int(mapSizeY * 65.f));
-      rockOffset = std::clamp(rockOffset, 5, 25);
+   //    if (y < mapSizeY * .3f) {
+   //       y++;
+   //       rockOffset++;
+   //    } else if (y > mapSizeY * .6f) {
+   //       y--;
+   //       rockOffset--;
+   //    }
+   //    y = std::clamp(y, int(mapSizeY * .25f), int(mapSizeY * 65.f));
+   //    rockOffset = std::clamp(rockOffset, 5, 25);
       
-      setBlock(blocks[y][x], "grass"s);
-      int dirtDepth = 0;
+   //    setBlock(blocks[y][x], "grass"s);
+   //    int dirtDepth = 0;
 
-      for (int yy = y + 1; yy < mapSizeY; ++yy) {
-         if (dirtDepth < rockOffset) {
-            dirtDepth++;
-            setBlock(blocks[yy][x], "dirt"s);
-         } else {
-            setBlock(blocks[yy][x], "stone"s);
-         }
-      }
-   }
+   //    for (int yy = y + 1; yy < mapSizeY; ++yy) {
+   //       if (dirtDepth < rockOffset) {
+   //          dirtDepth++;
+   //          setBlock(blocks[yy][x], "dirt"s);
+   //       } else {
+   //          setBlock(blocks[yy][x], "stone"s);
+   //       }
+   //    }
+   // }
 
-   siv::PerlinNoise sandNoise2 {(siv::PerlinNoise::seed_type)rand()};
-   siv::PerlinNoise sandNoise {(siv::PerlinNoise::seed_type)rand()};
-   siv::PerlinNoise dirtNoise {(siv::PerlinNoise::seed_type)rand()};
+   // siv::PerlinNoise sandNoise2 {(siv::PerlinNoise::seed_type)rand()};
+   // siv::PerlinNoise sandNoise {(siv::PerlinNoise::seed_type)rand()};
+   // siv::PerlinNoise dirtNoise {(siv::PerlinNoise::seed_type)rand()};
 
-   for (int x = 0; x < mapSizeX; ++x) {
-      for (int y = 0; y < mapSizeY; ++y) {
-         if (not blocks[y][x].tex) {
-            if (y >= mapSizeY * .45f) {
-               setBlock(blocks[y][x], "water"s);
-            }
-            continue;
-         }
+   // for (int x = 0; x < mapSizeX; ++x) {
+   //    for (int y = 0; y < mapSizeY; ++y) {
+   //       if (not blocks[y][x].tex) {
+   //          if (y >= mapSizeY * .45f) {
+   //             setBlock(blocks[y][x], "water"s);
+   //          }
+   //          continue;
+   //       }
 
-         if ((sandNoise.octave2D(x * 0.004f, y * 0.004f, 4) + 1.f) / 2.f >= .7f) {
-            if (blocks[y][x].type == Block::Type::stone) {
-               setBlock(blocks[y][x], "sandstone"s);
-            } else {
-               setBlock(blocks[y][x], "sand"s);
-            }
-         } else if (blocks[y][x].type != Block::Type::grass) {
-            float noise = (dirtNoise.octave2D(x * 0.04f, y * 0.04f, 4) + 1.f) / 2.f;
-            if (noise >= .825f) {
-               setBlock(blocks[y][x], "clay"s);
-            } else if (noise <= .2f) {
-               setBlock(blocks[y][x], "dirt"s);
-            } else if ((sandNoise2.octave2D(x * 0.04f, y * 0.04f, 4) + 1.f) / 2.f <= .15f) {
-               setBlock(blocks[y][x], "sand"s);
-            }
-         }
-      }
-   }
+   //       if ((sandNoise.octave2D(x * 0.004f, y * 0.004f, 4) + 1.f) / 2.f >= .7f) {
+   //          if (blocks[y][x].type == Block::Type::stone) {
+   //             setBlock(blocks[y][x], "sandstone"s);
+   //          } else {
+   //             setBlock(blocks[y][x], "sand"s);
+   //          }
+   //       } else if (blocks[y][x].type != Block::Type::grass) {
+   //          float noise = (dirtNoise.octave2D(x * 0.04f, y * 0.04f, 4) + 1.f) / 2.f;
+   //          if (noise >= .825f) {
+   //             setBlock(blocks[y][x], "clay"s);
+   //          } else if (noise <= .2f) {
+   //             setBlock(blocks[y][x], "dirt"s);
+   //          } else if ((sandNoise2.octave2D(x * 0.04f, y * 0.04f, 4) + 1.f) / 2.f <= .15f) {
+   //             setBlock(blocks[y][x], "sand"s);
+   //          }
+   //       }
+   //    }
+   // }
 
    playerPos = {mapSizeX / 2.f, 0.f};
    playerVel = {0, 0};
