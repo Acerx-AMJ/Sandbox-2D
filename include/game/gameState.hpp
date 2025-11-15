@@ -4,7 +4,7 @@
 // Includes
 
 #include "game/state.hpp"
-#include "objs/generation.hpp"
+#include "objs/player.hpp"
 
 // Game state
 
@@ -25,12 +25,10 @@ struct GameState: public State {
    void render() override;
    void change(States& states) override;
 
-private:   
+private:
    Map blocks;
    Camera2D camera;
-   Vector2 playerPos, playerVel;
-   bool onGround = false, canHoldJump = true;
-   float holdJumpTimer = 0.f;
+   Player player;
 };
 
 #endif

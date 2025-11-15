@@ -18,8 +18,9 @@ void drawTexture(const Texture& texture, const Vector2& position, const Vector2&
    DrawTexturePro(texture, getBox(texture), {position.x, position.y, size.x, size.y}, getOrigin(size), rotation, WHITE);
 }
 
-void drawTextureNO(const Texture& texture, const Rectangle& rect) {
-   DrawTexturePro(texture, getBox(texture), rect, {0.f, 0.f}, 0.f, WHITE);
+void drawTextureBlock(const Texture& texture, const Rectangle& rect) {
+   Rectangle src {0, 0, texture.width * (rect.width / rect.height), (float)texture.height};
+   DrawTexturePro(texture, src, rect, {0.f, 0.f}, 0.f, WHITE);
 }
 
 void drawRect(const Color& color) {
