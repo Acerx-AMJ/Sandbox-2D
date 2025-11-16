@@ -2,6 +2,7 @@
 #include <cmath>
 #include "game/gameState.hpp"
 #include "util/position.hpp"
+#include "util/random.hpp"
 #include "util/render.hpp"
 
 // Constants
@@ -24,6 +25,11 @@ GameState::GameState() {
 // Update functions
 
 void GameState::update() {
+   updateControls();
+   updatePhysics();
+}
+
+void GameState::updateControls() {
    player.updatePlayer(blocks);
    camera.target = player.getCenter();
 
@@ -34,6 +40,68 @@ void GameState::update() {
 
    if (IsKeyReleased(KEY_ESCAPE)) {
       fadingOut = true;
+   }
+}
+
+void GameState::updatePhysics() {
+   auto mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
+
+   // Temporary way to switch, delete and place blocks
+   static int index = 0;
+   static int size = 7;
+   static const char* blockMap[] {
+      "stone", "clay", "dirt", "grass", "sand", "sandstone", "water"
+   };
+
+   if (IsKeyPressed(KEY_E)) {
+      index = (index + 1) % size;
+   }
+
+   if (isPositionValid(blocks, mousePos.x, mousePos.y)) {
+
+      if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+         deleteBlock(blocks[mousePos.y][mousePos.x]);
+      } else if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+         setBlock(blocks[mousePos.y][mousePos.x], blockMap[index]);
+      }
+   }
+
+   physicsTimer += GetFrameTime();
+   if (physicsTimer >= .1f) {
+      physicsTimer -= .1f;
+   } else {
+      return;
+   }
+
+   
+   for (int y = mapSizeY - 1; y >= 0; --y) {
+      for (int x = mapSizeX - 1; x >= 0; --x) {
+         auto& block = blocks[y][x];
+
+         if (block.type == Block::Type::water) {
+            if (bottomIs(blocks, x, y)) {
+               moveBlock(block, blocks[y + 1][x]);
+            } else if (leftIs(blocks, x, y) and rightIs(blocks, x, y)) {
+               moveBlock(block, blocks[y][x + (chance(50) ? 1.f : -1.f)]);
+            } else if (leftIs(blocks, x, y)) {
+               moveBlock(block, blocks[y][x - 1]);
+            } else if (rightIs(blocks, x, y)) {
+               moveBlock(block, blocks[y][x + 1]);
+            }
+         }
+
+         if (block.type == Block::Type::sand and (bottomIs(blocks, x, y) or bottomIs(blocks, x, y, Block::Type::water))) {
+            moveBlock(block, blocks[y + 1][x]);
+         }
+
+         if (block.type == Block::Type::dirt and (topIs(blocks, x, y) or topIs(blocks, x, y, Block::Type::water)) and chance(1)) {
+            setBlock(block, "grass");
+         }
+
+         if (block.type == Block::Type::grass and not topIs(blocks, x, y) and not topIs(blocks, x, y, Block::Type::water) and chance(1)) {
+            setBlock(block, "dirt");
+         }
+      }
    }
 }
 

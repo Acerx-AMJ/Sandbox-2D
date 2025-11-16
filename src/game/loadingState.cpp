@@ -13,10 +13,10 @@
 // Constructors
 
 LoadingState::LoadingState() {
-   splash = getSplashMessage();
-   wrapText(splash, GetScreenWidth() - 50.f, 40, 1.f);
    ResourceManager::get().loadFont("andy", "assets/fonts/andy.ttf");
    ResourceManager::get().loadTexture("loading", "assets/sprites/loading.png");
+   splash = getSplashMessage();
+   wrapText(splash, GetScreenWidth() - 50.f, 40, 1.f);
 }
 
 // Update functions

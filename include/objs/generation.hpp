@@ -1,10 +1,7 @@
 #ifndef OBJS_GENERATION_HPP
 #define OBJS_GENERATION_HPP
 
-#include <vector>
 #include "objs/block.hpp"
-
-using Map = std::vector<std::vector<Block>>;
 
 // Generate functions
 

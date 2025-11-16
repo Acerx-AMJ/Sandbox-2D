@@ -17,6 +17,8 @@ struct GameState: public State {
    // Update
 
    void update() override;
+   void updateControls();
+   void updatePhysics();
 
    // Other functions
 
@@ -27,6 +29,7 @@ private:
    Map blocks;
    Camera2D camera;
    Player player;
+   float physicsTimer = 0.f;
 };
 
 #endif

@@ -13,7 +13,7 @@ static std::unordered_map<std::string, int> blockIds {
 };
 
 static std::array<Block::Type, idCount> blockTypes {{
-   Block::Type::air, Block::Type::grass, Block::Type::dirt, Block::Type::dirt, Block::Type::stone,
+   Block::Type::air, Block::Type::grass, Block::Type::dirt, Block::Type::clay, Block::Type::stone,
    Block::Type::sand, Block::Type::stone, Block::Type::water
 }};
 
@@ -22,13 +22,45 @@ static std::array<Color, idCount> blockColors {{
    {255, 189, 40, 255}, {247, 134, 13, 255}, {8, 69, 165, 255}
 }};
 
-// Set/get block functions
+// Set block functions
 
 void setBlock(Block& block, const std::string& name) {
    assert(blockIds.find(name) != blockIds.end(), "Block with the name '{}' does not exist.", name);
    block.tex = &ResourceManager::get().getTexture(name);
    block.id = blockIds[name];
    block.type = blockTypes[block.id];
+}
+
+void deleteBlock(Block& block) {
+   block.tex = nullptr;
+   block.type = Block::Type::air;
+   block.id = 0;
+}
+
+void moveBlock(Block& oldBlock, Block& newBlock) {
+   std::swap(oldBlock, newBlock);
+}
+
+// Get block functions
+
+bool isPositionValid(Map& map, int x, int y) {
+   return x >= 0 and x < map[0].size() and y >= 0 and y < map.size();
+}
+
+bool leftIs(Map& map, int x, int y, Block::Type type) {
+   return isPositionValid(map, x - 1, y) and map[y][x - 1].type == type;
+}
+
+bool rightIs(Map& map, int x, int y, Block::Type type) {
+   return isPositionValid(map, x + 1, y) and map[y][x + 1].type == type;
+}
+
+bool topIs(Map& map, int x, int y, Block::Type type) {
+   return isPositionValid(map, x, y - 1) and map[y - 1][x].type == type; 
+}
+
+bool bottomIs(Map& map, int x, int y, Block::Type type) {
+   return isPositionValid(map, x, y + 1) and map[y + 1][x].type == type;
 }
 
 Color& getBlockColor(int blockId) {
