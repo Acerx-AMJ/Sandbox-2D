@@ -1,17 +1,22 @@
 #ifndef OBJS_PLAYER_HPP
 #define OBJS_PLAYER_HPP
 
+#include "mngr/animation.hpp"
 #include "objs/generation.hpp"
 
 // Player
 
 struct Player {
-   Vector2 pos, vel;
+   AnimationManager anim;
+   Vector2 pos, vel, delta;
    bool onGround = false;
    bool canHoldJump = true;
-   bool facingRight = true;
    float waterMult = 1.f;
    float holdJumpTimer = 0.f;
+
+   float fallTimer = 0.f;
+   float walkTimer = 0.f;
+   int walkFrame = 6;
 
    // Constructors
 
@@ -22,6 +27,7 @@ struct Player {
    void updatePlayer(Map& map);
    void updateMovement();
    void updateCollisions(Map& map);
+   void updateAnimation();
 
    // Render function
 

@@ -5,6 +5,7 @@
 // Constants
 
 constexpr Vector2 size {2.f, 3.f};
+constexpr int frameSize = 20;
 
 constexpr float speed = 20.f;
 constexpr float jumpSpeed = -10.f;
@@ -18,6 +19,10 @@ constexpr float jumpHoldTime = .2f;
 void Player::init(const Vector2& spawnPos) {
    pos = spawnPos;
    vel = {0, 0};
+
+   anim.tex = &ResourceManager::get().getTexture("player");
+   anim.fwidth = 20;
+   anim.fheight = anim.tex->height;
 }
 
 // Update functions
@@ -25,6 +30,7 @@ void Player::init(const Vector2& spawnPos) {
 void Player::updatePlayer(Map& map) {
    updateMovement();
    updateCollisions(map);
+   updateAnimation();
 }
 
 void Player::updateMovement() {
@@ -58,11 +64,12 @@ void Player::updateMovement() {
    vel.y *= waterMult;
 
    if (not floatIsZero(vel.x)) {
-      facingRight = (vel.x > 0.f);
+      anim.flipX = (vel.x > 0.f);
    }
 }
 
 void Player::updateCollisions(Map& map) {
+   Vector2 original = pos;
    Rectangle bounds {pos.x + vel.x, pos.y + vel.y, 2.f, 3.f};
    bool collisionX = false, collisionY = false;
    int waterTileCount = 0;
@@ -111,13 +118,35 @@ void Player::updateCollisions(Map& map) {
       pos.y += vel.y;
    }
    waterMult = (waterTileCount > 0 ? .9f : 1.f);
+   delta = {pos.x - original.x, pos.y - original.y};
+}
+
+void Player::updateAnimation() {
+   if (not onGround) {
+      fallTimer += GetFrameTime();
+      if (fallTimer >= .05f) {
+         anim.fx = 5;
+      }
+   } else {
+      fallTimer = 0.f;
+
+      if (not floatIsZero(delta.x)) {
+         walkTimer += GetFrameTime() * clamp(abs(vel.x) / (speed * GetFrameTime()), .1f, 1.5f);
+         if (walkTimer >= .04f) {
+            anim.fx = ((int)anim.fx + 1) % 18;
+            anim.fx = (anim.fx < 6 ? 6 : anim.fx);
+            walkTimer = 0.f;
+         }
+      } else {
+         anim.fx = 0;
+      }
+   }
 }
 
 // Render functions
 
 void Player::render() {
-   auto& tex = ResourceManager::get().getTexture("player");
-   DrawTexturePro(tex, {0.f, 0.f, float(facingRight ? tex.width : -tex.width), (float)tex.height}, {pos.x, pos.y, size.x, size.y}, {0, 0}, 0, WHITE);
+   anim.render(pos, size);
 }
 
 // Getter functions
