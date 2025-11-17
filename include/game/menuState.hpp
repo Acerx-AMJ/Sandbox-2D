@@ -2,7 +2,7 @@
 #define GAME_MENUSTATE_HPP
 
 #include "game/state.hpp"
-#include "util/button.hpp"
+#include "ui/button.hpp"
 
 // Menu state
 

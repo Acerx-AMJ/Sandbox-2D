@@ -2,7 +2,7 @@
 #define OBJS_PLAYER_HPP
 
 #include "mngr/animation.hpp"
-#include "objs/generation.hpp"
+#include "objs/generation.hpp" // IWYU pragma: export
 
 // Player
 
