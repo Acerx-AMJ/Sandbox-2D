@@ -8,11 +8,11 @@ constexpr Vector2 size {2.f, 3.f};
 constexpr int frameSize = 20;
 
 constexpr float speed = 20.f;
-constexpr float jumpSpeed = -10.f;
+constexpr float jumpSpeed = -8.f;
 constexpr float gravity = 5.f;
-constexpr float maxGravity = 45.f;
+constexpr float maxGravity = 55.f;
 constexpr float acceleration = 9.f;
-constexpr float jumpHoldTime = .2f;
+constexpr float jumpHoldTime = .3f;
 
 // Constructors
 
@@ -70,9 +70,9 @@ void Player::updateMovement() {
 
 void Player::updateCollisions(Map& map) {
    Vector2 original = pos;
-   Rectangle bounds {pos.x + vel.x, pos.y + vel.y, 2.f, 3.f};
+   Rectangle bounds {pos.x + vel.x, pos.y + vel.y, size.x, size.y};
    bool collisionX = false, collisionY = false;
-   int waterTileCount = 0;
+   int waterTileCount = 0, suffocation = 0;
 
    auto maxX = std::min<int>(map[0].size(), int(bounds.x + bounds.width) + 1);
    auto maxY = std::min<int>(map.size(), int(bounds.y + bounds.height) + 1);
@@ -96,14 +96,16 @@ void Player::updateCollisions(Map& map) {
             continue;
          }
 
-         if (overlapX < overlapY and not collisionX) {
+         if (overlapX < overlapY) {
             pos.x = bounds.x = x + (x > bounds.x ? -size.x : 1.f);
+            suffocation += (collisionX);
             collisionX = true;
          }
          
-         if (overlapY < overlapX and not collisionY) {
+         if (overlapY < overlapX) {
             pos.y = bounds.y = y + (y > bounds.y ? -size.y : 1.f);
             onGround = (bounds.y + size.y <= y);
+            suffocation += (collisionY);
             collisionY = true;
          }
       }
@@ -116,6 +118,12 @@ void Player::updateCollisions(Map& map) {
    if (not collisionY) {
       onGround = false;
       pos.y += vel.y;
+   }
+
+   suffocating = (suffocation > 0);
+   if (suffocating) {
+      pos = original;
+      canHoldJump = false;
    }
    waterMult = (waterTileCount > 0 ? .9f : 1.f);
    delta = {pos.x - original.x, pos.y - original.y};
