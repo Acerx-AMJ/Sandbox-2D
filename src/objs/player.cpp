@@ -9,9 +9,10 @@ constexpr int frameSize = 20;
 
 constexpr float speed = 20.f;
 constexpr float jumpSpeed = -27.5f;
-constexpr float gravity = 4.f;
+constexpr float gravity = 2.5f;
 constexpr float maxGravity = 55.f;
-constexpr float acceleration = 9.f;
+constexpr float acceleration = 5.f;
+constexpr float deceleration = 10.f;
 constexpr float jumpHoldTime = .4f;
 
 // Constructors
@@ -19,6 +20,7 @@ constexpr float jumpHoldTime = .4f;
 void Player::init(const Vector2& spawnPos) {
    pos = spawnPos;
    vel = {0, 0};
+   prev = {0, 0};
 
    anim.tex = &ResourceManager::get().getTexture("player");
    anim.fwidth = 20;
@@ -31,23 +33,30 @@ void Player::updatePlayer(Map& map) {
    updateMovement();
    updateCollisions(map);
    updateAnimation();
+   prev = pos;
 }
 
 void Player::updateMovement() {
-   vel.y = std::min(maxGravity * GetFrameTime() * waterMult, vel.y + gravity * GetFrameTime() * waterMult);
+   auto dt = GetFrameTime();
    auto dir = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
 
-   if (dir != 0) {
-      auto speedX = (onGround ? speed : speed * 1.4f);
-      vel.x = lerp(vel.x, dir * speed * GetFrameTime(), acceleration * GetFrameTime());
+   if (not onGround) {
+      vel.y = std::min(maxGravity * dt, vel.y + gravity * dt);
    } else {
-      vel.x = lerp(vel.x, 0.f, acceleration * GetFrameTime());
+      vel.y = 0.f;
+   }
+
+   if (dir != 0) {
+      auto speedX = (onGround ? speed : speed * .6f);
+      vel.x = lerp(vel.x, dir * speedX * dt, acceleration * dt);
+   } else {
+      vel.x = lerp(vel.x, 0.f, deceleration * dt);
    }
 
    if (IsKeyDown(KEY_SPACE) and canHoldJump) {
-      vel.y = jumpSpeed * GetFrameTime();
+      vel.y = jumpSpeed * dt;
 
-      holdJumpTimer += GetFrameTime();
+      holdJumpTimer += dt;
       if (holdJumpTimer >= jumpHoldTime) {
          canHoldJump = false;
       }
@@ -68,64 +77,58 @@ void Player::updateMovement() {
 }
 
 void Player::updateCollisions(Map& map) {
-   Vector2 original = pos;
-   Rectangle bounds {pos.x + vel.x, pos.y + vel.y, size.x, size.y};
+   if (floatIsZero(vel.x) and floatIsZero(vel.y)) {
+      return;
+   }
+
+   pos = {pos.x + vel.x, pos.y + vel.y};
+   Rectangle bounds {pos.x, pos.y, size.x, size.y};
    bool collisionX = false, collisionY = false;
-   int waterTileCount = 0, suffocation = 0;
+   int waterTileCount = 0;
 
-   auto maxX = std::min<int>(map[0].size(), int(bounds.x + bounds.width) + 1);
-   auto maxY = std::min<int>(map.size(), int(bounds.y + bounds.height) + 1);
+   auto maxX = min((int)map[0].size(), int(bounds.x + bounds.width) + 1);
+   auto maxY = min((int)map.size(), int(bounds.y + bounds.height) + 1);
 
-   for (int y = std::max(0, (int)bounds.y); y < maxY; ++y) {
-      for (int x = std::max(0, (int)bounds.x); x < maxX; ++x) {
-         auto& block = map[y][x];
-         if (block.type == Block::Type::air or block.type == Block::Type::water) {
-            waterTileCount += (block.type == Block::Type::water);
+   for (int y = max(0, (int)bounds.y); y < maxY; ++y) {
+      for (int x = max(0, (int)bounds.x); x < maxX; ++x) {
+         if (map[y][x].type == Block::Type::air or map[y][x].type == Block::Type::water) {
+            waterTileCount += (map[y][x].type == Block::Type::water);
             continue;
          }
+         Rectangle blockBounds {(float)x, (float)y, 1.f, 1.f};
 
-         if (not CheckCollisionRecs(bounds, {(float)x, (float)y, 1, 1})) {
-            continue;
+         if (CheckCollisionRecs(bounds, blockBounds)) {
+            if (prev.x + size.x <= x) {
+               pos.x = bounds.x = x - size.x;
+               collisionX = true;
+            }
+
+            if (prev.x >= x + 1.f) {
+               pos.x = bounds.x = x + 1.f;
+               collisionX = true;
+            }
          }
 
-         auto overlapX = std::min((pos.x + size.x) - x, (x + 1) - pos.x);
-         auto overlapY = std::min((pos.y + size.y) - y, (y + 1) - pos.y);
+         if (CheckCollisionRecs(bounds, blockBounds)) {
+            if (prev.y + size.y <= y) {
+               pos.y = bounds.y = y - size.y;
+               onGround = true;
+               collisionY = true;
+            }
 
-         if (floatIsZero(overlapX) and floatIsZero(overlapY)) {
-            continue;
-         }
-
-         if (overlapX < overlapY) {
-            pos.x = bounds.x = x + (x > bounds.x ? -size.x : 1.f);
-            suffocation += (collisionX);
-            collisionX = true;
-         }
-         
-         if (overlapY < overlapX) {
-            pos.y = bounds.y = y + (y > bounds.y ? -size.y : 1.f);
-            onGround = (bounds.y + size.y <= y);
-            suffocation += (collisionY);
-            collisionY = true;
+            if (prev.y >= y + 1.f) {
+               pos.y = bounds.y = y + 1.f;
+               collisionY = true;
+               canHoldJump = false;
+            }
          }
       }
    }
 
-   if (not collisionX) {
-      pos.x += vel.x;
-   }
-
+   waterMult = (waterTileCount > 0 ? .9f : 1.f);
    if (not collisionY) {
       onGround = false;
-      pos.y += vel.y;
    }
-
-   suffocating = (suffocation > 0);
-   if (suffocating) {
-      pos = original;
-      canHoldJump = false;
-   }
-   waterMult = (waterTileCount > 0 ? .9f : 1.f);
-   delta = {pos.x - original.x, pos.y - original.y};
 }
 
 void Player::updateAnimation() {
@@ -137,12 +140,12 @@ void Player::updateAnimation() {
    } else {
       fallTimer = 0.f;
 
-      if (not floatIsZero(delta.x)) {
+      if (not floatEquals(prev.x, pos.x)) {
          walkTimer += GetFrameTime() * clamp(abs(vel.x) / (speed * GetFrameTime()), .1f, 1.5f);
-         if (walkTimer >= .04f) {
+         if (walkTimer >= .03f) {
             anim.fx = ((int)anim.fx + 1) % 18;
             anim.fx = (anim.fx < 6 ? 6 : anim.fx);
-            walkTimer = 0.f;
+            walkTimer -= .03f;
          }
       } else {
          anim.fx = 0;

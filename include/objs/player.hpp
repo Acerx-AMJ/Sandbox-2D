@@ -8,10 +8,9 @@
 
 struct Player {
    AnimationManager anim;
-   Vector2 pos, vel, delta;
+   Vector2 pos, vel, prev;
    bool onGround = false;
    bool canHoldJump = true;
-   bool suffocating = false;
    float waterMult = 1.f;
    float holdJumpTimer = 0.f;
 
