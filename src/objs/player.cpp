@@ -81,46 +81,66 @@ void Player::updateCollisions(Map& map) {
       return;
    }
 
-   pos = {pos.x + vel.x, pos.y + vel.y};
-   Rectangle bounds {pos.x, pos.y, size.x, size.y};
+   pos.y += vel.y;
    bool collisionX = false, collisionY = false;
    int waterTileCount = 0;
 
-   auto maxX = min((int)map[0].size(), int(bounds.x + bounds.width) + 1);
-   auto maxY = min((int)map.size(), int(bounds.y + bounds.height) + 1);
+   auto maxX = min((int)map[0].size(), int(pos.x + size.x) + 1);
+   auto maxY = min((int)map.size(), int(pos.y + size.y) + 1);
 
-   for (int y = max(0, (int)bounds.y); y < maxY; ++y) {
-      for (int x = max(0, (int)bounds.x); x < maxX; ++x) {
+   for (int y = max(0, (int)pos.y); y < maxY; ++y) {
+      for (int x = max(0, (int)pos.x); x < maxX; ++x) {
          if (map[y][x].type == Block::Type::air or map[y][x].type == Block::Type::water) {
+            // Only check water tile count in the first iteration
             waterTileCount += (map[y][x].type == Block::Type::water);
             continue;
          }
-         Rectangle blockBounds {(float)x, (float)y, 1.f, 1.f};
 
-         if (CheckCollisionRecs(bounds, blockBounds)) {
-            if (prev.x + size.x <= x) {
-               pos.x = bounds.x = x - size.x;
-               collisionX = true;
-            }
-
-            if (prev.x >= x + 1.f) {
-               pos.x = bounds.x = x + 1.f;
-               collisionX = true;
-            }
+         if (not CheckCollisionRecs({pos.x, pos.y, size.x, size.y}, {(float)x, (float)y, 1.f, 1.f})) {
+            continue;
          }
 
-         if (CheckCollisionRecs(bounds, blockBounds)) {
-            if (prev.y + size.y <= y) {
-               pos.y = bounds.y = y - size.y;
-               onGround = true;
-               collisionY = true;
-            }
+         bool ceilingCollision = (prev.y >= y + 1.f);
+         bool floorCollision = (prev.y + size.y <= y);
 
-            if (prev.y >= y + 1.f) {
-               pos.y = bounds.y = y + 1.f;
-               collisionY = true;
-               canHoldJump = false;
-            }
+         collisionY = (collisionY or ceilingCollision or floorCollision);
+
+         if (ceilingCollision) {
+            pos.y = y + 1.f;
+            canHoldJump = false;
+         }
+
+         if (floorCollision) {
+            pos.y = y - size.y;
+            onGround = true;
+         }
+      }
+   }
+
+   pos.x += vel.x;
+   maxX = min((int)map[0].size(), int(pos.x + size.x) + 1);
+   maxY = min((int)map.size(), int(pos.y + size.y) + 1);
+
+   for (int y = max(0, (int)pos.y); y < maxY; ++y) {
+      for (int x = max(0, (int)pos.x); x < maxX; ++x) {
+         if (map[y][x].type == Block::Type::air or map[y][x].type == Block::Type::water) {
+            continue;
+         }
+
+         if (not CheckCollisionRecs({pos.x, pos.y, size.x, size.y}, {(float)x, (float)y, 1.f, 1.f})) {
+            continue;
+         }
+
+         bool leftWallCollision = (prev.x >= x + 1.f);
+         bool rightWallCollision = (prev.x + size.x <= x);
+         collisionX = (collisionX or leftWallCollision or rightWallCollision);
+
+         if (leftWallCollision) {
+            pos.x = x + 1.f;
+         }
+
+         if (rightWallCollision) {
+            pos.x = x - size.x;
          }
       }
    }
