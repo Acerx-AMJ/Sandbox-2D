@@ -6,20 +6,24 @@
 
 // Constants
 
-constexpr int idCount = 8;
+constexpr int idCount = 13;
 
 static std::unordered_map<std::string, int> blockIds {
-   {"air", 0}, {"grass", 1}, {"dirt", 2}, {"clay", 3}, {"stone", 4}, {"sand", 5}, {"sandstone", 6}, {"water", 7} 
+   {"air", 0}, {"grass", 1}, {"dirt", 2}, {"clay", 3}, {"stone", 4},
+   {"sand", 5}, {"sandstone", 6}, {"water", 7}, {"bricks", 8}, {"glass", 9},
+   {"planks", 10}, {"stone_bricks", 11}, {"tiles", 12}
 };
 
 static std::array<Block::Type, idCount> blockTypes {{
-   Block::Type::air, Block::Type::grass, Block::Type::dirt, Block::Type::clay, Block::Type::stone,
-   Block::Type::sand, Block::Type::stone, Block::Type::water
+   Block::Type::air, Block::Type::grass, Block::Type::dirt, Block::Type::solid, Block::Type::solid,
+   Block::Type::sand, Block::Type::solid, Block::Type::water, Block::Type::solid, Block::Type::solid,
+   Block::Type::solid, Block::Type::solid, Block::Type::solid
 }};
 
 static std::array<Color, idCount> blockColors {{
    {0, 0, 0, 0}, {28, 152, 29, 255}, {117, 56, 19, 255}, {158, 91, 35, 255}, {102, 102, 102, 255},
-   {255, 189, 40, 255}, {247, 134, 13, 255}, {8, 69, 165, 255}
+   {255, 189, 40, 255}, {247, 134, 13, 255}, {8, 69, 165, 255}, {244, 52, 8, 255}, {0, 0, 0, 0},
+   {158, 91, 35, 255}, {102, 102, 102, 255}, {102, 102, 102, 255}
 }};
 
 // Set block functions

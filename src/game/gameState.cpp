@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include "game/gameState.hpp"
+#include "mngr/resource.hpp"
 #include "util/position.hpp"
 #include "util/random.hpp"
 #include "util/render.hpp"
@@ -47,26 +48,32 @@ void GameState::updateControls() {
    }
 }
 
+// Temporary way to switch, delete and place blocks. blockMap blocks must be in the same order as
+// the blockIds map in objs/block.cpp.
+static int index = 0;
+static int size = 12;
+static const char* blockMap[] {
+   "grass", "dirt", "clay", "stone", "sand", "sandstone", "water", "bricks", "glass", "planks", "stone_bricks", "tiles"
+};
+
 void GameState::updatePhysics() {
    auto mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
-
-   // Temporary way to switch, delete and place blocks
-   static int index = 0;
-   static int size = 7;
-   static const char* blockMap[] {
-      "stone", "clay", "dirt", "grass", "sand", "sandstone", "water"
-   };
 
    if (IsKeyPressed(KEY_E)) {
       index = (index + 1) % size;
    }
 
-   if (isPositionValid(blocks, mousePos.x, mousePos.y)) {
+   if (IsKeyPressed(KEY_Q)) {
+      index = (index == 0 ? size - 1 : index - 1);
+   }
 
+   if (isPositionValid(blocks, mousePos.x, mousePos.y)) {
       if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
          deleteBlock(blocks[mousePos.y][mousePos.x]);
       } else if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
          setBlock(blocks[mousePos.y][mousePos.x], blockMap[index]);
+      } else if (IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE) and blocks[mousePos.y][mousePos.x].type != Block::Type::air) {
+         index = blocks[mousePos.y][mousePos.x].id - 1;
       }
    }
 
@@ -146,6 +153,8 @@ void GameState::render() {
    }
    player.render();
    EndMode2D();
+
+   drawTexture(ResourceManager::get().getTexture(blockMap[index]), {GetScreenWidth() - 75.f, GetScreenHeight() - 75.f}, {50.f, 50.f});
 }
 
 void GameState::change(States& states) {

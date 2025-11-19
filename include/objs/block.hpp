@@ -8,7 +8,7 @@
 // Block
 
 struct Block {
-   enum class Type { air, grass, dirt, clay, stone, sand, water };
+   enum class Type { air, grass, dirt, solid, sand, water };
    
    Texture* tex = nullptr;
    Type type = Type::air;

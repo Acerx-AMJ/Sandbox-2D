@@ -77,10 +77,6 @@ void Player::updateMovement() {
 }
 
 void Player::updateCollisions(Map& map) {
-   if (floatIsZero(vel.x) and floatIsZero(vel.y)) {
-      return;
-   }
-
    pos.y += vel.y;
    bool collisionX = false, collisionY = false;
    int waterTileCount = 0;
