@@ -55,6 +55,7 @@ static int size = 12;
 static const char* blockMap[] {
    "grass", "dirt", "clay", "stone", "sand", "sandstone", "water", "bricks", "glass", "planks", "stone_bricks", "tiles"
 };
+static bool drawWall = false;
 
 void GameState::updatePhysics() {
    auto mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
@@ -67,13 +68,17 @@ void GameState::updatePhysics() {
       index = (index == 0 ? size - 1 : index - 1);
    }
 
+   if (IsKeyPressed(KEY_R)) {
+      drawWall =! drawWall;
+   }
+
    if (map.isPositionValid(mousePos.x, mousePos.y)) {
       if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-         map.deleteBlock(mousePos.x, mousePos.y);
+         map.deleteBlock(mousePos.x, mousePos.y, drawWall);
       } else if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-         map.setBlock(mousePos.x, mousePos.y, blockMap[index]);
-      } else if (IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE) and map[mousePos.y][mousePos.x].type != Block::air) {
-         index = map[mousePos.y][mousePos.x].id - 1;
+         map.setBlock(mousePos.x, mousePos.y, blockMap[index], drawWall);
+      } else if (IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE) and (drawWall ? map.walls : map.blocks)[mousePos.y][mousePos.x].type != Block::air) {
+         index = (drawWall ? map.walls : map.blocks)[mousePos.y][mousePos.x].id - 1;
       }
    }
 
@@ -128,33 +133,11 @@ void GameState::updatePhysics() {
 void GameState::render() {
    drawRect(BLUE);
    BeginMode2D(camera);
-
-   auto crect = getCameraBounds(camera);
-   auto maxY = std::min(mapSizeY, int((crect.y + crect.height)) + 1);
-   auto maxX = std::min(mapSizeX, int((crect.x + crect.width)) + 1);
-
-   for (int y = std::max(0, int(crect.y)); y < maxY; ++y) {
-      for (int x = std::max(0, int(crect.x)); x < maxX; ++x) {
-         auto& block = map[y][x];
-         if (block.type == Block::air) {
-            continue;
-         }
-
-         int ox = x;
-         while (x < maxX and map[y][x].id == block.id) { ++x; }
-
-         if (camera.zoom <= 12.5f) {
-            DrawRectangle(ox, y, x - ox, 1, block.getColor());
-         } else {
-            drawTextureBlock(*block.tex, {(float)ox, (float)y, float(x - ox), 1.f});
-         }
-         --x;
-      }
-   }
+   map.render(camera);
    player.render();
    EndMode2D();
 
-   drawTexture(ResourceManager::get().getTexture(blockMap[index]), {GetScreenWidth() - 75.f, GetScreenHeight() - 75.f}, {50.f, 50.f});
+   drawTexture(ResourceManager::get().getTexture(blockMap[index]), {GetScreenWidth() - 75.f, GetScreenHeight() - 75.f}, {50.f, 50.f}, 0.f, (drawWall ? Color{90, 90, 90, 255} : WHITE));
 }
 
 void GameState::change(States& states) {

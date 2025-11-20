@@ -3,6 +3,7 @@
 #include "game/game.hpp"
 #include "game/loadingState.hpp"
 #include "mngr/sound.hpp"
+#include "objs/map.hpp"
 #include "util/render.hpp"
 
 // Constructors
@@ -16,6 +17,7 @@ Game::Game() {
    
    InitAudioDevice();
    SetExitKey(KEY_NULL);
+   Block::initializeWallColors();
    states.push_back(LoadingState::make());
 }
 

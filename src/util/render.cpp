@@ -4,18 +4,18 @@
 
 // Render functions
 
-void drawText(const Vector2& position, const char* text, float fontSize, float rotation) {
+void drawText(const Vector2& position, const char* text, float fontSize) {
    auto& font = ResourceManager::get().getFont("andy");
-   DrawTextPro(font, text, position, getOrigin(text, fontSize, 1.f), rotation, fontSize, 1.f, WHITE);
+   DrawTextPro(font, text, position, getOrigin(text, fontSize, 1.f), 0.f, fontSize, 1.f, WHITE);
 }
 
-void drawTexture(const Texture& texture, const Vector2& position, const Vector2& size, float rotation) {
-   DrawTexturePro(texture, getBox(texture), {position.x, position.y, size.x, size.y}, getOrigin(size), rotation, WHITE);
+void drawTexture(const Texture& texture, const Vector2& position, const Vector2& size, float rotation, const Color& color) {
+   DrawTexturePro(texture, getBox(texture), {position.x, position.y, size.x, size.y}, getOrigin(size), rotation, color);
 }
 
-void drawTextureBlock(const Texture& texture, const Rectangle& rect) {
+void drawTextureBlock(const Texture& texture, const Rectangle& rect, const Color& color) {
    Rectangle src {0, 0, texture.width * (rect.width / rect.height), (float)texture.height};
-   DrawTexturePro(texture, src, rect, {0.f, 0.f}, 0.f, WHITE);
+   DrawTexturePro(texture, src, rect, {0.f, 0.f}, 0.f, color);
 }
 
 void drawRect(const Color& color) {
