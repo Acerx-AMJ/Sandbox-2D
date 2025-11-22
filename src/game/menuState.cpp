@@ -37,7 +37,7 @@ void MenuState::update() {
 // Other functions
 
 void MenuState::render() {
-   drawText(getScreenCenter(0.f, -200.f), "TERRARIA", 180);
+   drawText(getScreenCenter(0.f, -200.f), "SANDBOX 2D", 180);
    playButton.render();
    optionsButton.render();
    quitButton.render();

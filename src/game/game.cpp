@@ -10,7 +10,7 @@
 Game::Game() {
    srand(time(nullptr));
    SetConfigFlags(FLAG_VSYNC_HINT);
-   InitWindow(GetMonitorWidth(GetCurrentMonitor()), GetMonitorHeight(GetCurrentMonitor()), "Terraria 2");
+   InitWindow(GetMonitorWidth(GetCurrentMonitor()), GetMonitorHeight(GetCurrentMonitor()), "Sandbox-2D");
    ToggleFullscreen();
    SetTargetFPS(60);
    

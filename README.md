@@ -1,19 +1,31 @@
-# Terraria Clone
-Terraria Clone will be a 2D survival game heavily based off of Terraria. Fight off monsters, build a base and explore. The name is a work in progress and will be changed later in development.
+# Sandbox-2D
+Sandbox-2D is a 2D sidescrolling sandbox where you can build, destroy and play with physics.
 
 ![Game Screenshot](assets/screenshots/2025-11-19_20-36.png)
 
 ## Table of Contents
 - [Features](#features)
+- [Controls](#controls)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Contributing](#contributing)
 - [License](#license)
 
 ## Features
-- Build and destroy blocks, switch blocks by pressing E/Q and pick a block by middle clicking.
-- Water and sand physics.
+- Building and destroying.
+- Water, lava and sand physics.
 - Player controller.
+
+## Controls
+
+- ESC - regenerate world
+- A, D - move left/right
+- SPACE - jump
+- Q, E - switch blocks
+- R - toggle building in foreground/background
+- LEFT CLICK - destroy a block
+- RIGHT CLICK - place a block
+- MIDDLE CLICK - select a block
 
 ## Installation
 
@@ -23,18 +35,18 @@ You must have git, cmake, a C++ compiler, raylib and nlohmann-json installed.
 #### Installation
 1. Clone the repository:
 ```bash
-git clone https://github.com/Acerx-AMJ/Terraria-Clone.git
+git clone https://github.com/Acerx-AMJ/Sandbox-2D.git
 ```
 2. Navigate in the repository:
 ```bash
-cd Terraria-Clone
+cd Sandbox-2D
 ```
 3. Build using CMake:
 ```bash
 cmake -B build
 cmake --build build
 ```
-The executable will be found in `build/terraria`. If something didn't work, feel free to open an issue.
+The executable will be found in `build/sandbox`. If something didn't work, feel free to open an issue.
 
 ## Usage
 

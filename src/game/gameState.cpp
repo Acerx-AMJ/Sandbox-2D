@@ -8,8 +8,8 @@
 
 // Constants
 
-constexpr int mapSizeX = 1250;
-constexpr int mapSizeY = 500;
+constexpr int mapSizeX = 2500;
+constexpr int mapSizeY = 300;
 
 constexpr float cameraFollowSpeed = 17.5f;
 constexpr float maxCameraZoom = 1.f;
