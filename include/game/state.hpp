@@ -1,15 +1,6 @@
 #ifndef GAME_STATE_HPP
 #define GAME_STATE_HPP
 
-#include <deque>
-#include <memory>
-
-// Forward declaration
-
-class State;
-using StatePtr = std::unique_ptr<State>;
-using States = std::deque<StatePtr>;
-
 // Polymorphic state
 
 struct State {
@@ -25,7 +16,7 @@ struct State {
 
    virtual void update() = 0;
    virtual void render() = 0;
-   virtual void change(States& states) = 0;
+   virtual State* change() = 0;
 
    // Update functions
 

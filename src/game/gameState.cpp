@@ -181,6 +181,6 @@ void GameState::render() {
    drawTexture(ResourceManager::get().getTexture(blockMap[index]), {GetScreenWidth() - 75.f, GetScreenHeight() - 75.f}, {50.f, 50.f}, 0.f, (drawWall ? Color{120, 120, 120, 255} : WHITE));
 }
 
-void GameState::change(States& states) {
-   states.push_back(GameState::make());
+State* GameState::change() {
+   return new GameState();
 }

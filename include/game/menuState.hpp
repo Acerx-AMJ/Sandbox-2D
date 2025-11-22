@@ -10,10 +10,6 @@ struct MenuState: public State {
    MenuState();
    ~MenuState() = default;
 
-   static StatePtr make() {
-      return std::make_unique<MenuState>();
-   } 
-
    // Update
 
    void update() override;
@@ -21,7 +17,7 @@ struct MenuState: public State {
    // Other functions
 
    void render() override;
-   void change(States& states) override;
+   State* change() override;
 
 private:
    Button playButton, optionsButton, quitButton;

@@ -43,8 +43,9 @@ void MenuState::render() {
    quitButton.render();
 }
 
-void MenuState::change(States& states) {
+State* MenuState::change() {
    if (playing) {
-      states.push_back(GameState::make());
+      return new GameState();
    }
+   return nullptr;
 }

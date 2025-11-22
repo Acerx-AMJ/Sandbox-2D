@@ -41,9 +41,9 @@ void Player::updateMovement() {
    auto dir = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
 
    if (not onGround) {
-      vel.y = std::min(maxGravity * dt, vel.y + gravity * dt);
+      vel.y = min(maxGravity * dt, vel.y + gravity * dt);
    } else {
-      vel.y = std::min(maxGravity * dt, gravity * dt);
+      vel.y = min(maxGravity * dt, gravity * dt);
    }
 
    if (dir != 0) {

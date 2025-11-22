@@ -10,10 +10,6 @@ struct LoadingState: public State {
    LoadingState();
    ~LoadingState() = default;
 
-   static StatePtr make() {
-      return std::make_unique<LoadingState>();
-   }
-
    // Update functions
 
    void update() override;
@@ -21,7 +17,7 @@ struct LoadingState: public State {
    // Other functions
 
    void render() override;
-   void change(States& states) override;
+   State* change() override;
    std::string getSplashMessage();
 
 private:

@@ -10,10 +10,6 @@ struct GameState: public State {
    GameState();
    ~GameState() = default;
 
-   static StatePtr make() {
-      return std::make_unique<GameState>();
-   }
-
    // Update
 
    void update() override;
@@ -23,7 +19,7 @@ struct GameState: public State {
    // Other functions
 
    void render() override;
-   void change(States& states) override;
+   State* change() override;
 
 private:
    Map map;

@@ -68,8 +68,8 @@ void LoadingState::render() {
    drawTexture(tex, getScreenCenter(), {70.f, 70.f}, rotation);
 }
 
-void LoadingState::change(States& states) {
-   states.push_back(MenuState::make());
+State* LoadingState::change() {
+   return new MenuState();
 }
 
 // Return the error message as the splash as the average user might not
