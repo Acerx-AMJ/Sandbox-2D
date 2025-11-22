@@ -1,5 +1,5 @@
 #include <fstream>
-#include <nlohmann/json.hpp>
+#include "json.hpp"
 #include "game/loadingState.hpp"
 #include "game/menuState.hpp"
 #include "mngr/resource.hpp"
