@@ -1,7 +1,7 @@
 # Sandbox-2D
 Sandbox-2D is a 2D sidescrolling sandbox where you can build, destroy and play with physics.
 
-![Game Screenshot](assets/screenshots/2025-11-19_20-36.png)
+![Game Screenshot](assets/screenshots/demo.gif)
 
 ## Table of Contents
 - [Features](#features)
