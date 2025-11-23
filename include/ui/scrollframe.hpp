@@ -15,6 +15,9 @@ struct Scrollframe {
 
    void update();
    void render();
+
+   bool inFrame(const Rectangle& rect);
+   float getOffsetY();
 };
 
 #endif

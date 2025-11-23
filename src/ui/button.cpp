@@ -5,9 +5,9 @@
 
 // Update function
 
-void Button::update() {
+void Button::update(float offsetY) {
    bool was_hovering = hovering;
-   hovering = CheckCollisionPointRec({GetMouseX() + rectangle.width / 2.f, GetMouseY() + rectangle.height / 2.f}, rectangle);
+   hovering = CheckCollisionPointRec({GetMouseX() + rectangle.width / 2.f, GetMouseY() + rectangle.height / 2.f - offsetY}, rectangle);
    down = hovering and IsMouseButtonDown(MOUSE_LEFT_BUTTON);
    clicked = hovering and IsMouseButtonReleased(MOUSE_LEFT_BUTTON);
 
@@ -30,7 +30,13 @@ void Button::update() {
 
 // Render function
 
-void Button::render() {
-   drawTexture(ResourceManager::get().getTexture("button"), {rectangle.x, rectangle.y}, {rectangle.width * scale, rectangle.height * scale});
-   drawText({rectangle.x, rectangle.y}, text.c_str(), 35 * scale);
+void Button::render(float offsetY) {
+   drawTexture(ResourceManager::get().getTexture("button"), {rectangle.x, rectangle.y - offsetY}, {rectangle.width * scale, rectangle.height * scale});
+   drawText({rectangle.x, rectangle.y - offsetY}, text.c_str(), 35 * scale);
+}
+
+// Other functions
+
+Rectangle Button::normalizeRect() {
+   return {rectangle.x - rectangle.width / 2.f, rectangle.y - rectangle.height / 2.f, rectangle.width, rectangle.height};
 }

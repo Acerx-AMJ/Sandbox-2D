@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include "game/gameState.hpp"
+#include "game/menuState.hpp"
 #include "mngr/resource.hpp"
 #include "util/position.hpp"
 #include "util/random.hpp"
@@ -182,5 +183,5 @@ void GameState::render() {
 }
 
 State* GameState::change() {
-   return new GameState();
+   return new MenuState();
 }

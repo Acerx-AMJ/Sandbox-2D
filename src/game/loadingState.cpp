@@ -25,6 +25,7 @@ LoadingState::LoadingState() {
 void LoadingState::update() {
    rotation += GetFrameTime() * 360.f;
 
+   // Sometimes brute-forcing is better than over-engineering an automatic way to do everything
    if (load == Load::fonts) {
       text = "Loading Fonts... ";
       ResourceManager::get().loadFonts();

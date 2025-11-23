@@ -30,9 +30,6 @@ struct ResourceManager {
    Texture& getTexture(const std::string& name);
    Font& getFont(const std::string& name);
 
-   bool textureExists(const std::string& name);
-   bool fontExists(const std::string& name);
-
    // Fallback functions
 
    Texture& getFallbackTexture();

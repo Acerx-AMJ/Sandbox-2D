@@ -4,7 +4,7 @@
 // Load functions
 
 Texture& ResourceManager::loadTexture(const std::string& name, const std::filesystem::path& path) {
-   if (textureExists(name)) {
+   if (textures.count(name)) {
       return textures[name];
    }
 
@@ -18,7 +18,7 @@ Texture& ResourceManager::loadTexture(const std::string& name, const std::filesy
 }
 
 Font& ResourceManager::loadFont(const std::string& name, const std::filesystem::path& path) {
-   if (fontExists(name)) {
+   if (fonts.count(name)) {
       return fonts[name];
    }
 
@@ -47,7 +47,7 @@ void ResourceManager::loadFonts() {
 // Get functions
 
 Texture& ResourceManager::getTexture(const std::string& name) {
-   if (not textureExists(name)) {
+   if (not textures.count(name)) {
       warn("Texture '{}' does not exist, using fallback texture.", name);
       return getFallbackTexture();
    }
@@ -55,19 +55,11 @@ Texture& ResourceManager::getTexture(const std::string& name) {
 }
 
 Font& ResourceManager::getFont(const std::string& name) {
-   if (not fontExists(name)) {
+   if (not fonts.count(name)) {
       warn("Font '{}' does not exist, using fallback font.", name);
       return getFallbackFont();
    }
    return fonts[name];
-}
-
-bool ResourceManager::textureExists(const std::string& name) {
-   return textures.count(name);
-}
-
-bool ResourceManager::fontExists(const std::string& name) {
-   return fonts.count(name);
 }
 
 // Fallback functions
