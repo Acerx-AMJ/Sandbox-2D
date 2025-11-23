@@ -5,12 +5,12 @@
 // Load functions
 
 void SoundManager::loadSound(const std::string& name, const std::filesystem::path& path) {
-   auto newSound = LoadSound(path.c_str());
+   auto newSound = LoadSound(path.string().c_str());
    sounds[name] = newSound;
 }
 
 void SoundManager::loadMusic(const std::string& name, const std::filesystem::path& path) {
-   auto newMusic = LoadMusicStream(path.c_str());
+   auto newMusic = LoadMusicStream(path.string().c_str());
    music[name] = newMusic;
 }
 

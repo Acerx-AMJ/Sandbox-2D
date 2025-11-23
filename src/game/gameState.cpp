@@ -20,13 +20,16 @@ constexpr float minCameraZoom = 100.f;
 
 // Constructors
 
-GameState::GameState(const std::string& worldName) {
+GameState::GameState(const std::string& worldName)
+   : worldName(worldName) {
    std::ifstream file (format("data/worlds/{}.txt", worldName));
    assert(file.is_open(), "Failed to load world 'data/worlds/{}.txt'.", worldName);
-   int mapSizeX = 0, mapSizeY = 0, playerX = 0, playerY = 0;
+
+   float playerX = 0, playerY = 0;
+   int mapSizeX = 0, mapSizeY = 0;
+   
    file >> std::ws >> playerX >> std::ws >> playerY;
    file >> std::ws >> mapSizeX >> std::ws >> mapSizeY;
-
    map.setSize(mapSizeX, mapSizeY);
 
    for (int y = 0; y < mapSizeY; ++y) {
@@ -46,11 +49,33 @@ GameState::GameState(const std::string& worldName) {
       }
    }
 
-   player.init({mapSizeX / 2.f, 0.f});
+   player.init({playerX, playerY});
    camera.target = player.getCenter();
    camera.offset = getScreenCenter();
    camera.rotation = 0.0f;
    camera.zoom = 50.f;
+}
+
+GameState::~GameState() {
+   std::fstream file (format("data/worlds/{}.txt", worldName));
+   assert(file.is_open(), "Failed to save world 'data/worlds/{}.txt'.", worldName);
+   file << player.pos.x << '\n' << player.pos.y << '\n';
+   file << map.sizeX << '\n' << map.sizeY << '\n';
+
+   for (const auto& row: map.blocks) {
+      for (const auto& tile: row) {
+         file << (int)tile.id << ' ';
+      }
+      file << '\n';
+   }
+
+   for (const auto& row: map.walls) {
+      for (const auto& tile: row) {
+         file << (int)tile.id << ' ';
+      }
+      file << '\n';
+   }
+   file.close();
 }
 
 // Update functions

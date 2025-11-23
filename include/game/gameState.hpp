@@ -8,7 +8,7 @@
 
 struct GameState: public State {
    GameState(const std::string& worldName);
-   ~GameState() = default;
+   ~GameState();
 
    // Update
 
@@ -25,6 +25,8 @@ private:
    Map map;
    Camera2D camera;
    Player player;
+
+   std::string worldName;
    float physicsTimer = 0.f;
 };
 

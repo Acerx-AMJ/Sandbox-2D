@@ -8,7 +8,7 @@ Texture& ResourceManager::loadTexture(const std::string& name, const std::filesy
       return textures[name];
    }
 
-   Texture texture = LoadTexture(path.c_str());
+   Texture texture = LoadTexture(path.string().c_str());
    if (texture.id == 0) {
       warn("Failed to load texture from file '{}'.", path.string());
       return getFallbackTexture();
@@ -22,7 +22,7 @@ Font& ResourceManager::loadFont(const std::string& name, const std::filesystem::
       return fonts[name];
    }
 
-   Font font = LoadFontEx(path.c_str(), 120, nullptr, 0);
+   Font font = LoadFontEx(path.string().c_str(), 120, nullptr, 0);
    SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
    if (font.texture.id == 0) {
       warn("Failed to load font from file '{}'.", path.string());
