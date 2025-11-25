@@ -7,8 +7,8 @@
 
 // Constants
 
-constexpr int defaultMapSizeX = 2500;
-constexpr int defaultMapSizeY = 300;
+constexpr int defaultMapSizeX = 2000;
+constexpr int defaultMapSizeY = 750;
 
 // Constructors
 
@@ -73,11 +73,13 @@ void MenuState::updateLevelSelection() {
 
    float offsetY = worldFrame.getOffsetY();
    for (auto& button: worldButtons) {
-      button.update(offsetY);
+      if (worldFrame.inFrame(button.normalizeRect())) {
+         button.update(offsetY);
 
-      if (button.clicked) {
-         selectedWorld = button.text;
-         fadingOut = playing = true;
+         if (button.clicked) {
+            selectedWorld = button.text;
+            fadingOut = playing = true;
+         }
       }
    }
 
@@ -165,7 +167,7 @@ void MenuState::loadWorlds() {
       button.rectangle.y += button.rectangle.height / 2.f;
       button.text = file.path().stem().string();
       worldButtons.push_back(button);
-      worldFrame.scrollbarHeight = std::max(worldFrame.rectangle.height, button.rectangle.y + button.rectangle.height / 2.f);
+      worldFrame.scrollHeight = button.rectangle.y + button.rectangle.height / 2.f;
    }
 }
 

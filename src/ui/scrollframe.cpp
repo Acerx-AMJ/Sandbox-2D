@@ -45,5 +45,5 @@ bool Scrollframe::inFrame(const Rectangle& rect) {
 }
 
 float Scrollframe::getOffsetY() {
-   return ((rectangle.y * scrollHeight) / rectangle.height) * progress;
+   return (scrollHeight - rectangle.height) * progress;
 }

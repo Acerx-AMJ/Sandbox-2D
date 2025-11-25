@@ -7,7 +7,7 @@
 
 void Button::update(float offsetY) {
    bool was_hovering = hovering;
-   hovering = CheckCollisionPointRec({GetMouseX() + rectangle.width / 2.f, GetMouseY() + rectangle.height / 2.f - offsetY}, rectangle);
+   hovering = CheckCollisionPointRec({GetMouseX() + rectangle.width / 2.f, GetMouseY() + rectangle.height / 2.f + offsetY}, rectangle);
    down = hovering and IsMouseButtonDown(MOUSE_LEFT_BUTTON);
    clicked = hovering and IsMouseButtonReleased(MOUSE_LEFT_BUTTON);
 
