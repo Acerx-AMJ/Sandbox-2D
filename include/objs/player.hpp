@@ -17,6 +17,7 @@ struct Player {
    float waterMult = 1.f;
    float holdJumpTimer = 0.f;
 
+   float updateTimer = 0.f;
    float fallTimer = 0.f;
    float walkTimer = 0.f;
    int walkFrame = 6;

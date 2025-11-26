@@ -7,20 +7,21 @@
 constexpr Vector2 size {2.f, 3.f};
 constexpr int frameSize = 20;
 
-constexpr float speed = 80.f;
-constexpr float jumpSpeed = -100.f;
-constexpr float gravity = 10.f;
-constexpr float maxGravity = 200.f;
+constexpr float updateSpeed = 1.f / 60.f;
+constexpr float speed = 4.363f * .5f;
+constexpr float jumpSpeed = -6.667f * .5f;
+constexpr float gravity = .533f * .5f;
+constexpr float maxGravity = 14.667f * .5f;
 constexpr float acceleration = .083f;
 constexpr float deceleration = .167f;
-constexpr float smoothing = .333f;
+constexpr float smoothing = .083f * 2.f;
 constexpr float jumpHoldTime = .4f;
 
 // Constructors
 
 void Player::init() {
    vel = {0, 0};
-   prev = {0, 0};
+   prev = pos;
 
    anim.tex = &ResourceManager::get().getTexture("player");
    anim.fwidth = 20;
@@ -30,33 +31,36 @@ void Player::init() {
 // Update functions
 
 void Player::updatePlayer(Map& map) {
-   updateMovement();
-   updateCollisions(map);
+   updateTimer += GetFrameTime();
+   while (updateTimer >= updateSpeed) {
+      updateTimer -= updateSpeed;
+      updateMovement();
+      updateCollisions(map);
+   }
    updateAnimation();
    prev = pos;
 }
 
 void Player::updateMovement() {
-   auto dt = GetFrameTime();
    auto dir = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
 
    if (not onGround) {
-      vel.y = min(maxGravity * dt, vel.y + gravity * dt);
+      vel.y = min(maxGravity, vel.y + gravity);
    } else {
-      vel.y = min(maxGravity * dt, gravity * dt);
+      vel.y = min(maxGravity, gravity);
    }
 
    if (dir != 0) {
       auto speedX = (onGround ? speed : speed * .6f);
-      vel.x = lerp(vel.x, dir * speedX * dt, acceleration);
+      vel.x = lerp(vel.x, dir * speedX, acceleration);
    } else {
       vel.x = lerp(vel.x, 0.f, deceleration);
    }
 
    if (IsKeyDown(KEY_SPACE) and canHoldJump) {
-      vel.y = jumpSpeed * dt;
+      vel.y = jumpSpeed;
 
-      holdJumpTimer += dt;
+      holdJumpTimer += updateSpeed;
       if (holdJumpTimer >= jumpHoldTime) {
          canHoldJump = false;
       }
@@ -176,7 +180,7 @@ void Player::updateAnimation() {
       fallTimer = 0.f;
 
       if (not floatEquals(prev.x, pos.x)) {
-         walkTimer += GetFrameTime() * clamp(abs(vel.x) / (speed * GetFrameTime()), .1f, 1.5f);
+         walkTimer += GetFrameTime() * clamp(abs(vel.x) / speed, .1f, 1.5f);
          if (walkTimer >= .03f) {
             anim.fx = ((int)anim.fx + 1) % 18;
             anim.fx = (anim.fx < 6 ? 6 : anim.fx);
