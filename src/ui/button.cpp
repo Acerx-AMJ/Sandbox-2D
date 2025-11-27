@@ -19,11 +19,11 @@ void Button::update(float offsetY) {
    }
 
    if (not was_hovering and hovering) {
-      SoundManager::get().play("hover");
+      playSound("hover");
    }
 
    if (clicked) {
-      SoundManager::get().play("click");
+      playSound("click");
    }
 }
 

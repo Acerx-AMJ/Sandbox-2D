@@ -1,9 +1,35 @@
+#include <unordered_map>
 #include "mngr/resource.hpp"
 #include "util/format.hpp"
 
+// Globals
+
+static std::unordered_map<std::string, Texture> textures;
+static std::unordered_map<std::string, Font> fonts;
+
+// Fallback functions
+
+Texture& getFallbackTexture() {
+   static Texture fallbackTexture;
+   static bool loaded = false;
+
+   if (not loaded) {
+      Image image = GenImageChecked(32, 32, 4, 4, MAGENTA, BLACK);
+      fallbackTexture = LoadTextureFromImage(image);
+      UnloadImage(image);
+      loaded = true;
+   }
+   return fallbackTexture;
+}
+
+Font& getFallbackFont() {
+   static Font fallbackFont = GetFontDefault();
+   return fallbackFont;
+}
+
 // Load functions
 
-Texture& ResourceManager::loadTexture(const std::string& name, const std::filesystem::path& path) {
+Texture& loadTexture(const std::string& name, const std::filesystem::path& path) {
    if (textures.count(name)) {
       return textures[name];
    }
@@ -17,7 +43,7 @@ Texture& ResourceManager::loadTexture(const std::string& name, const std::filesy
    return textures[name];
 }
 
-Font& ResourceManager::loadFont(const std::string& name, const std::filesystem::path& path) {
+Font& loadFont(const std::string& name, const std::filesystem::path& path) {
    if (fonts.count(name)) {
       return fonts[name];
    }
@@ -32,14 +58,14 @@ Font& ResourceManager::loadFont(const std::string& name, const std::filesystem::
    return fonts[name];
 }
 
-void ResourceManager::loadTextures() {
+void loadTextures() {
    std::filesystem::create_directories("assets/sprites/");
    for (const auto& file: std::filesystem::recursive_directory_iterator("assets/sprites/")) {
       loadTexture(file.path().stem().string(), file.path());
    }
 }
 
-void ResourceManager::loadFonts() {
+void loadFonts() {
    std::filesystem::create_directories("assets/fonts/");
    for (const auto& file: std::filesystem::recursive_directory_iterator("assets/fonts/")) {
       loadFont(file.path().stem().string(), file.path());
@@ -48,7 +74,7 @@ void ResourceManager::loadFonts() {
 
 // Get functions
 
-Texture& ResourceManager::getTexture(const std::string& name) {
+Texture& getTexture(const std::string& name) {
    if (not textures.count(name)) {
       warn("Texture '{}' does not exist, using fallback texture.", name);
       return getFallbackTexture();
@@ -56,30 +82,10 @@ Texture& ResourceManager::getTexture(const std::string& name) {
    return textures[name];
 }
 
-Font& ResourceManager::getFont(const std::string& name) {
+Font& getFont(const std::string& name) {
    if (not fonts.count(name)) {
       warn("Font '{}' does not exist, using fallback font.", name);
       return getFallbackFont();
    }
    return fonts[name];
-}
-
-// Fallback functions
-
-Texture& ResourceManager::getFallbackTexture() {
-   static Texture fallbackTexture;
-   static bool loaded = false;
-
-   if (not loaded) {
-      Image image = GenImageChecked(32, 32, 4, 4, MAGENTA, BLACK);
-      fallbackTexture = LoadTextureFromImage(image);
-      UnloadImage(image);
-      loaded = true;
-   }
-   return fallbackTexture;
-}
-
-Font& ResourceManager::getFallbackFont() {
-   static Font fallbackFont = GetFontDefault();
-   return fallbackFont;
 }

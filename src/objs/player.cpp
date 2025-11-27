@@ -23,7 +23,7 @@ void Player::init() {
    vel = {0, 0};
    prev = pos;
 
-   anim.tex = &ResourceManager::get().getTexture("player");
+   anim.tex = &getTexture("player");
    anim.fwidth = 20;
    anim.fheight = anim.tex->height;
 }

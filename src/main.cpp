@@ -30,7 +30,7 @@ int main() {
          break;
       }
 
-      SoundManager::get().update();
+      updateMusic();
       current->updateStateLogic();
 
       BeginDrawing();

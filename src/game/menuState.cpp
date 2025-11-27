@@ -37,7 +37,7 @@ MenuState::MenuState() {
    createButton.text = "Create";
    worldName.rectangle = {GetScreenWidth() / 2.f - 210.f, GetScreenHeight() / 2.f - 70.f, 420.f, 140.f};
    worldName.maxChars = 48;
-   playButton.texture = optionsButton.texture = quitButton.texture = backButton.texture = newButton.texture = createButton.texture = &ResourceManager::get().getTexture("button");
+   playButton.texture = optionsButton.texture = quitButton.texture = backButton.texture = newButton.texture = createButton.texture = &getTexture("button");
 }
 
 // Update
@@ -180,7 +180,7 @@ void MenuState::loadWorlds() {
       button.rectangle.x += button.rectangle.width / 2.f;
       button.rectangle.y += button.rectangle.height / 2.f;
       button.text = file.path().stem().string();
-      button.texture = &ResourceManager::get().getTexture("button_long");
+      button.texture = &getTexture("button_long");
       worldButtons.push_back(button);
       worldFrame.scrollHeight = std::max(worldFrame.rectangle.height, button.rectangle.y + button.rectangle.height / 2.f);
    }

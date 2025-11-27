@@ -22,7 +22,7 @@ Vector2 getOrigin(float x, float y) {
 }
 
 Vector2 getOrigin(const char* text, float fontSize, float spacing) {
-   return getOrigin(MeasureTextEx(ResourceManager::get().getFont("andy"), text, fontSize, spacing));
+   return getOrigin(MeasureTextEx(getFont("andy"), text, fontSize, spacing));
 }
 
 // Texture functions

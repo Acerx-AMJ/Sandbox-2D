@@ -182,12 +182,12 @@ void GameState::render() {
 
    auto mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
    if (canDraw and camera.zoom > 12.5f and map.isPositionValid(mousePos.x, mousePos.y)) {
-      drawTextureBlock(ResourceManager::get().getTexture(blockMap[index]), {(float)(int)mousePos.x, (float)(int)mousePos.y, 1.f, 1.f}, Fade((drawWall ? Color{120, 120, 120, 255} : WHITE), .75f));
+      drawTextureBlock(getTexture(blockMap[index]), {(float)(int)mousePos.x, (float)(int)mousePos.y, 1.f, 1.f}, Fade((drawWall ? Color{120, 120, 120, 255} : WHITE), .75f));
    }
    player.render();
    EndMode2D();
 
-   drawTexture(ResourceManager::get().getTexture(blockMap[index]), {GetScreenWidth() - 75.f, GetScreenHeight() - 75.f}, {50.f, 50.f}, 0.f, (drawWall ? Color{120, 120, 120, 255} : WHITE));
+   drawTexture(getTexture(blockMap[index]), {GetScreenWidth() - 75.f, GetScreenHeight() - 75.f}, {50.f, 50.f}, 0.f, (drawWall ? Color{120, 120, 120, 255} : WHITE));
 }
 
 State* GameState::change() {

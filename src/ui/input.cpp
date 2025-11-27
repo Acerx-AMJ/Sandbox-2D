@@ -32,12 +32,12 @@ void Input::update() {
       }
 
       if (text.size() != previous) {
-         SoundManager::get().play("hover");
+         playSound("hover");
       }
    }
 
    if (wasTyping != typing) {
-      SoundManager::get().play("click");
+      playSound("click");
    }
    ++counter;
 }
@@ -49,6 +49,6 @@ void Input::render() {
    std::string wrapped = text;
    wrapText(wrapped, rectangle.width - 10.f, 35, 1);
 
-   drawTextureNoOrigin(ResourceManager::get().getTexture("button"), {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height});
+   drawTextureNoOrigin(getTexture("button"), {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height});
    drawText({rectangle.x + rectangle.width / 2.f, rectangle.y + rectangle.height / 2.f}, (text.empty() ? defaultText : wrapped).c_str(), 35, Color{value, value, value, 255});
 }

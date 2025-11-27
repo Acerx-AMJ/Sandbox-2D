@@ -2,7 +2,7 @@
 #include "util/text.hpp"
 
 void wrapText(std::string& string, float maxWidth, float fontSize, float spacing) {
-   auto& font = ResourceManager::get().getFont("andy");
+   auto& font = getFont("andy");
 
    if (MeasureTextEx(font, string.c_str(), fontSize, spacing).x <= maxWidth) {
       return;

@@ -18,12 +18,11 @@ static std::unordered_map<std::string, Block::id_t> blockIds {
    {"platform", 15}, {"log", 16}, {"leaf", 17}
 };
 
-// Gotta do what you gotta do
-static std::unordered_map<Block::id_t, std::string> blockNames {
-   {0, "air"}, {1, "grass"}, {2, "dirt"}, {3, "clay"}, {4, "stone"},
-   {5, "sand"}, {6, "sandstone"}, {7, "water"}, {8, "bricks"}, {9, "glass"},
-   {10, "planks"}, {11, "stone_bricks"}, {12, "tiles"}, {13, "obsidian"}, {14, "lava"},
-   {15, "platform"}, {16, "log"}, {17, "leaf"}
+constexpr static std::array<const char*, idCount> blockNames {
+   "air", "grass", "dirt", "clay", "stone",
+   "sand", "sandstone", "water", "bricks", "glass",
+   "planks", "stone_bricks", "tiles", "obsidian", "lava",
+   "platform", "log", "leaf"
 };
 
 constexpr static std::array<Block::Type, idCount> blockTypes {{
@@ -47,7 +46,7 @@ Color& Block::getWallColor() {
 
 void Block::initializeColors() {
    for (const auto& [name, id]: blockIds) {
-      auto& texture = ResourceManager::get().getTexture(name);
+      auto& texture = getTexture(name);
       auto image = LoadImageFromTexture(texture);
       Color a = GetImageColor(image, 0, 0);
 
@@ -97,7 +96,7 @@ void Map::setBlock(int x, int y, const std::string& name, bool wall) {
    block.type = blockTypes[block.id];
 
    if (block.id != 0) {
-      block.tex = &ResourceManager::get().getTexture(name);
+      block.tex = &getTexture(name);
    }
 }
 
@@ -107,7 +106,7 @@ void Map::setBlock(int x, int y, Block::id_t id, bool wall) {
    block.type = blockTypes[block.id];
 
    if (block.id != 0) {
-      block.tex = &ResourceManager::get().getTexture(blockNames[id]);
+      block.tex = &getTexture(blockNames[id]);
    }
 }
 

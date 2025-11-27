@@ -3,52 +3,33 @@
 
 #include <filesystem>
 #include <string>
-#include <unordered_map>
 #include <vector>
 #include <raylib.h>
 
-// Sound manager
+// Load functions
 
-struct SoundManager {
-   SoundManager() = default;
-   ~SoundManager() = default;
+void loadSound(const std::string& name, const std::filesystem::path& path);
+void loadMusic(const std::string& name, const std::filesystem::path& path);
+void saveSound(const std::string& name, const std::vector<std::string>& names);
 
-   static SoundManager& get() {
-      static SoundManager soundManager;
-      return soundManager;
-   }
+void loadSounds();
+void loadMusic();
 
-   // Load functions
+// Play functions
 
-   void loadSound(const std::string& name, const std::filesystem::path& path);
-   void loadMusic(const std::string& name, const std::filesystem::path& path);
-   void saveSound(const std::string& name, const std::vector<std::string>& names);
+void playSound(const std::string& name);
+void playMusic(const std::string& name);
 
-   void loadSounds();
-   void loadMusic();
+// Get functions
 
-   // Play functions
+Sound& getSound(const std::string& name);
+Music& getMusic(const std::string& name);
 
-   void play(const std::string& name);
-   void playMusic(const std::string& name);
+bool soundExists(const std::string& name);
+bool musicExists(const std::string& name);
 
-   // Get functions
+// Update functions
 
-   Sound& getSound(const std::string& name);
-   Music& getMusic(const std::string& name);
-
-   bool soundExists(const std::string& name);
-   bool musicExists(const std::string& name);
-
-   // Update functions
-
-   void update();
-
-private:
-   std::unordered_map<std::string, std::vector<Sound*>> savedSounds;
-   std::unordered_map<std::string, Sound> sounds;
-   std::unordered_map<std::string, Music> music;
-   Music* currentMusic = nullptr;
-};
+void updateMusic();
 
 #endif
