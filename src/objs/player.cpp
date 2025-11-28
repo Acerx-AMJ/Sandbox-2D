@@ -22,10 +22,6 @@ constexpr float jumpHoldTime = .4f;
 void Player::init() {
    vel = {0, 0};
    prev = pos;
-
-   anim.tex = &getTexture("player");
-   anim.fwidth = 20;
-   anim.fheight = anim.tex->height;
 }
 
 // Update functions
@@ -76,7 +72,7 @@ void Player::updateMovement() {
    vel.y *= waterMult;
 
    if (not floatIsZero(vel.x)) {
-      anim.flipX = (vel.x > 0.f);
+      flipX = (vel.x > 0.f);
    }
 }
 
@@ -169,7 +165,7 @@ void Player::updateAnimation() {
    if (not onGround) {
       fallTimer += GetFrameTime();
       if (fallTimer >= .05f) {
-         anim.fx = 5;
+         fx = 5;
       }
    } else {
       fallTimer = 0.f;
@@ -177,12 +173,12 @@ void Player::updateAnimation() {
       if (not floatEquals(prev.x, pos.x)) {
          walkTimer += GetFrameTime() * clamp(abs(vel.x) / speed, .1f, 1.5f);
          if (walkTimer >= .03f) {
-            anim.fx = ((int)anim.fx + 1) % 18;
-            anim.fx = (anim.fx < 6 ? 6 : anim.fx);
+            fx = (fx + 1) % 18;
+            fx = (fx < 6 ? 6 : fx);
             walkTimer -= .03f;
          }
       } else {
-         anim.fx = 0;
+         fx = 0;
       }
    }
 }
@@ -190,7 +186,8 @@ void Player::updateAnimation() {
 // Render functions
 
 void Player::render() {
-   anim.render(pos, size);
+   auto& texture = getTexture("player");
+   DrawTexturePro(texture, {fx * 20.f, 0.f, (flipX ? -20.f : 20.f), (float)texture.height}, {pos.x, pos.y, size.x, size.y}, {0, 0}, 0, WHITE);
 }
 
 // Getter functions

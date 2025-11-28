@@ -1,5 +1,3 @@
-#include <algorithm>
-#include <cmath>
 #include "game/gameState.hpp"
 #include "game/menuState.hpp"
 #include "mngr/resource.hpp"
@@ -7,6 +5,8 @@
 #include "util/position.hpp"
 #include "util/random.hpp"
 #include "util/render.hpp"
+#include <algorithm>
+#include <cmath>
 
 // Constants
 
@@ -79,7 +79,7 @@ void GameState::updatePhysics() {
 
       if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
          map.deleteBlock(mousePos.x, mousePos.y, drawWall);
-      } else if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) and canDraw) {
+      } else if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) and canDraw and not map.blocks[mousePos.y][mousePos.x].furniture) {
          map.setBlock(mousePos.x, mousePos.y, blockMap[index], drawWall);
       } else if (IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE) and (drawWall ? map.walls : map.blocks)[mousePos.y][mousePos.x].type != Block::air) {
          index = (drawWall ? map.walls : map.blocks)[mousePos.y][mousePos.x].id - 1;
@@ -172,7 +172,11 @@ void GameState::updatePhysics() {
    }
 
    map.furniture.erase(std::remove_if(map.furniture.begin(), map.furniture.end(), [this](Furniture& f) -> bool {
-      return f.type == Furniture::tree and map.is(f.posX + 1, f.posY + f.sizeY, Block::air);
+      if (f.type != Furniture::tree or not map.is(f.posX + 1, f.posY + f.sizeY, Block::air)) {
+         return false;
+      }
+      map.removeFurniture(f);
+      return true;
    }), map.furniture.end());
 }
 

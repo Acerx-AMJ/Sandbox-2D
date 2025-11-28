@@ -1,8 +1,8 @@
 #ifndef GAME_LOADINGSTATE_HPP
 #define GAME_LOADINGSTATE_HPP
 
-#include <string>
 #include "game/state.hpp"
+#include <string>
 
 // Loading state
 

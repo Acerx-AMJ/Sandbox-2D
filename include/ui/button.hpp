@@ -1,8 +1,8 @@
 #ifndef UTIL_BUTTON_HPP
 #define UTIL_BUTTON_HPP
 
-#include <string>
 #include <raylib.h>
+#include <string>
 
 // Button
 

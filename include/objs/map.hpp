@@ -1,8 +1,8 @@
 #ifndef OBJS_BLOCK_HPP
 #define OBJS_BLOCK_HPP
 
-#include <string>
 #include "objs/furniture.hpp"
+#include <string>
 
 // Block
 
@@ -16,6 +16,7 @@ struct Block {
    // Unsigned chars can only hold 256 unique IDs. Currently trying to save
    // block space, so it's a problem for later
    id_t id = 0;
+   bool furniture = false;
 
    // Values used by physics updates, specific to the block type
    unsigned char value = 0, value2 = 0;
@@ -44,10 +45,16 @@ struct Map {
    void deleteBlock(int x, int y, bool walls = false);
    void moveBlock(int ox, int oy, int nx, int ny);
 
+   // Set furniture functions
+
+   void addFurniture(const Furniture& furniture);
+   void removeFurniture(const Furniture& furniture);
+
    // Get block functions
 
    bool isPositionValid(int x, int y);
    bool is(int x, int y, Block::Type type);
+   bool isu(int x, int y, Block::Type type); // Unsafe is variant
    bool isTransparent(int x, int y);
 
    std::vector<Block>& operator[](size_t index);

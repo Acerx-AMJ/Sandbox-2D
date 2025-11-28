@@ -1,10 +1,10 @@
-#include <array>
-#include <unordered_map>
 #include "objs/furniture.hpp"
 #include "mngr/resource.hpp"
 #include "objs/generation.hpp"
 #include "objs/map.hpp"
 #include "util/random.hpp"
+#include <array>
+#include <unordered_map>
 
 // Constants
 
@@ -28,12 +28,8 @@ void setBlock(FurniturePiece& piece, const std::string& id, int tx, int ty) {
    piece.ty = ty;
 }
 
-bool isBlockEmpty(Block::id_t block) {
-   return block == 0;
-}
-
-bool isBlockSoil(Block::id_t block) {
-   return block == Block::getId("grass") or block == Block::getId("dirt");
+bool isBlockSoil(Map& map, int x, int y) {
+   return map.is(x, y, Block::grass) or map.isu(x, y, Block::dirt);
 }
 
 // Furniture functions
@@ -51,12 +47,8 @@ Furniture::Furniture(const std::string& texture, int posX, int posY, int sizeX, 
 void Furniture::render(bool zoomedOut, int minX, int minY, int maxX, int maxY) {
    for (int y = posY; y < maxY and y - posY < sizeY; ++y) {
       for (int x = posX; x < maxX and x - posX < sizeX; ++x) {
-         if (y < minY or x < minX) {
-            continue;
-         }
-         
          auto& piece = pieces[y - posY][x - posX];
-         if (piece.nil) {
+         if (y < minY or x < minX or piece.nil) {
             continue;
          }
 
@@ -81,21 +73,21 @@ std::string Furniture::getName(id_t id) {
 
 // Furniture methods
 
-Furniture generateTree(int x, int y, FileMap& map) {
-   if (x < 1 or x >= map.sizeX - 1 or y < 0 or not isBlockSoil(map.blocks[y + 1][x])) {
-      return {};
+void generateTree(int x, int y, Map& map) {
+   if (x < 1 or x >= map.sizeX - 1 or y < 0 or not isBlockSoil(map, x , y + 1)) {
+      return;
    }
    
    int height = random(5, 18);
    for (int i = 0; i < height and i < map.sizeY; ++i) {
-      if (not isBlockEmpty(map.blocks[y - i][x])) {
+      if (not map.isu(x, y - i, Block::air)) {
          height = i + 1;
          break;
       }
    }
 
    if (height < 5) {
-      return {};
+      return;
    }
    Furniture tree ("tree", x - 1, y - height + 1, 3, height, Furniture::tree);
    int offsetTx = (chance(50) ? 0 : 3 * texSize);
@@ -111,8 +103,8 @@ Furniture generateTree(int x, int y, FileMap& map) {
       setBlock(piece, "planks", 2 * texSize, 3 * texSize);
 
       if (i + 1 == height) {
-         bool rightFree = (isBlockEmpty(map.blocks[tree.posY + i][tree.posX + 2]) and isBlockSoil(map.blocks[tree.posY + i + 1][tree.posX + 2]) and chance(25));
-         bool leftFree = (isBlockEmpty(map.blocks[tree.posY + i][tree.posX]) and isBlockSoil(map.blocks[tree.posY + i + 1][tree.posX]) and chance(25));
+         bool rightFree = (map.isu(tree.posX + 2, tree.posY + i, Block::air) and isBlockSoil(map, tree.posX + 2, tree.posY + i + 1) and chance(25));
+         bool leftFree = (map.isu(tree.posX, tree.posY + i, Block::air) and isBlockSoil(map, tree.posX, tree.posY + i + 1) and chance(25));
 
          if (rightFree) {
             setBlock(tree.pieces[i][2], "planks", 4 * texSize, 4 * texSize);
@@ -131,8 +123,8 @@ Furniture generateTree(int x, int y, FileMap& map) {
             piece.ty = 4 * texSize;
          }
       } else {
-         bool rightFree = (isBlockEmpty(map.blocks[tree.posY + i][tree.posX + 2]) and chance(10));
-         bool leftFree = (isBlockEmpty(map.blocks[tree.posY + i][tree.posX]) and chance(10));
+         bool rightFree = (map.is(tree.posX + 2, tree.posY + i, Block::air) and chance(15));
+         bool leftFree = (map.is(tree.posX, tree.posY + i, Block::air) and chance(15));
 
          if (rightFree) {
             setBlock(tree.pieces[i][2], "planks", 4 * texSize, 3 * texSize);
@@ -150,5 +142,5 @@ Furniture generateTree(int x, int y, FileMap& map) {
          }
       }
    }
-   return tree;
+   map.addFurniture(tree);
 }

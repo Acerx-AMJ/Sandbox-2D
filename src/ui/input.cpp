@@ -1,9 +1,9 @@
-#include <cmath>
 #include "mngr/resource.hpp"
 #include "ui/input.hpp"
 #include "mngr/sound.hpp"
 #include "util/render.hpp"
 #include "util/text.hpp"
+#include <cmath>
 
 // Update function
 

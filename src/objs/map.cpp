@@ -1,10 +1,9 @@
-#include <array>
-#include <unordered_map>
 #include "mngr/resource.hpp"
 #include "objs/map.hpp"
-#include "util/format.hpp" // IWYU pragma: export
 #include "util/position.hpp"
 #include "util/render.hpp"
+#include <array>
+#include <unordered_map>
 
 // Constants
 
@@ -92,7 +91,6 @@ void Map::init() {
 }
 
 void Map::setBlock(int x, int y, const std::string& name, bool wall) {
-   assert(blockIds.find(name) != blockIds.end(), "Block with the name '{}' does not exist.", name);
    auto& block = (wall ? walls : blocks)[y][x];
    
    block.id = blockIds[name];
@@ -125,6 +123,29 @@ void Map::moveBlock(int ox, int oy, int nx, int ny) {
    std::swap(blocks[oy][ox], blocks[ny][nx]);
 }
 
+// Set furniture functions
+
+void Map::addFurniture(const Furniture& obj) {
+   for (int y = obj.posY; y < obj.sizeY + obj.posY; ++y) {
+      for (int x = obj.posX; x < obj.sizeX + obj.posX; ++x) {
+         if (not obj.pieces[y - obj.posY][x - obj.posX].nil) {
+            blocks[y][x].furniture = true;
+         }
+      }
+   }
+   furniture.push_back(obj);
+}
+
+void Map::removeFurniture(const Furniture& obj) {
+   for (int y = obj.posY; y < obj.sizeY + obj.posY; ++y) {
+      for (int x = obj.posX; x < obj.sizeX + obj.posX; ++x) {
+         if (not obj.pieces[y - obj.posY][x - obj.posX].nil) {
+            blocks[y][x].furniture = false;
+         }
+      }
+   }
+}
+
 // Get block functions
 
 bool Map::isPositionValid(int x, int y) {
@@ -133,6 +154,10 @@ bool Map::isPositionValid(int x, int y) {
 
 bool Map::is(int x, int y, Block::Type type) {
    return isPositionValid(x, y) and blocks[y][x].type == type;
+}
+
+bool Map::isu(int x, int y, Block::Type type) {
+   return blocks[y][x].type == type;
 }
 
 bool Map::isTransparent(int x, int y) {

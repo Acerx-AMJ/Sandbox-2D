@@ -1,6 +1,6 @@
-#include <unordered_map>
 #include "mngr/resource.hpp"
 #include "util/format.hpp"
+#include <unordered_map>
 
 // Globals
 
@@ -14,7 +14,7 @@ Texture& getFallbackTexture() {
    static bool loaded = false;
 
    if (not loaded) {
-      Image image = GenImageChecked(32, 32, 4, 4, MAGENTA, BLACK);
+      Image image = GenImageChecked(8, 8, 1, 1, MAGENTA, BLACK);
       fallbackTexture = LoadTextureFromImage(image);
       UnloadImage(image);
       loaded = true;

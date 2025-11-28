@@ -1,11 +1,11 @@
 #ifndef GAME_MENUSTATE_HPP
 #define GAME_MENUSTATE_HPP
 
-#include <vector>
 #include "game/state.hpp"
 #include "ui/button.hpp"
 #include "ui/input.hpp"
 #include "ui/scrollframe.hpp"
+#include <vector>
 
 // Menu state
 

@@ -1,5 +1,5 @@
-#include <raylib.h>
 #include "game/state.hpp"
+#include <raylib.h>
 
 // Constants
 

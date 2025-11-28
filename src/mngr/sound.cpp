@@ -1,7 +1,7 @@
-#include <unordered_map>
 #include "mngr/sound.hpp"
 #include "util/format.hpp" // IWYU pragma: export
 #include "util/random.hpp"
+#include <unordered_map>
 
 // Globals
 
@@ -48,7 +48,7 @@ void loadMusic() {
 // Play functions
 
 void playSound(const std::string& name) {
-   assert(soundExists(name), "Sound '{}' does not exist.", name);
+   assert(savedSounds.count(name) or sounds.count(name), "Sound '{}' does not exist.", name);
    Sound* sound = nullptr;
    
    if (savedSounds.count(name)) {
@@ -61,28 +61,20 @@ void playSound(const std::string& name) {
 }
 
 void playMusic(const std::string& name) {
-   assert(musicExists(name), "Music '{}' does not exist.", name);
+   assert(music.count(name), "Music '{}' does not exist.", name);
    currentMusic = &music[name];
 }
 
 // Get functions
 
 Sound& getSound(const std::string& name) {
-   assert(soundExists(name), "Sound '{}' does not exist.", name);
+   assert(savedSounds.count(name) or sounds.count(name), "Sound '{}' does not exist.", name);
    return sounds[name];
 }
 
 Music& getMusic(const std::string& name) {
-   assert(musicExists(name), "Music '{}' does not exist.", name);
+   assert(music.count(name), "Music '{}' does not exist.", name);
    return music[name];
-}
-
-bool soundExists(const std::string& name) {
-   return savedSounds.count(name) or sounds.count(name);
-}
-
-bool musicExists(const std::string& name) {
-   return music.count(name);
 }
 
 // Update functions

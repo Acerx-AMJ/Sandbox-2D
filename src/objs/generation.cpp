@@ -1,8 +1,8 @@
-#include "PerlinNoise.hpp"
 #include "objs/generation.hpp"
 #include "objs/map.hpp"
 #include "util/fileio.hpp"
 #include "util/random.hpp"
+#include "PerlinNoise.hpp"
 
 // Constants
 
@@ -30,7 +30,10 @@ inline float normalizedNoise1D(siv::PerlinNoise& noise, int x, float amplitude) 
 // Generate functions
 
 void generateMap(const std::string& name, int sizeX, int sizeY) {
-   FileMap map {std::vector<std::vector<Block::id_t>>(sizeY, std::vector<Block::id_t>(sizeX, 0)), {}, sizeX, sizeY};
+   Map map;
+   map.sizeX = sizeX;
+   map.sizeY = sizeY;
+   map.init();
    generateTerrain(map);
    generateDebri(map);
    generateWater(map);
@@ -38,7 +41,7 @@ void generateMap(const std::string& name, int sizeX, int sizeY) {
    saveWorldData(name, sizeX / 2.f, 0.f, 50.f, map);
 }
 
-void generateTerrain(FileMap& map) {
+void generateTerrain(Map& map) {
    siv::PerlinNoise noise (rand());
    int y = startY * map.sizeY;
    int rockOffset = rockOffsetStart;
@@ -46,7 +49,8 @@ void generateTerrain(FileMap& map) {
    for (int x = 0; x < map.sizeX; ++x) {
       float value = normalizedNoise2D(noise, x, y, 0.01f);
 
-      // Get different height increase/decrease based on the noise
+      // Get different height increase/decrease based on the noise, normal 2D
+      // perlin noise is better for top-down generation
 
       if (value < .2f) {
          y += random(-3, 0);
@@ -81,56 +85,61 @@ void generateTerrain(FileMap& map) {
 
       // Generate grass, dirt and stone
 
-      map.blocks[y][x] = Block::getId("grass");
+      map.setBlock(x, y, "grass");
       for (int yy = y + 1; yy < map.sizeY; ++yy) {
-         map.blocks[yy][x] = Block::getId((yy - y < rockOffset ? "dirt" : "stone"));
+         if (yy - y < rockOffset) {
+            map.setBlock(x, yy, "dirt");
+            map.setBlock(x, yy, "dirt", true);
+         } else {
+            map.setBlock(x, yy, "stone");
+            map.setBlock(x, yy, "stone", true);
+         }
       }
    }
 }
 
-void generateWater(FileMap& map) {
+void generateWater(Map& map) {
    int seaY = map.sizeY * seaLevel;
    for (int x = 0; x < map.sizeX; ++x) {
-      for (int y = seaY; y < map.sizeY and map.blocks[y][x] == Block::getId("air"); ++y) {
-         map.blocks[y][x] = Block::getId("water");
+      for (int y = seaY; y < map.sizeY and map.isu(x, y, Block::air); ++y) {
+         map.setBlock(x, y, "water");
       }
    }
 }
 
-void generateDebri(FileMap& map) {
+void generateDebri(Map& map) {
    siv::PerlinNoise sandNoise (rand());
    siv::PerlinNoise dirtNoise (rand());
 
    for (int x = 0; x < map.sizeX; ++x) {
       for (int y = 0; y < map.sizeY; ++y) {
-         if (map.blocks[y][x] == Block::getId("air") or map.blocks[y][x] == Block::getId("grass")) {
+         if (map.isu(x, y, Block::air) or map.isu(x, y, Block::grass)) {
             continue;
          }
 
          float value = normalizedNoise2D(dirtNoise, x, y, 0.04f);
          if (value >= .825f) {
-            map.blocks[y][x] = Block::getId("clay");
+            map.setBlock(x, y, "clay");
          } else if (value <= .2f) {
-            map.blocks[y][x] = Block::getId("dirt");
-         } else if (map.blocks[y][x] != Block::getId("dirt") and normalizedNoise2D(sandNoise, x, y, 0.04f) <= .15f) {
-            map.blocks[y][x] = Block::getId("sand");
+            map.setBlock(x, y, "dirt");
+         } else if (not map.isu(x, y, Block::dirt) and normalizedNoise2D(sandNoise, x, y, 0.04f) <= .15f) {
+            map.setBlock(x, y, "sand");
          }
       }
    }
 }
 
-void generateTrees(FileMap& map) {
+void generateTrees(Map& map) {
    siv::PerlinNoise treeNoise (rand());
    float y = startY * map.sizeY + 1;
    int counter = 0, counterThreshold = 0;
    
    for (int x = 0; x < map.sizeX; ++x) {
-      while (y < map.sizeY - 1 and map.blocks[y + 1][x] == 0) { y++; }
-      while (y > 0 and map.blocks[y][x] != 0) { y--; }
+      while (y < map.sizeY - 1 and map.isu(x, y + 1, Block::air)) { y++; }
+      while (y > 0 and not map.isu(x, y, Block::air)) { y--; }
 
-      if (map.blocks[y + 1][x] != Block::getId("water") and map.blocks[y + 1][x] != Block::getId("leaf") and normalizedNoise1D(treeNoise, x, 0.04f) >= .5f and counter >= counterThreshold) {
-         auto tree = generateTree(x, y, map);
-         map.furniture.push_back(tree);
+      if (normalizedNoise1D(treeNoise, x, 0.04f) >= .5f and counter >= counterThreshold) {
+         generateTree(x, y, map);
          counter = 0;
          counterThreshold = random(1, 4);
       } else {

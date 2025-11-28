@@ -1,8 +1,8 @@
 #ifndef UI_INPUT_HPP
 #define UI_INPUT_HPP
 
-#include <string>
 #include <raylib.h>
+#include <string>
 
 // Input
 

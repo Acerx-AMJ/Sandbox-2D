@@ -1,8 +1,8 @@
-#include <cstdlib>
-#include <raylib.h>
 #include "game/loadingState.hpp"
 #include "mngr/sound.hpp"
 #include "util/render.hpp"
+#include <raylib.h>
+#include <cstdlib>
 
 int main() {
    // Initialize the game

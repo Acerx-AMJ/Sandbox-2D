@@ -1,8 +1,8 @@
-#include <cmath>
 #include "ui/scrollframe.hpp"
 #include "mngr/resource.hpp"
 #include "util/math.hpp"
 #include "util/render.hpp"
+#include <cmath>
 
 // Update function
 
