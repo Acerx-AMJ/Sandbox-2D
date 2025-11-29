@@ -86,9 +86,9 @@ void Player::updateCollisions(Map& map) {
 
    for (int y = max(0, (int)pos.y); y < maxY; ++y) {
       for (int x = max(0, (int)pos.x); x < maxX; ++x) {
-         if (map.is(x, y, Block::air) or map.is(x, y, Block::water) or (IsKeyDown(KEY_S) and map.is(x, y, Block::platform))) {
+         if (map.isu(x, y, Block::air) or map.isu(x, y, Block::water) or (IsKeyDown(KEY_S) and map.isu(x, y, Block::platform))) {
             // Only check water tile count in the first iteration
-            waterTileCount += map.is(x, y, Block::water);
+            waterTileCount += map.isu(x, y, Block::water);
             continue;
          }
 
@@ -96,7 +96,7 @@ void Player::updateCollisions(Map& map) {
             continue;
          }
 
-         if (prev.y >= y + 1.f and not map.is(x, y, Block::platform)) {
+         if (prev.y >= y + 1.f and not map.isu(x, y, Block::platform)) {
             pos.y = y + 1.f;
             canHoldJump = false;
             collisionY = true;
@@ -126,17 +126,21 @@ void Player::updateCollisions(Map& map) {
 
    for (int y = max(0, (int)pos.y - 1); y < maxY; ++y) {
       for (int x = max(0, (int)pos.x); x < maxX; ++x) {
-         if (map.is(x, y, Block::air) or map.is(x, y, Block::water) or map.is(x, y, Block::platform)) {
+         if (map.isu(x, y, Block::air) or map.isu(x, y, Block::water) or (map.isu(x, y, Block::platform) and not IsKeyDown(KEY_W))) {
             continue;
-         }
-
-         if (not torsoCollision and CheckCollisionRecs(torso, {(float)x, (float)y, 1.f, 1.f})) {
-            torsoCollision = true;
          }
 
          if (not feetCollision and CheckCollisionRecs(feet, {(float)x, (float)y, 1.f, 1.f})) {
             feetCollision = true;
             feetCollisionY = y;
+         }
+
+         if (map.isu(x, y, Block::platform)) {
+            continue;
+         }
+
+         if (not torsoCollision and CheckCollisionRecs(torso, {(float)x, (float)y, 1.f, 1.f})) {
+            torsoCollision = true;
          }
 
          if (not CheckCollisionRecs({pos.x, pos.y, size.x, size.y}, {(float)x, (float)y, 1.f, 1.f})) {

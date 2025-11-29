@@ -8,28 +8,28 @@
 
 // Constants
 
-constexpr int furnitureCount = 2;
+constexpr int furnitureCount = 4;
 static std::unordered_map<std::string, int> furnitureTextureIds {
-   {"tree", 0}, {"sapling", 1}
+   {"tree", 0}, {"sapling", 1}, {"palm", 2}, {"palm_sapling", 3}
 };
 
 constexpr std::array<const char*, furnitureCount> furnitureTextureNames {
-   "tree", "sapling"
+   "tree", "sapling", "palm", "palm_sapling"
 };
 
 constexpr int texSize = 8;
 
 // Helper functions
 
-void setBlock(FurniturePiece& piece, const std::string& id, int tx, int ty) {
+inline void setBlock(FurniturePiece& piece, const std::string& id, int tx, int ty) {
    piece.nil = false;
    piece.colorId = Block::getId(id);
    piece.tx = tx;
    piece.ty = ty;
 }
 
-bool isBlockSoil(Map& map, int x, int y) {
-   return map.is(x, y, Block::grass) or map.isu(x, y, Block::dirt);
+inline bool isBlockSoil(Map& map, int x, int y) {
+   return map.is(x, y, Block::grass) or map.isu(x, y, Block::dirt) or map.isu(x, y, Block::sand);
 }
 
 // Furniture functions
@@ -127,7 +127,8 @@ void generateTree(int x, int y, Map& map) {
       return;
    }
    
-   int height = random(5, 18);
+   bool palm = (map.isu(x, y + 1, Block::sand));
+   int height = (palm ? random(8, 24) : random(5, 18));
    for (int i = 0; i < height and i < map.sizeY; ++i) {
       if (not map.isu(x, y - i, Block::air)) {
          height = i;
@@ -135,20 +136,25 @@ void generateTree(int x, int y, Map& map) {
       }
    }
 
-   if (height < 5) {
+   if (height < (palm ? 8 : 5)) {
       return;
    }
-   Furniture tree ("tree", x - 1, y - height + 1, 3, height, Furniture::tree);
+   Furniture tree ((palm ? "palm" : "tree"), x - 1, y - height + 1, 3, height, Furniture::tree);
    int offsetTx = (chance(50) ? 0 : 3 * texSize);
 
-   for (int i = 0; i < 2; ++i) {
+   for (int i = 0; i < (palm ? 3 : 2); ++i) {
       for (int j = 0; j < 3; ++j) {
          setBlock(tree.pieces[i][j], "grass", offsetTx + j * texSize, i * texSize);
       }
    }
 
-   for (int i = 2; i < height; ++i) {
+   for (int i = (palm ? 3 : 2); i < height; ++i) {
       auto& piece = tree.pieces[i][1];
+      if (palm) {
+         setBlock(piece, "planks", random(0, 2) * texSize, (i + 1 == height ? 4 : 3) * texSize);
+         continue;
+      }
+
       setBlock(piece, "planks", 2 * texSize, 3 * texSize);
 
       if (i + 1 == height) {
@@ -205,7 +211,7 @@ void generateSapling(int x, int y, Map& map) {
       }
    }
 
-   Furniture sapling ("sapling", x, y - 1, 1, 2, Furniture::sapling);
+   Furniture sapling ((map.is(x, y + 1, Block::sand) ? "palm_sapling" : "sapling"), x, y - 1, 1, 2, Furniture::sapling);
    int value = random(0, 100);
    int offsetTx = (value < 33 ? 0 : (value < 66 ? texSize : 2 * texSize));
 
