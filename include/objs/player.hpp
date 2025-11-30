@@ -13,7 +13,7 @@ struct Player {
    bool torsoCollision = false;
    bool flipX = false;
    int feetCollisionY = 0;
-   float waterMult = 1.f;
+   float waterMult = 1.f, iceMult = 1.f;
    float holdJumpTimer = 0.f;
 
    float updateTimer = 0.f;

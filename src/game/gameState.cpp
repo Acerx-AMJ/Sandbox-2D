@@ -53,15 +53,16 @@ void GameState::updateControls() {
 // Temporary way to switch, delete and place blocks. blockMap blocks must be in the same order as
 // the blockIds map in objs/block.cpp.
 static int index = 0;
-static int size = 16;
+static int size = 18;
 static const char* blockMap[] {
-   "grass", "dirt", "clay", "stone", "sand", "sandstone", "water", "bricks", "glass", "planks", "stone_bricks", "tiles", "obsidian", "lava", "platform",
+   "grass", "dirt", "clay", "stone", "sand", "sandstone", "water", "bricks", "glass", "planks", "stone_bricks", "tiles", "obsidian",
+   "lava", "platform", "snow", "ice",
    "sapling"
 };
 static bool drawWall = false;
 static bool canDraw = false;
 static Furniture obj;
-inline Furniture::Type getFurnitureType() { return (index == 15 ? Furniture::sapling : Furniture::none); }
+inline Furniture::Type getFurnitureType() { return (index == 17 ? Furniture::sapling : Furniture::none); }
 /************************************/
 
 void GameState::updatePhysics() {

@@ -8,13 +8,13 @@
 
 // Constants
 
-constexpr int furnitureCount = 4;
+constexpr int furnitureCount = 6;
 static std::unordered_map<std::string, int> furnitureTextureIds {
-   {"tree", 0}, {"sapling", 1}, {"palm", 2}, {"palm_sapling", 3}
+   {"tree", 0}, {"sapling", 1}, {"palm", 2}, {"palm_sapling", 3}, {"pine", 4}, {"pine_sapling", 5}
 };
 
 constexpr std::array<const char*, furnitureCount> furnitureTextureNames {
-   "tree", "sapling", "palm", "palm_sapling"
+   "tree", "sapling", "palm", "palm_sapling", "pine", "pine_sapling"
 };
 
 constexpr int texSize = 8;
@@ -29,7 +29,7 @@ inline void setBlock(FurniturePiece& piece, const std::string& id, int tx, int t
 }
 
 inline bool isBlockSoil(Map& map, int x, int y) {
-   return map.is(x, y, Block::grass) or map.isu(x, y, Block::dirt) or map.isu(x, y, Block::sand);
+   return map.is(x, y, Block::grass) or map.isu(x, y, Block::dirt) or map.isu(x, y, Block::sand) or map.isu(x, y, Block::snow);
 }
 
 // Furniture functions
@@ -99,12 +99,16 @@ Furniture Furniture::get(int x, int y, Map& map, Type type, bool debug) {
       if (not debug and (height < (palm ? 8 : 5))) {
          return {};
       }
-      Furniture tree ((palm ? "palm" : "tree"), x - 1, y - height + 1, 3, height, Furniture::tree);
+      static std::unordered_map<Block::Type, std::string> textureMap {
+         {Block::grass, "tree"}, {Block::dirt, "tree"}, {Block::sand, "palm"}, {Block::snow, "pine"}
+      };
+
+      Furniture tree (textureMap[map.blocks[y + 1][x].type], x - 1, y - height + 1, 3, height, Furniture::tree);
       int offsetTx = (chance(50) ? 0 : 3 * texSize);
 
       for (int i = 0; i < (palm ? 3 : 2); ++i) {
          for (int j = 0; j < 3; ++j) {
-            setBlock(tree.pieces[i][j], "grass", offsetTx + j * texSize, i * texSize);
+            setBlock(tree.pieces[i][j], (tree.texId == furnitureTextureIds["pine"] ? "snow" : "grass"), offsetTx + j * texSize, i * texSize);
          }
       }
 
@@ -164,7 +168,12 @@ Furniture Furniture::get(int x, int y, Map& map, Type type, bool debug) {
       if (not debug and (x < 0 or x >= map.sizeX or y < 0 or not isBlockSoil(map, x , y + 2) or not map.empty(x, y) or not map.empty(x, y + 1))) {
          return {};
       }
-      Furniture sapling ((map.is(x, y + 2, Block::sand) ? "palm_sapling" : "sapling"), x, y, 1, 2, Furniture::sapling);
+
+      auto btype = map.blocks[y + 2][x].type;
+      static std::unordered_map<Block::Type, std::string> textureMap {
+         {Block::grass, "sapling"}, {Block::dirt, "sapling"}, {Block::sand, "palm_sapling"}, {Block::snow, "pine_sapling"}
+      };
+      Furniture sapling ((not textureMap.count(btype) ? "sapling" : textureMap[btype]), x, y, 1, 2, Furniture::sapling);
 
       int value = random(0, 100);
       int offsetTx = (value < 33 ? 0 : (value < 66 ? texSize : 2 * texSize));
@@ -191,7 +200,7 @@ void Furniture::preview(Map& map) {
    for (int y = posY; y - posY < sizeY; ++y) {
       for (int x = posX; x - posX < sizeX; ++x) {
          auto& piece = pieces[y - posY][x - posX];
-         Color color = Fade((map.is(x, y, Block::air) ? WHITE : RED), .75f);
+         Color color = Fade((map.empty(x, y) ? WHITE : RED), .75f);
          DrawTexturePro(getTexture(furnitureTextureNames[texId]), {(float)piece.tx, (float)piece.ty, texSize, texSize}, {(float)x, (float)y, 1.f, 1.f}, {0, 0}, 0, color);
       }
    }

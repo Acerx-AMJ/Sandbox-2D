@@ -7,7 +7,7 @@
 // Block
 
 struct Block {
-   enum Type { air, grass, dirt, solid, platform, transparent, sand, water, lava };
+   enum Type { air, grass, dirt, solid, platform, transparent, sand, snow, ice, water, lava };
    using id_t = unsigned char;
    
    Texture* tex = nullptr;

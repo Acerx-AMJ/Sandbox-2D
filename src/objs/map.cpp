@@ -14,21 +14,21 @@ static std::unordered_map<std::string, Block::id_t> blockIds {
    {"air", 0}, {"grass", 1}, {"dirt", 2}, {"clay", 3}, {"stone", 4},
    {"sand", 5}, {"sandstone", 6}, {"water", 7}, {"bricks", 8}, {"glass", 9},
    {"planks", 10}, {"stone_bricks", 11}, {"tiles", 12}, {"obsidian", 13}, {"lava", 14},
-   {"platform", 15}
+   {"platform", 15}, {"snow", 16}, {"ice", 17}
 };
 
 constexpr static std::array<const char*, idCount> blockNames {
    "air", "grass", "dirt", "clay", "stone",
    "sand", "sandstone", "water", "bricks", "glass",
    "planks", "stone_bricks", "tiles", "obsidian", "lava",
-   "platform"
+   "platform", "snow", "ice"
 };
 
 constexpr static std::array<Block::Type, idCount> blockTypes {{
    Block::air, Block::grass, Block::dirt, Block::solid, Block::solid,
    Block::sand, Block::solid, Block::water, Block::solid, Block::transparent,
    Block::solid, Block::solid, Block::solid, Block::solid, Block::lava,
-   Block::platform
+   Block::platform, Block::snow, Block::ice
 }};
 
 static std::array<Color, idCount> wallColors, blockColors;

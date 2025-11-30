@@ -48,9 +48,9 @@ void Player::updateMovement() {
 
    if (dir != 0) {
       auto speedX = (onGround ? speed : speed * .6f);
-      vel.x = lerp(vel.x, dir * speedX, acceleration);
+      vel.x = lerp(vel.x, dir * speedX, acceleration * iceMult);
    } else {
-      vel.x = lerp(vel.x, 0.f, deceleration);
+      vel.x = lerp(vel.x, 0.f, deceleration * iceMult);
    }
 
    if (IsKeyDown(KEY_SPACE) and canHoldJump) {
@@ -71,15 +71,15 @@ void Player::updateMovement() {
    vel.x *= waterMult;
    vel.y *= waterMult;
 
-   if (not floatIsZero(vel.x)) {
-      flipX = (vel.x > 0.f);
+   if (dir != 0 ) {
+      flipX = (dir == 1);
    }
 }
 
 void Player::updateCollisions(Map& map) {
    pos.y = lerp(pos.y, pos.y + vel.y, smoothing);
    bool collisionX = false, collisionY = false;
-   int waterTileCount = 0;
+   int waterTileCount = 0, iceTileCount = 0;
 
    auto maxX = min(map.sizeX, int(pos.x + size.x) + 1);
    auto maxY = min(map.sizeY, int(pos.y + size.y) + 1);
@@ -106,6 +106,7 @@ void Player::updateCollisions(Map& map) {
             pos.y = y - size.y;
             onGround = true;
             collisionY = true;
+            iceTileCount += map.isu(x, y, Block::ice);
          }
       }
    }
@@ -162,6 +163,9 @@ void Player::updateCollisions(Map& map) {
    waterMult = (waterTileCount > 0 ? .9f : 1.f);
    if (not collisionY) {
       onGround = false;
+   }
+   if (onGround) {
+      iceMult = (iceTileCount > 0 ? .2f : 1.f);
    }
 }
 
