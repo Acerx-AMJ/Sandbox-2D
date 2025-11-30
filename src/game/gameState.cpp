@@ -51,7 +51,7 @@ void GameState::updateControls() {
 
 /************************************/
 // Temporary way to switch, delete and place blocks. blockMap blocks must be in the same order as
-// the blockIds map in objs/block.cpp.
+// the blockIds map in objs/block.cpp. Everything between these multi-comments is temporary.
 static int index = 0;
 static int size = 18;
 static const char* blockMap[] {
@@ -154,8 +154,23 @@ void GameState::updatePhysics() {
             }
          }
 
-         if (block.type == Block::sand and (map.is(x, y + 1, Block::air) or map.is(x, y + 1, Block::water))) {
-            map.moveBlock(x, y, x, y + 1);
+         // Update sand
+         if (block.type == Block::sand) {
+            if (map.is(x, y + 1, Block::air) or map.is(x, y + 1, Block::water)) {
+               map.moveBlock(x, y, x, y + 1);
+            } else if ((map.is(x - 1, y + 1, Block::air) or map.is(x - 1, y + 1, Block::water)) and (map.is(x + 1, y + 1, Block::air) or map.is(x + 1, y + 1, Block::water))) {
+               if (chance(50)) {
+                  goto moveSandRight;
+               } else {
+                  goto moveSandLeft;
+               }
+            } else if (map.is(x - 1, y + 1, Block::air) or map.is(x - 1, y + 1, Block::water)) {
+            moveSandLeft:
+               map.moveBlock(x, y, x - 1, y + 1);
+            } else if (map.is(x + 1, y + 1, Block::air) or map.is(x + 1, y + 1, Block::water)) {
+            moveSandRight:
+               map.moveBlock(x, y, x + 1, y + 1);
+            }
          }
 
          if (block.type == Block::dirt and (map.is(x, y - 1, Block::air) or map.is(x, y - 1, Block::water) or map.is(x, y - 1, Block::platform))) {
@@ -202,6 +217,7 @@ void GameState::render() {
    map.render(camera);
 
    /************************************/
+   // Scary method of rendering furniture and block preview correctly
    auto mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
    if (canDraw and camera.zoom > 12.5f and map.isPositionValid(mousePos.x, mousePos.y)) {
       auto ftype = getFurnitureType();
@@ -217,7 +233,7 @@ void GameState::render() {
          obj.posY = mousePos.y;
          obj.preview(map);
       } else {
-         drawTextureBlock(getTexture(blockMap[index]), {(float)(int)mousePos.x, (float)(int)mousePos.y, 1.f, 1.f}, Fade((drawWall ? Color{120, 120, 120, 255} : WHITE), .75f));
+         drawTextureBlock(getTexture(blockMap[index]), {(float)(int)mousePos.x, (float)(int)mousePos.y, 1.f, 1.f}, Fade((drawWall ? Color{120, 120, 120, 255} : (map.blocks[mousePos.y][mousePos.x].furniture ? RED : WHITE)), .75f));
       }
    }
    /************************************/
