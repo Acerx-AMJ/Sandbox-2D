@@ -9,11 +9,6 @@
 
 constexpr float startY = .5f;
 constexpr float seaLevel = .4f;
-constexpr float highThreshold = .25f;
-constexpr float lowThreshold = .5f;
-constexpr float highestPoint = .2f;
-constexpr float lowestPoint = .55f;
-
 constexpr int rockOffsetStart = 12;
 constexpr int rockOffsetMin = 5;
 constexpr int rockOffsetMax = 25;
@@ -37,6 +32,22 @@ static std::unordered_map<Biome, int> treeRates {
 
 constexpr std::array<std::pair<const char*, const char*>, biomeCount> biomeBlocks {{
    {"grass", "dirt"}, {"grass", "dirt"}, {"stone", "stone"}, {"sand", "sand"}, {"snow", "snow"}, {"jungle_grass", "mud"}
+}};
+
+struct BiomeHeightData {
+   int hmin[5];
+   int hmax[5];
+   int rng;
+   float highestPoint, lowestPoint;
+};
+
+constexpr std::array<BiomeHeightData, biomeCount> biomeHeightData {{
+   {{-2, -1, 0, 0, 0},   {0, 0, 0, 1, 2}, 20, .3f,  .5f},
+   {{-3, -2, -1, 0, 0},  {0, 0, 1, 2, 3}, 80, .2f,  .55f},
+   {{-7, -5, -3, -2, 0}, {0, 2, 3, 5, 7}, 80, .05f, .5f},
+   {{-1, -1, 0, 0, 0},   {0, 0, 1, 1, 1}, 15, .3f,  .5f},
+   {{-3, -2, -1, 0, 0},  {0, 0, 1, 2, 3}, 80, .2f,  .55f},
+   {{-3, -2, -1, 0, 0},  {0, 0, 1, 2, 3}, 80, .2f,  .55f},
 }};
 
 // A single noise object can do two things, one for the 0.0-0.1 and one for 0.9-1.0
@@ -88,56 +99,49 @@ void generateMap(const std::string &name, int sizeX, int sizeY) {
 }
 
 void generateTerrain(Map &map) {
+   Biome current = Biome::plains, last = Biome::plains;
    siv::PerlinNoise noise (rand());
    int y = startY * map.sizeY;
    int rockOffset = rockOffsetStart;
 
    for (int x = 0; x < map.sizeX; ++x) {
       float value = normalizedNoise2D(noise, x, y, 0.01f);
+      last = current;
+      current = getBiome(x);
 
       // Get different height increase/decrease based on the noise, normal 2D
       // perlin noise is better for top-down generation
 
-      if (value < .2f) {
-         y += random(-3, 0);
-         rockOffset += random(-2, 0);
-      } else if (value < .4f) {
-         y += random(-2, 0);
-         rockOffset += random(-1, 0);
-      } else if (value < .65f) {
-         y += (chance(50) ? random(-1, 1) : 0);
-         rockOffset += (chance(20) ? random(-1, 1) : 0);
-      } else if (value < .85f) {
-         y += random(0, 2);
-         rockOffset += random(0, 1);
-      } else {
-         y += random(0, 3);
-         rockOffset += random(0, 2);
+      BiomeHeightData data = biomeHeightData[(int)current];
+      int height = std::floor(value * 5.f);
+      y += random(data.hmin[height], data.hmax[height]);
+
+      // 2 is the middle point in our data
+      if ((height == 2 and chance(data.rng)) or height != 2) {
+         y += random(-1, 1);
       }
 
-      // Don't let the height get too low or too high
-
-      if (y < map.sizeY * highThreshold) {
-         ++y;
-         ++rockOffset;
+      if (y < map.sizeY * data.highestPoint) {
+         y += data.hmax[4];
       }
 
-      if (y > map.sizeY * lowThreshold) {
-         --y;
-         --rockOffset;
+      if (y > map.sizeY * data.lowestPoint) {
+         y += data.hmin[0];
       }
-      y = std::clamp<int>(y, map.sizeY * highestPoint, map.sizeY * lowestPoint);
+      y = std::clamp(y, 0, map.sizeY - 1);
       rockOffset = std::clamp(rockOffset, rockOffsetMin, rockOffsetMax);
 
       // Generate grass, dirt and stone
 
-      auto [top_block, bottom_block] = biomeBlocks[(int)getBiome(x)];
-      map.setBlock(x, y, top_block);
+      auto [last_top_block, last_bottom_block] = biomeBlocks[(int)last];
+      auto [top_block, bottom_block] = biomeBlocks[(int)current];
 
+      map.setBlock(x, y, (last != current and chance(50) ? last_top_block : top_block));
       for (int yy = y + 1; yy < map.sizeY; ++yy) {
          if (yy - y < rockOffset) {
-            map.setBlock(x, yy, bottom_block);
-            map.setBlock(x, yy, bottom_block, true);
+            const auto *block = (last != current and chance(50) ? last_bottom_block : bottom_block);
+            map.setBlock(x, yy, block);
+            map.setBlock(x, yy, block, true);
          } else {
             map.setBlock(x, yy, "stone");
             map.setBlock(x, yy, "stone", true);
@@ -150,7 +154,7 @@ void generateWater(Map &map) {
    int seaY = map.sizeY * seaLevel;
    for (int x = 0; x < map.sizeX; ++x) {
       for (int y = seaY; y < map.sizeY && map.isu(x, y, Block::air); ++y) {
-         map.setBlock(x, y, (getBiome(x) == Biome::tundra ? "ice" : "water"));
+         map.setBlock(x, y, "water");
       }
    }
 }
@@ -161,7 +165,7 @@ void generateDebri(Map &map) {
 
    for (int x = 0; x < map.sizeX; ++x) {
       for (int y = 0; y < map.sizeY; ++y) {
-         if (map.isu(x, y, Block::air) || map.isu(x, y, Block::grass)) {
+         if (map.isu(x, y, Block::air) || map.isu(x, y, Block::grass) || map.isu(x, y, Block::sand) || map.isu(x, y, Block::snow)) {
             continue;
          }
 

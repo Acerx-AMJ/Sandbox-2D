@@ -112,8 +112,8 @@ void GameState::updatePhysics() {
       (float)std::max(0, int(bounds.y)),
    };
    Vector2 max {
-      (float)std::min(map.sizeX, int((bounds.x + bounds.width))),
-      (float)std::min(map.sizeY, int((bounds.y + bounds.height))),
+      (float)std::min(map.sizeX - 1, int((bounds.x + bounds.width))),
+      (float)std::min(map.sizeY - 1, int((bounds.y + bounds.height))),
    };
 
    for (int y = max.y; y >= min.y; --y) {
