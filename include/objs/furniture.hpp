@@ -14,7 +14,7 @@ struct FurniturePiece {
 };
 
 struct Furniture {
-   enum Type { none, tree, sapling };
+   enum Type { none, tree, sapling, cactus, cactus_seed };
    using id_t = unsigned char;
 
    std::vector<std::vector<FurniturePiece>> pieces;

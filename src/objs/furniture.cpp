@@ -8,13 +8,15 @@
 
 // Constants
 
-constexpr int furnitureCount = 8;
+constexpr int furnitureCount = 10;
 static std::unordered_map<std::string, int> furnitureTextureIds {
-   {"tree", 0}, {"sapling", 1}, {"palm", 2}, {"palm_sapling", 3}, {"pine", 4}, {"pine_sapling", 5}, {"jungle_tree", 6}, {"jungle_sapling", 7}
+   {"tree", 0}, {"sapling", 1}, {"palm", 2}, {"palm_sapling", 3}, {"pine", 4}, {"pine_sapling", 5},
+   {"jungle_tree", 6}, {"jungle_sapling", 7}, {"cactus", 8}, {"cactus_seed", 9}
 };
 
 constexpr std::array<const char*, furnitureCount> furnitureTextureNames {
-   "tree", "sapling", "palm", "palm_sapling", "pine", "pine_sapling", "jungle_tree", "jungle_sapling"
+   "tree", "sapling", "palm", "palm_sapling", "pine", "pine_sapling",
+   "jungle_tree", "jungle_sapling", "cactus", "cactus_seed"
 };
 
 constexpr int texSize = 8;
@@ -64,11 +66,35 @@ void Furniture::update(Map &map) {
       if (value == 0) {
          value2 = random(200, 1500);
       }
-      ++value;
+
+      value += 1;
       if (value >= value2) {
-         value = value2 = 0;
          map.removeFurniture(*this);
          Furniture::generate(posX, posY + 1, map, Type::tree);
+      }
+   } break;
+
+   case Type::cactus: {
+      if (!map.isu(posX + 1, posY + sizeY, Block::sand)) {
+         map.removeFurniture(*this);
+         return;
+      }
+   } break;
+
+   case Type::cactus_seed: {
+      if (!map.isu(posX, posY + sizeY, Block::sand)) {
+         map.removeFurniture(*this);
+         return;
+      }
+
+      if (value == 0) {
+         value2 = random(350, 1750);
+      }
+
+      value += 1;
+      if (value >= value2) {
+         map.removeFurniture(*this);
+         Furniture::generate(posX, posY, map, Type::cactus);
       }
    } break;
 
@@ -184,6 +210,98 @@ Furniture Furniture::get(int x, int y, Map &map, Type type, bool debug) {
       return sapling;
    } break;
 
+   case Type::cactus: {
+      if (!debug && (x < 1 || x >= map.sizeX - 1 || y < 0 || !map.isu(x , y + 1, Block::sand))) {
+         return {};
+      }
+
+      int height = random(4, 9);
+      for (int i = 0; i < height && i < map.sizeY; ++i) {
+         if (!map.empty(x, y - i)) {
+            height = i;
+            break;
+         }
+      }
+
+      if (!debug && height <= 0) {
+         return {};
+      }
+
+      Furniture cactus ("cactus", x - 1, y - height + 1, 3, height, Furniture::cactus);
+      cactus.value = height;
+      
+      for (int i = 0; i < cactus.sizeY; ++i) {
+         for (int j = 0; j < cactus.sizeX; ++j) {
+            if (!map.empty(cactus.posX + j, cactus.posY + i)) {
+               continue;
+            }
+            
+            if (j == 1) {
+               cactus.pieces[i][j].nil = false;
+            } else if (i != cactus.sizeY - 1 && i != 0) {
+               cactus.pieces[i][j].nil = chance(50);
+            }
+         }
+      }
+
+      for (int i = 0; i < cactus.sizeY; ++i) {
+         for (int j = 0; j < cactus.sizeX; ++j) {
+            FurniturePiece &piece = cactus.pieces[i][j];
+            
+            if (j == 1) {
+               bool rightStub = (!cactus.pieces[i][2].nil && i < cactus.sizeY + 1 && cactus.pieces[i + 1][2].nil);
+               bool leftStub = (!cactus.pieces[i][0].nil && i < cactus.sizeY + 1 && cactus.pieces[i + 1][0].nil);
+
+               if (rightStub && leftStub) {
+                  setBlock(piece, 0 * texSize, 3 * texSize);
+               } else if (rightStub) {
+                  setBlock(piece, 0 * texSize, 1 * texSize);
+               } else if (leftStub) {
+                  setBlock(piece, 0 * texSize, 2 * texSize);
+               } else {
+                  if (i == 0) {
+                     setBlock(piece, 1 * texSize, (chance(10) ? 1 : 0) * texSize);
+                  } else if (i == cactus.sizeY - 1) {
+                     setBlock(piece, 1 * texSize, 3 * texSize);
+                  } else {
+                     setBlock(piece, 0 * texSize, 0 * texSize);
+                  }
+               }
+               continue;
+            } else if (!piece.nil) {
+               int offsetX = (j == 0 ? 2 : 3) * texSize;
+
+               if (cactus.pieces[i - 1][j].nil && cactus.pieces[i + 1][j].nil) {
+                  setBlock(piece, offsetX, 3 * texSize);
+               } else if (cactus.pieces[i - 1][j].nil) {
+                  setBlock(piece, offsetX, 0 * texSize);
+               } else if (cactus.pieces[i + 1][j].nil) {
+                  setBlock(piece, offsetX, 2 * texSize);
+               } else {
+                  setBlock(piece, offsetX, 1 * texSize);
+               }
+            }
+         }
+      }
+      return cactus;
+   } break;
+
+   case Type::cactus_seed: {
+      printf(
+         "GENERATING CACTUS SEED\n"
+      );
+      if (!debug && (!map.is(x, y + 1, Block::sand) or !map.empty(x, y))) {
+         return {};
+      }
+
+      Furniture cactus_seed ("cactus_seed", x, y, 1, 1, Furniture::cactus_seed);
+      int value = random(0, 100);
+      int offsetTx = (value < 33 ? 0 : (value < 66 ? texSize : 2 * texSize));
+
+      setBlock(cactus_seed.pieces[0][0], offsetTx * texSize, 0 * texSize);
+      return cactus_seed;
+   } break;
+
    default: return {};
    };
 }
@@ -201,6 +319,9 @@ void Furniture::preview(Map &map) {
    for (int y = posY; y - posY < sizeY; ++y) {
       for (int x = posX; x - posX < sizeX; ++x) {
          FurniturePiece &piece = pieces[y - posY][x - posX];
+         if (piece.nil) {
+            continue;
+         }
          Color color = Fade((map.empty(x, y) ? WHITE : RED), .75f);
          DrawTexturePro(getTexture(furnitureTextureNames[texId]), {(float)piece.tx, (float)piece.ty, texSize, texSize}, {(float)x, (float)y, 1.f, 1.f}, {0, 0}, 0, color);
       }
