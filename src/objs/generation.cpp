@@ -149,7 +149,10 @@ void generateTerrain(Map &map) {
          if (yy - y < rockOffset) {
             const auto *block = (last != current and chance(50) ? last_bottom_block : bottom_block);
             map.setBlock(x, yy, block);
-            map.setBlock(x, yy, block, true);
+
+            if (std::string(block) != "sand") {
+               map.setBlock(x, yy, block, true);
+            }
          } else {
             map.setBlock(x, yy, "stone");
             map.setBlock(x, yy, "stone", true);

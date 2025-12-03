@@ -11,8 +11,8 @@
 // Constants
 
 constexpr float cameraFollowSpeed = .416f;
-constexpr float maxCameraZoom = 12.5f;
-constexpr float minCameraZoom = 100.f;
+constexpr float minCameraZoom = 12.5f;
+constexpr float maxCameraZoom = 200.f;
 
 // Constructors
 
@@ -41,7 +41,7 @@ void GameState::updateControls() {
 
    float wheel = GetMouseWheelMove();
    if (wheel != 0.f) {
-      camera.zoom = std::clamp(std::exp(std::log(camera.zoom) + wheel * 0.2f), maxCameraZoom, minCameraZoom);
+      camera.zoom = std::clamp(std::exp(std::log(camera.zoom) + wheel * 0.2f), minCameraZoom, maxCameraZoom);
    }
 
    if (IsKeyReleased(KEY_ESCAPE)) {

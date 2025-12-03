@@ -78,8 +78,17 @@ void Player::updateMovement() {
 
 void Player::updateCollisions(Map &map) {
    pos.y = lerp(pos.y, pos.y + vel.y, smoothing);
-   bool collisionY = false;
+   bool collisionY = false, canGoUpSlopes = true;
    int waterTileCount = 0, iceTileCount = 0;
+
+   if (pos.y < 0) {
+      pos.y = 0;
+      canGoUpSlopes = canHoldJump = false;
+      collisionY = true;
+   } else if (pos.y > map.sizeY - size.y) {
+      pos.y = map.sizeY - size.y;
+      onGround = collisionY = true;
+   }
 
    int maxX = min(map.sizeX, int(pos.x + size.x) + 1);
    int maxY = min(map.sizeY, int(pos.y + size.y) + 1);
@@ -122,6 +131,7 @@ void Player::updateCollisions(Map &map) {
    torsoCollision = feetCollision = false;
    feetCollisionY = 0;
 
+   pos.x = clamp(pos.x, 0.f, map.sizeX - size.x);
    maxX = min(map.sizeX, int(pos.x + size.x) + 1);
    maxY = min(map.sizeY, int(pos.y + size.y) + 1);
 
@@ -131,7 +141,7 @@ void Player::updateCollisions(Map &map) {
             continue;
          }
 
-         if (!feetCollision && CheckCollisionRecs(feet, {(float)x, (float)y, 1.f, 1.f})) {
+         if (canGoUpSlopes && !feetCollision && CheckCollisionRecs(feet, {(float)x, (float)y, 1.f, 1.f})) {
             feetCollision = true;
             feetCollisionY = y;
          }
@@ -140,7 +150,7 @@ void Player::updateCollisions(Map &map) {
             continue;
          }
 
-         if (!torsoCollision && CheckCollisionRecs(torso, {(float)x, (float)y, 1.f, 1.f})) {
+         if (!torsoCollision && (CheckCollisionRecs(torso, {(float)x, (float)y, 1.f, 1.f}) || pos.y <= 0.f)) {
             torsoCollision = true;
          }
 
@@ -158,7 +168,10 @@ void Player::updateCollisions(Map &map) {
       }
    }
 
+   pos.x = clamp(pos.x, 0.f, map.sizeX - size.x);
+   pos.y = clamp(pos.y, 0.f, map.sizeY - size.y);
    waterMult = (waterTileCount > 0 ? .9f : 1.f);
+
    if (!collisionY) {
       onGround = false;
    }
