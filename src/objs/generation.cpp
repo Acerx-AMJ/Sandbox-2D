@@ -28,7 +28,7 @@ inline float normalizedNoise1D(siv::PerlinNoise &noise, int x, float amplitude) 
 
 constexpr int biomeCount = 6;
 static std::unordered_map<Biome, int> treeRates {
-   {Biome::plains, 2}, {Biome::forest, 90}, {Biome::mountains, 1}, {Biome::desert, 40}, {Biome::tundra, 60}, {Biome::jungle, 95}
+   {Biome::plains, 2}, {Biome::forest, 90}, {Biome::mountains, 1}, {Biome::desert, 50}, {Biome::tundra, 60}, {Biome::jungle, 95}
 };
 
 constexpr std::array<std::pair<const char*, const char*>, biomeCount> biomeBlocks {{
@@ -165,7 +165,7 @@ void generateWater(Map &map) {
    int seaY = map.sizeY * seaLevel;
    for (int x = 0; x < map.sizeX; ++x) {
       for (int y = seaY; y < map.sizeY && map.isu(x, y, Block::air); ++y) {
-         map.setBlock(x, y, "water");
+         map.setBlock(x, y, (y == seaY && getBiome(x) == Biome::tundra ? "ice" : "water"));
       }
    }
 }
@@ -202,7 +202,12 @@ void generateTrees(Map &map) {
 
       if (counter >= counterThreshold && chance(treeRates[getBiome(x)])) {
          bool sapling = chance(5);
-         Furniture::generate(x, (sapling ? y - 1 : y), map, (sapling ? Furniture::sapling : Furniture::tree));
+
+         if (map.isu(x, y + 1, Block::sand) and chance(60)) {
+            Furniture::generate(x, y, map, (sapling ? Furniture::cactus_seed : Furniture::cactus));
+         } else {
+            Furniture::generate(x, (sapling ? y - 1 : y), map, (sapling ? Furniture::sapling : Furniture::tree));
+         }
          counter = 0;
          counterThreshold = random(1, 4);
       } else {
