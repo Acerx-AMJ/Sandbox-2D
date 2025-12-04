@@ -189,7 +189,7 @@ void GameState::updatePhysics() {
                map[y][x].value2 = random(175, 255);
             }
 
-            map[y][x].value += chance(5);
+            map[y][x].value += chance(2);
             if (map[y][x].value >= map[y][x].value2 && map[y][x].value2 != 0 && map.empty(x, y - 1) && map.empty(x, y - 2)) {
                map[y][x].value = map[y][x].value2 = 0;
                Furniture::generate(x, y - 1, map, Furniture::cactus_seed);

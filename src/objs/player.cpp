@@ -5,7 +5,7 @@
 // Constants
 
 constexpr Vector2 size {2.f, 3.f};
-constexpr float frameSize = 20;
+constexpr float frameSize = 16;
 
 constexpr float updateSpeed = 1.f / 60.f;
 constexpr float speed = 4.363f * .5f;
@@ -192,17 +192,17 @@ void Player::updateAnimation() {
    if (!onGround) {
       fallTimer += GetFrameTime();
       if (fallTimer >= .05f) {
-         fx = 5;
+         fx = 1;
       }
    } else {
       fallTimer = 0.f;
 
       if (prev.x != pos.x) {
          walkTimer += GetFrameTime() * clamp(abs(vel.x) / speed, .1f, 1.5f);
-         if (walkTimer >= .03f) {
-            fx = (fx + 1) % 18;
-            fx = (fx < 6 ? 6 : fx);
-            walkTimer -= .03f;
+         if (walkTimer >= .04f) {
+            fx = (fx + 1) % 13;
+            fx = (fx < 2 ? 2 : fx);
+            walkTimer -= .04f;
          }
       } else {
          fx = 0;
