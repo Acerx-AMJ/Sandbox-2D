@@ -5,6 +5,7 @@
 #include "util/fileio.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
+#include <cmath>
 #include <filesystem>
 
 // Constants
@@ -120,6 +121,12 @@ void MenuState::updateGeneratingLevel() {
 // Render
 
 void MenuState::render() {
+   // Render the parallax background
+   drawTextureNoOrigin(getTexture("sky"), {0, 0}, getScreenSize());
+   drawParallaxTexture(getTexture("mountains1"), scrollingBg, 150.f);
+   drawParallaxTexture(getTexture("bg_trees1"), scrollingFg, 200.f);
+
+   // Render everything else
    switch (phase) {
    case Phase::title:           renderTitle();           break;
    case Phase::levelSelection:  renderLevelSelection();  break;

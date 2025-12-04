@@ -11,7 +11,7 @@
 
 LoadingState::LoadingState() {
    loadFont("andy", "assets/fonts/andy.ttf");
-   loadTexture("loading", "assets/sprites/loading.png");
+   loadTexture("loading", "assets/sprites/ui/loading.png");
    splash = getRandomLineFromFile("assets/splash.txt");
    wrapText(splash, GetScreenWidth() - 50.f, 40, 1.f);
 }

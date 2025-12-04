@@ -47,6 +47,8 @@ private:
    std::string selectedWorld;
    Phase phase = Phase::title;
    bool playing = false;
+   float scrollingBg = 0.f;
+   float scrollingFg = 0.f;
 };
 
 #endif

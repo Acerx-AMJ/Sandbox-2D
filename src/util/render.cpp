@@ -19,6 +19,18 @@ void drawTextureBlock(const Texture &texture, const Rectangle &rect, const Color
    DrawTexturePro(texture, source, rect, {0, 0}, 0, color);
 }
 
+void drawParallaxTexture(const Texture &texture, float &progress, float speed) {
+   Vector2 screenSize = getScreenSize();
+   progress -= speed * GetFrameTime();
+   
+   if (progress <= -screenSize.x) {
+      progress = 0.f;
+   }
+
+   drawTextureNoOrigin(texture, {progress, 0}, screenSize);
+   drawTextureNoOrigin(texture, {screenSize.x + progress, 0}, screenSize);
+}
+
 void drawRect(const Color &color) {
    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), color);
 }
