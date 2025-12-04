@@ -79,7 +79,7 @@ void Player::updateMovement() {
 void Player::updateCollisions(Map &map) {
    pos.y = lerp(pos.y, pos.y + vel.y, smoothing);
    bool collisionY = false, canGoUpSlopes = true;
-   int waterTileCount = 0, iceTileCount = 0;
+   int waterTileCount = 0, lavaTileCount = 0, iceTileCount = 0;
 
    if (pos.y < 0) {
       pos.y = 0;
@@ -95,9 +95,10 @@ void Player::updateCollisions(Map &map) {
 
    for (int y = max(0, (int)pos.y); y < maxY; ++y) {
       for (int x = max(0, (int)pos.x); x < maxX; ++x) {
-         if (map.isu(x, y, Block::air) || map.isu(x, y, Block::water) || (IsKeyDown(KEY_S) && map.isu(x, y, Block::platform))) {
-            // Only check water tile count in the first iteration
+         if (map.isu(x, y, Block::air) || map.isu(x, y, Block::water) || map.isu(x, y, Block::lava) || (IsKeyDown(KEY_S) && map.isu(x, y, Block::platform))) {
+            // Only check water and lava tile count in the first iteration
             waterTileCount += map.isu(x, y, Block::water);
+            lavaTileCount += map.isu(x, y, Block::lava);
             continue;
          }
 
@@ -137,7 +138,7 @@ void Player::updateCollisions(Map &map) {
 
    for (int y = max(0, (int)pos.y - 1); y < maxY; ++y) {
       for (int x = max(0, (int)pos.x); x < maxX; ++x) {
-         if (map.isu(x, y, Block::air) || map.isu(x, y, Block::water) || (map.isu(x, y, Block::platform) && !IsKeyDown(KEY_W))) {
+         if (map.isu(x, y, Block::air) || map.isu(x, y, Block::water) || map.isu(x, y, Block::lava) || (map.isu(x, y, Block::platform) && !IsKeyDown(KEY_W))) {
             continue;
          }
 
@@ -170,7 +171,14 @@ void Player::updateCollisions(Map &map) {
 
    pos.x = clamp(pos.x, 0.f, map.sizeX - size.x);
    pos.y = clamp(pos.y, 0.f, map.sizeY - size.y);
-   waterMult = (waterTileCount > 0 ? .9f : 1.f);
+
+   if (lavaTileCount > 0) {
+      waterMult = .6f;
+   } else if (waterTileCount > 0) {
+      waterMult = .9f;
+   } else {
+      waterMult = 1.f;
+   }
 
    if (!collisionY) {
       onGround = false;

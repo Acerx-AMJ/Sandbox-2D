@@ -63,6 +63,11 @@ void Furniture::update(Map &map) {
          return;
       }
 
+      if ((map.isu(posX, posY, Block::water) || map.isu(posX, posY, Block::lava)) && (map.isu(posX, posY + 1, Block::water) || map.isu(posX, posY + 1, Block::lava))) {
+         map.removeFurniture(*this);
+         return;
+      }
+
       if (value == 0) {
          value2 = random(200, 1500);
       }
@@ -82,7 +87,7 @@ void Furniture::update(Map &map) {
    } break;
 
    case Type::cactus_seed: {
-      if (!map.isu(posX, posY + sizeY, Block::sand) || map.is(posX, posY - 1, Block::sand)) {
+      if (!map.isu(posX, posY + sizeY, Block::sand) || map.is(posX, posY - 1, Block::sand) || map.isu(posX, posY, Block::water) || map.isu(posX, posY, Block::lava)) {
          map.removeFurniture(*this);
          return;
       }

@@ -122,19 +122,22 @@ void GameState::updatePhysics() {
 
          if (block.type == Block::water || block.type == Block::lava) {
             if (block.type == Block::lava) {
-               // Turn into obsidian if water is found adjacently
-               if (map.is(x, y + 1, Block::water)) {
-                  map.setBlock(x, y, "obsidian");
-                  map.deleteBlock(x, y + 1);
-               } else if (map.is(x, y - 1, Block::water)) {
-                  map.setBlock(x, y, "obsidian");
-                  map.deleteBlock(x, y - 1);
-               } else if (map.is(x + 1, y, Block::water)) {
-                  map.setBlock(x, y, "obsidian");
-                  map.deleteBlock(x + 1, y);
-               } else if (map.is(x - 1, y, Block::water)) {
-                  map.setBlock(x, y, "obsidian");
-                  map.deleteBlock(x - 1, y);
+               // Turn into obsidian if water is in a 1 tile radius
+               for (int yy = y - 1; yy <= y + 1 && yy >= 0 && yy < map.sizeY; ++yy) {
+                  for (int xx = x - 1; xx <= x + 1 && xx >= 0 && xx < map.sizeX; ++xx) {
+                     if (map.isu(xx, yy, Block::water)) {
+                        if (map.blocks[y][x].furniture) {
+                           map.deleteBlock(x, y);
+                        } else {
+                           map.setBlock(x, y, "obsidian");
+                        }
+                        map.deleteBlock(xx, yy);
+                     }
+                  }
+               }
+
+               if (block.type != Block::lava) {
+                  continue;
                }
 
                // Update lava slower than water
@@ -146,19 +149,19 @@ void GameState::updatePhysics() {
                }
             }
 
-            if (map.empty(x, y + 1)) {
+            if (map.is(x, y + 1, Block::air)) {
                map.moveBlock(x, y, x, y + 1);
-            } else if (map.empty(x - 1, y) && map.empty(x + 1, y)) {
+            } else if (map.is(x - 1, y, Block::air) && map.is(x + 1, y, Block::air)) {
                if (chance(50)) {
                   goto moveWaterLeft;
                } else {
                   goto moveWaterRight;
                }
-            } else if (map.empty(x - 1, y)) {
+            } else if (map.is(x - 1, y, Block::air)) {
             moveWaterLeft:
                map.moveBlock(x, y, x - 1, y);
                --x; // Prevent the water tile from updating twice
-            } else if (map.empty(x + 1, y)) {
+            } else if (map.is(x + 1, y, Block::air)) {
             moveWaterRight:
                map.moveBlock(x, y, x + 1, y);
             }
