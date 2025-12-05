@@ -7,11 +7,11 @@
 #include <vector>
 
 static inline std::vector<std::string> backgroundTextures {
-   "mountains1", "mountains2"
+   "mountains1", "mountains2", "mountains3"
 };
 
 static inline std::vector<std::string> foregroundTextures {
-   "bg_trees1"
+   "bg_trees1", "bg_trees2", "bg_trees3"
 };
 
 void drawParallaxTexture(const Texture &texture, float &progress, float speed) {
