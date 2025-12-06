@@ -1,6 +1,8 @@
 #include "mngr/resource.hpp"
 #include "objs/player.hpp"
+#include "util/debug.hpp"
 #include "util/math.hpp"
+#include <raymath.h>
 
 // Constants
 
@@ -29,15 +31,11 @@ void Player::init() {
 // Update functions
 
 void Player::updatePlayer(Map &map) {
-   if (IsKeyReleased(KEY_TAB)) {
-      debugging = !debugging;
-   }
-
    updateTimer += GetFrameTime();
    while (updateTimer >= updateSpeed) {
       updateTimer -= updateSpeed;
 
-      if (debugging) {
+      if (isDebugModeActive()) {
          updateDebugMovement();
       } else {
          updateMovement();
@@ -92,12 +90,15 @@ void Player::updateMovement() {
 }
 
 void Player::updateDebugMovement() {
-   int directionX = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
-   int directionY = IsKeyDown(KEY_S) - IsKeyDown(KEY_W);
+   float directionX = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
+   float directionY = IsKeyDown(KEY_S) - (IsKeyDown(KEY_W) || IsKeyDown(KEY_SPACE));
+   Vector2 normalized = Vector2Normalize({directionX, directionY});
+
    float speed = (IsKeyDown(KEY_LEFT_SHIFT) ? debugFastFlySpeed : debugFlySpeed);
 
-   velocity.x = lerp(velocity.x, directionX * speed, acceleration * iceMultiplier) * waterMultiplier;
-   velocity.y = lerp(velocity.y, directionY * speed, acceleration * iceMultiplier) * waterMultiplier;
+   // Ice multiplier doesn't work as intended here
+   velocity.x = lerp(velocity.x, normalized.x * speed, acceleration) * waterMultiplier;
+   velocity.y = lerp(velocity.y, normalized.y * speed, acceleration) * waterMultiplier;
 
    if (directionX != 0) {
       flipX = (directionX == 1);
@@ -219,12 +220,7 @@ void Player::updateCollisions(Map &map) {
 }
 
 void Player::updateAnimation() {
-   if (debugging) {
-      frameX = 0;
-      return;
-   }
-
-   if (!onGround) {
+   if (!onGround || isDebugModeActive()) {
       fallTimer += GetFrameTime();
       if (fallTimer >= .05f) {
          frameX = 1;

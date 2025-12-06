@@ -21,8 +21,6 @@ struct Player {
    bool flipX = false;
    int frameX = 0;
 
-   bool debugging = false;
-
    // Constructors
 
    void init();
