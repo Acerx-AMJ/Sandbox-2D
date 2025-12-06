@@ -34,6 +34,8 @@ void Player::updatePlayer(Map &map) {
       updateCollisions(map);
    }
    updateAnimation();
+
+   delta = {pos.x - prev.x, pos.y - prev.y};
    prev = pos;
 }
 

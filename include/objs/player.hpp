@@ -6,7 +6,7 @@
 // Player
 
 struct Player {
-   Vector2 pos, vel, prev;
+   Vector2 pos, vel, prev, delta;
    bool onGround = false;
    bool canHoldJump = true;
    bool feetCollision = false;

@@ -115,7 +115,9 @@ void MenuState::updateLevelCreation() {
 }
 
 void MenuState::updateGeneratingLevel() {
-   generateMap(worldName.text, defaultMapSizeX, defaultMapSizeY);
+   MapGenerator generator (worldName.text, defaultMapSizeX, defaultMapSizeY);
+   generator.generate();
+   
    loadWorlds();
    phase = Phase::levelSelection;
 }

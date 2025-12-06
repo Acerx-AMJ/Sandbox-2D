@@ -239,8 +239,8 @@ void GameState::updatePhysics() {
 void GameState::render() {
    // Draw parallax background
    drawTextureNoOrigin(getTexture("sky"), {0, 0}, getScreenSize());
-   drawParallaxTexture(backgroundTexture, scrollingBg, player.vel.x * 30.f);
-   drawParallaxTexture(foregroundTexture, scrollingFg, player.vel.x * 40.f);
+   drawParallaxTexture(backgroundTexture, scrollingBg, player.delta.x * 75.f);
+   drawParallaxTexture(foregroundTexture, scrollingFg, player.delta.x * 100.f);
 
    BeginMode2D(camera);
    map.render(camera);
