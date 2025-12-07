@@ -8,14 +8,6 @@ static bool statMode = false;
 
 // Debug functions
 
-bool isProjectInDebug() {
-#ifndef NDEBUG
-   return true;
-#else
-   return false;
-#endif
-}
-
 bool isDebugModeActive() {
    return debugMode;
 }

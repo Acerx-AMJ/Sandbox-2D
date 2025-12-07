@@ -1,7 +1,9 @@
 #include "game/gameState.hpp"
 #include "game/menuState.hpp"
 #include "mngr/resource.hpp"
+#include "util/debug.hpp"
 #include "util/fileio.hpp"
+#include "util/math.hpp"
 #include "util/parallax.hpp"
 #include "util/position.hpp"
 #include "util/random.hpp"
@@ -14,12 +16,15 @@
 constexpr float cameraFollowSpeed = .416f;
 constexpr float minCameraZoom = 12.5f;
 constexpr float maxCameraZoom = 200.f;
+constexpr float minCameraZoomDebug = 1.25f;
+constexpr float maxCameraZoomDebug = 400.f;
 
 // Constructors
 
 GameState::GameState(const std::string &worldName)
    : backgroundTexture(getRandomBackground()), foregroundTexture(getRandomForeground()), worldName(worldName) {
    loadWorldData(worldName, player, camera.zoom, map);
+   camera.zoom = clamp(camera.zoom, minCameraZoom, maxCameraZoom);
    camera.target = player.getCenter();
    camera.offset = getScreenCenter();
    camera.rotation = 0.0f;
@@ -42,7 +47,9 @@ void GameState::updateControls() {
 
    float wheel = GetMouseWheelMove();
    if (wheel != 0.f) {
-      camera.zoom = std::clamp(std::exp(std::log(camera.zoom) + wheel * 0.2f), minCameraZoom, maxCameraZoom);
+      float minZoom = (isDebugModeActive() ? minCameraZoomDebug : minCameraZoom);
+      float maxZoom = (isDebugModeActive() ? maxCameraZoomDebug : maxCameraZoom);
+      camera.zoom = clamp(std::exp(std::log(camera.zoom) + wheel * 0.2f), minZoom, maxZoom);
    }
 
    if (IsKeyReleased(KEY_ESCAPE)) {
@@ -108,17 +115,17 @@ void GameState::updatePhysics() {
    }
 
    Rectangle bounds = getCameraBounds(camera);
-   Vector2 min {
-      (float)std::max(0, int(bounds.x)),
-      (float)std::max(0, int(bounds.y)),
+   Vector2 boundsMin {
+      (float)max(0, int(bounds.x)),
+      (float)max(0, int(bounds.y)),
    };
-   Vector2 max {
-      (float)std::min(map.sizeX - 1, int((bounds.x + bounds.width))),
-      (float)std::min(map.sizeY - 1, int((bounds.y + bounds.height))),
+   Vector2 boundsMax {
+      (float)min(map.sizeX - 1, int((bounds.x + bounds.width))),
+      (float)min(map.sizeY - 1, int((bounds.y + bounds.height))),
    };
 
-   for (int y = max.y; y >= min.y; --y) {
-      for (int x = max.x; x >= min.x; --x) {
+   for (int y = boundsMax.y; y >= boundsMin.y; --y) {
+      for (int x = boundsMax.x; x >= boundsMin.x; --x) {
          Block &block = map[y][x];
 
          if (block.type == Block::water || block.type == Block::lava) {
