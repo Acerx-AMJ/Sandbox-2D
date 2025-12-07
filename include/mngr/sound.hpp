@@ -15,7 +15,7 @@ void loadMusic();
 
 // Play functions
 
-void playSound(const std::string &name);
+void playSound(const std::string &name, float volume = 1.f);
 void playMusic(const std::string &name);
 
 // Get functions

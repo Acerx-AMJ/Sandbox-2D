@@ -43,7 +43,7 @@ void loadMusic() {
 
 // Play functions
 
-void playSound(const std::string &name) {
+void playSound(const std::string &name, float volume) {
    assert(savedSounds.count(name) || sounds.count(name), "Sound '{}' does not exist.", name);
    Sound sound;
 
@@ -53,7 +53,8 @@ void playSound(const std::string &name) {
    } else {
       sound = sounds[name];
    }
-   SetSoundPitch(sound, random(.75f, 1.25f));
+   SetSoundPitch(sound, random(.95f, 1.05f));
+   SetSoundVolume(sound, volume);
    PlaySound(sound);
 }
 

@@ -1,5 +1,6 @@
 #include "mngr/resource.hpp"
 #include "objs/player.hpp"
+#include "mngr/sound.hpp"
 #include "util/debug.hpp"
 #include "util/math.hpp"
 #include <raymath.h>
@@ -24,7 +25,7 @@ constexpr float jumpHoldTime = .4f;
 // Constructors
 
 void Player::init() {
-   velocity = {0, 0};
+   delta = velocity = {0, 0};
    previousPosition = position;
 }
 
@@ -67,12 +68,18 @@ void Player::updateMovement() {
    }
 
    if (IsKeyDown(KEY_SPACE) && canHoldJump) {
+      if (!justJumped) {
+         playSound("jump");
+         justJumped = true;
+      }
       velocity.y = jumpSpeed;
 
       holdJumpTimer += updateSpeed;
       if (holdJumpTimer >= jumpHoldTime) {
-         canHoldJump = false;
+         canHoldJump = justJumped = false;
       }
+   } else {
+      justJumped = false;
    }
 
    if (onGround) {
@@ -232,7 +239,11 @@ void Player::updateAnimation() {
          walkTimer += GetFrameTime() * clamp(abs(velocity.x) / speed, .1f, 1.5f);
          if (walkTimer >= .04f) {
             frameX = (frameX + 1) % 13;
-            frameX = (frameX < 2 ? 2 : frameX);
+            if (frameX < 2) {
+               frameX = 2;
+               playSound("footsteps", .7f);
+            }
+
             walkTimer -= .04f;
          }
       } else {

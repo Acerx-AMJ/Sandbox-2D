@@ -38,6 +38,7 @@ void LoadingState::update() {
       text = "Setting Up Sounds... ";
       saveSound("click", {"click", "click2", "click3"});
       saveSound("hover", {"hover", "hover2"});
+      saveSound("jump", {"jump1", "jump2", "jump3"});
       load = Load::music;
    } else if (load == Load::music) {
       text = "Loading Music... ";
