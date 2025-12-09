@@ -10,6 +10,7 @@
 #include "util/render.hpp"
 #include <algorithm>
 #include <cmath>
+#include <raymath.h>
 
 // Constants
 
@@ -276,6 +277,14 @@ void GameState::render() {
 
    player.render();
    EndMode2D();
+
+   // Draw the UI
+   for (int i = 0; i < 10; ++i) {
+      Vector2 position = {i * 65.f + 15.f, 15.f};
+      Vector2 textPosition = Vector2Add(position, {15.f, 15.f});
+      drawTextureNoOrigin(getTexture("small_frame"), position, {60.f, 60.f});
+      drawText(textPosition, std::to_string(i + 1).c_str(), 25);
+   }
 }
 
 State* GameState::change() {

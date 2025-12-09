@@ -41,7 +41,7 @@ MenuState::MenuState()
    createButton.text = "Create";
    worldName.rectangle = {GetScreenWidth() / 2.f - 210.f, GetScreenHeight() / 2.f - 70.f, 420.f, 140.f};
    worldName.maxChars = 48;
-   shouldWorldBeFlat.rectangle = {GetScreenWidth() / 2.f - 25.f, worldName.rectangle.y + 200.f, 50.f, 50.f};
+   shouldWorldBeFlat.rectangle = {GetScreenWidth() / 2.f - 35.f, worldName.rectangle.y + 200.f, 70.f, 70.f};
 
    playButton.texture = optionsButton.texture = quitButton.texture = backButton.texture = newButton.texture = createButton.texture = &getTexture("button");
 }
