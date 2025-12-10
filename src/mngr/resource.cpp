@@ -1,4 +1,5 @@
 #include "mngr/resource.hpp"
+#include "util/config.hpp"
 #include "util/format.hpp"
 #include <filesystem>
 #include <unordered_map>
@@ -15,7 +16,7 @@ Texture& getFallbackTexture() {
    static bool loaded = false;
 
    if (!loaded) {
-      Image image = GenImageChecked(8, 8, 2, 2, MAGENTA, BLACK);
+      Image image = GenImageChecked(textureSize, textureSize, textureSize / 4, textureSize / 4, MAGENTA, BLACK);
       fallbackTexture = LoadTextureFromImage(image);
       UnloadImage(image);
       loaded = true;

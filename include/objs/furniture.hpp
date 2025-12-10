@@ -1,6 +1,7 @@
 #ifndef OBJS_FURNITURE_HPP
 #define OBJS_FURNITURE_HPP
 
+#include "util/config.hpp"
 #include <raylib.h>
 #include <string>
 #include <vector>
@@ -15,11 +16,10 @@ struct FurniturePiece {
 
 struct Furniture {
    enum Type { none, tree, sapling, cactus, cactus_seed };
-   using id_t = unsigned char;
 
    std::vector<std::vector<FurniturePiece>> pieces;
    Type type = Type::tree;
-   id_t texId = 0;
+   objid_t texId = 0;
 
    int value = 0, value2 = 0;
    int posX = 0, posY = 0, sizeX = 0, sizeY = 0;
@@ -28,7 +28,7 @@ struct Furniture {
    // Constructors
 
    Furniture() = default;
-   Furniture(Type type, id_t texId, int value, int value2, int posX, int posY, int sizeX, int sizeY);
+   Furniture(Type type, objid_t texId, int value, int value2, int posX, int posY, int sizeX, int sizeY);
    Furniture(const std::string &texture, int posX, int posY, int sizeX, int sizeY, Type type);
 
    // Update functions
@@ -47,8 +47,8 @@ struct Furniture {
 
    // Id functions
 
-   static id_t getId(const std::string &name);
-   static std::string getName(id_t id);
+   static objid_t getId(const std::string &name);
+   static std::string getName(objid_t id);
 };
 
 #endif

@@ -1,6 +1,7 @@
 #include "mngr/resource.hpp"
 #include "mngr/sound.hpp"
 #include "ui/input.hpp"
+#include "util/config.hpp"
 #include "util/format.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
@@ -45,9 +46,9 @@ void Input::update() {
 // Render function
 
 void Input::render() {
-   unsigned char value = (typing ? std::sin(counter * .3f) * 65 + 190 : 255);
+   unsigned char value = (typing ? std::sin(counter * inputTextFadeSpeed) * inputTextFadeValue + inputTextFadeMin : 255);
    std::string wrapped = text;
-   wrapText(wrapped, rectangle.width - 10.f, 35, 1);
+   wrapText(wrapped, rectangle.width - inputTextWrapPadding, 35, 1);
 
    drawTextureNoOrigin(getTexture("button"), {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height});
    drawText(Vector2Add({rectangle.x, rectangle.y}, getOrigin({rectangle.width, rectangle.height})), (text.empty() ? fallback : wrapped).c_str(), 35, Color{value, value, value, 255});

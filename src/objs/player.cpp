@@ -5,23 +5,6 @@
 #include "util/math.hpp"
 #include <raymath.h>
 
-// Constants
-
-constexpr Vector2 size {2.f, 3.f};
-constexpr float frameSize = 16;
-
-constexpr float updateSpeed = 1.f / 60.f;
-constexpr float speed = 4.363f * .5f;
-constexpr float debugFlySpeed = speed * 2.f;
-constexpr float debugFastFlySpeed = speed * 5.f;
-constexpr float jumpSpeed = -6.667f * .5f;
-constexpr float gravity = .533f * .5f;
-constexpr float maxGravity = 14.667f * .5f;
-constexpr float acceleration = .083f;
-constexpr float deceleration = .167f;
-constexpr float smoothing = .083f * 2.f;
-constexpr float jumpHoldTime = .4f;
-
 // Constructors
 
 void Player::init() {
@@ -33,8 +16,8 @@ void Player::init() {
 
 void Player::updatePlayer(Map &map) {
    updateTimer += GetFrameTime();
-   while (updateTimer >= updateSpeed) {
-      updateTimer -= updateSpeed;
+   while (updateTimer >= playerUpdateSpeed) {
+      updateTimer -= playerUpdateSpeed;
 
       if (isDebugModeActive()) {
          updateDebugMovement();
@@ -61,7 +44,7 @@ void Player::updateMovement() {
    }
 
    if (directionX != 0) {
-      float speedX = (onGround ? speed : speed * .6f);
+      float speedX = (onGround ? playerSpeed : playerSpeed * airMultiplier);
       velocity.x = lerp(velocity.x, directionX * speedX, acceleration * iceMultiplier);
    } else {
       velocity.x = lerp(velocity.x, 0.f, deceleration * iceMultiplier);
@@ -74,7 +57,7 @@ void Player::updateMovement() {
       }
       velocity.y = jumpSpeed;
 
-      holdJumpTimer += updateSpeed;
+      holdJumpTimer += playerUpdateSpeed;
       if (holdJumpTimer >= jumpHoldTime) {
          canHoldJump = justJumped = false;
       }
@@ -115,7 +98,7 @@ void Player::updateDebugMovement() {
 // Update collisions
 
 void Player::updateCollisions(Map &map) {
-   position.y = lerp(position.y, position.y + velocity.y, smoothing);
+   position.y = lerp(position.y, position.y + velocity.y, playerSmoothing);
    bool collisionY = false, canGoUpSlopes = true;
    int waterTileCount = 0, lavaTileCount = 0, iceTileCount = 0;
 
@@ -123,13 +106,13 @@ void Player::updateCollisions(Map &map) {
       position.y = 0;
       canGoUpSlopes = canHoldJump = false;
       collisionY = true;
-   } else if (position.y > map.sizeY - size.y) {
-      position.y = map.sizeY - size.y;
+   } else if (position.y > map.sizeY - playerSize.y) {
+      position.y = map.sizeY - playerSize.y;
       onGround = collisionY = true;
    }
 
-   int maxX = min(map.sizeX, int(position.x + size.x) + 1);
-   int maxY = min(map.sizeY, int(position.y + size.y) + 1);
+   int maxX = min(map.sizeX, int(position.x + playerSize.x) + 1);
+   int maxY = min(map.sizeY, int(position.y + playerSize.y) + 1);
 
    for (int y = max(0, (int)position.y); y < maxY; ++y) {
       for (int x = max(0, (int)position.x); x < maxX; ++x) {
@@ -140,7 +123,7 @@ void Player::updateCollisions(Map &map) {
             continue;
          }
 
-         if (!CheckCollisionRecs({position.x, position.y, size.x, size.y}, {(float)x, (float)y, 1.f, 1.f})) {
+         if (!CheckCollisionRecs({position.x, position.y, playerSize.x, playerSize.y}, {(float)x, (float)y, 1.f, 1.f})) {
             continue;
          }
 
@@ -150,8 +133,8 @@ void Player::updateCollisions(Map &map) {
             collisionY = true;
          }
 
-         if (previousPosition.y + size.y <= y) {
-            position.y = y - size.y;
+         if (previousPosition.y + playerSize.y <= y) {
+            position.y = y - playerSize.y;
             onGround = true;
             collisionY = true;
             iceTileCount += map.isu(x, y, Block::ice);
@@ -160,19 +143,19 @@ void Player::updateCollisions(Map &map) {
    }
 
    if (!torsoCollision && feetCollision && !IsKeyDown(KEY_S)) {
-      position.y = feetCollisionY - size.y;
+      position.y = feetCollisionY - playerSize.y;
    }
 
-   position.x = lerp(position.x, position.x + velocity.x, smoothing);
+   position.x = lerp(position.x, position.x + velocity.x, playerSmoothing);
 
-   Rectangle torso {position.x, position.y - 1.f, size.x, size.y};
-   Rectangle feet {position.x, position.y + 2.f, size.x, 1.f};
+   Rectangle torso {position.x, position.y - 1.f, playerSize.x, playerSize.y};
+   Rectangle feet {position.x, position.y + 2.f, playerSize.x, 1.f};
    torsoCollision = feetCollision = false;
    feetCollisionY = 0;
 
-   position.x = clamp(position.x, 0.f, map.sizeX - size.x);
-   maxX = min(map.sizeX, int(position.x + size.x) + 1);
-   maxY = min(map.sizeY, int(position.y + size.y) + 1);
+   position.x = clamp(position.x, 0.f, map.sizeX - playerSize.x);
+   maxX = min(map.sizeX, int(position.x + playerSize.x) + 1);
+   maxY = min(map.sizeY, int(position.y + playerSize.y) + 1);
 
    for (int y = max(0, (int)position.y - 1); y < maxY; ++y) {
       for (int x = max(0, (int)position.x); x < maxX; ++x) {
@@ -193,7 +176,7 @@ void Player::updateCollisions(Map &map) {
             torsoCollision = true;
          }
 
-         if (!CheckCollisionRecs({position.x, position.y, size.x, size.y}, {(float)x, (float)y, 1.f, 1.f})) {
+         if (!CheckCollisionRecs({position.x, position.y, playerSize.x, playerSize.y}, {(float)x, (float)y, 1.f, 1.f})) {
             continue;
          }
 
@@ -201,14 +184,14 @@ void Player::updateCollisions(Map &map) {
             position.x = x + 1.f;
          }
 
-         if (previousPosition.x + size.x <= x) {
-            position.x = x - size.x;
+         if (previousPosition.x + playerSize.x <= x) {
+            position.x = x - playerSize.x;
          }
       }
    }
 
-   position.x = clamp(position.x, 0.f, map.sizeX - size.x);
-   position.y = clamp(position.y, 0.f, map.sizeY - size.y);
+   position.x = clamp(position.x, 0.f, map.sizeX - playerSize.x);
+   position.y = clamp(position.y, 0.f, map.sizeY - playerSize.y);
 
    if (lavaTileCount > 0) {
       waterMultiplier = .6f;
@@ -236,7 +219,7 @@ void Player::updateAnimation() {
       fallTimer = 0.f;
 
       if (previousPosition.x != position.x) {
-         walkTimer += GetFrameTime() * clamp(abs(velocity.x) / speed, .1f, 1.5f);
+         walkTimer += GetFrameTime() * clamp(abs(velocity.x) / playerSpeed, .1f, 1.5f);
          if (walkTimer >= .04f) {
             frameX = (frameX + 1) % 13;
             if (frameX < 2) {
@@ -256,15 +239,15 @@ void Player::updateAnimation() {
 
 void Player::render() {
    Texture2D &texture = getTexture("player");
-   DrawTexturePro(texture, {frameX * frameSize, 0.f, (flipX ? -frameSize : frameSize), (float)texture.height}, {position.x, position.y, size.x, size.y}, {0, 0}, 0, WHITE);
+   DrawTexturePro(texture, {frameX * playerFrameSize, 0.f, (flipX ? -playerFrameSize : playerFrameSize), (float)texture.height}, {position.x, position.y, playerSize.x, playerSize.y}, {0, 0}, 0, WHITE);
 }
 
 // Getter functions
 
 Vector2 Player::getCenter() {
-   return {position.x + size.x / 2.f, position.y + size.y / 2.f};
+   return {position.x + playerSize.x / 2.f, position.y + playerSize.y / 2.f};
 }
 
 Rectangle Player::getBounds() {
-   return {position.x, position.y, size.x, size.y};
+   return {position.x, position.y, playerSize.x, playerSize.y};
 }

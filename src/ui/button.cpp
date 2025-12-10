@@ -1,5 +1,6 @@
 #include "mngr/sound.hpp"
 #include "ui/button.hpp"
+#include "util/config.hpp"
 #include "util/render.hpp"
 #include <raymath.h>
 
@@ -10,9 +11,9 @@ void Button::update(float offsetY) {
    clicked = hovering && IsMouseButtonReleased(MOUSE_LEFT_BUTTON);
 
    if (down) {
-      scale = std::max(scale * 1.f - GetFrameTime(), .98f);
+      scale = std::max(scale * 1.f - GetFrameTime(), buttonScaleMin);
    } else if (hovering) {
-      scale = std::min(scale * 1.f + GetFrameTime(), 1.02f);
+      scale = std::min(scale * 1.f + GetFrameTime(), buttonScaleMax);
    } else if (scale != 1.f) {
       scale = (scale < 1.f ? std::min(1.f, scale * 1.f + GetFrameTime()) : std::max(1.f, scale * 1.f - GetFrameTime()));
    }

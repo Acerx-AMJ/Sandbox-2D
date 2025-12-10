@@ -1,5 +1,6 @@
 #include "util/parallax.hpp"
 #include "mngr/resource.hpp"
+#include "util/config.hpp"
 #include "util/position.hpp"
 #include "util/random.hpp"
 #include "util/render.hpp"
@@ -29,7 +30,7 @@ void drawParallaxTexture(const Texture &texture, float &progress, float speed, b
       progress = -screenSize.x;
    }
 
-   Color color = (background ? Color{190, 190, 170, 255} : Color{210, 210, 190, 255}); 
+   Color color = (background ? backgroundTint : foregroundTint); 
    drawTextureNoOrigin(texture, {progress, 0}, screenSize, color);
    drawTextureNoOrigin(texture, {screenSize.x + progress, 0}, screenSize, color);
 }

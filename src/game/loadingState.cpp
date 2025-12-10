@@ -2,6 +2,7 @@
 #include "game/menuState.hpp"
 #include "mngr/resource.hpp"
 #include "mngr/sound.hpp"
+#include "util/config.hpp"
 #include "util/fileio.hpp"
 #include "util/format.hpp"
 #include "util/position.hpp"
@@ -13,13 +14,13 @@ LoadingState::LoadingState() {
    loadFont("andy", "assets/fonts/andy.ttf");
    loadTexture("loading", "assets/sprites/ui/loading.png");
    splash = getRandomLineFromFile("assets/splash.txt");
-   wrapText(splash, GetScreenWidth() - 50.f, 40, 1.f);
+   wrapText(splash, GetScreenWidth() - splashWrapOffset, 40, 1.f);
 }
 
 // Update functions
 
 void LoadingState::update() {
-   rotation += GetFrameTime() * 360.f;
+   rotation += GetFrameTime() * loadingIconRotationSpeed;
 
    // Sometimes brute-forcing is better than over-engineering an automatic way to do everything
    if (load == Load::fonts) {
@@ -60,9 +61,9 @@ void LoadingState::render() {
       ltext = text + std::to_string((int)load) + "/" + std::to_string((int)Load::count);
    }
 
-   drawText(getScreenCenter({0.f, -175.f}), ltext.c_str(), 80);
-   drawText(getScreenCenter({0.f, 100.f}), splash.c_str(), 40);
-   drawTexture(tex, getScreenCenter(), {70.f, 70.f}, rotation);
+   drawText(getScreenCenter(loadingTextOffset), ltext.c_str(), 80);
+   drawText(getScreenCenter(splashTextOffset), splash.c_str(), 40);
+   drawTexture(tex, getScreenCenter(), loadingIconSize, rotation);
 }
 
 State* LoadingState::change() {

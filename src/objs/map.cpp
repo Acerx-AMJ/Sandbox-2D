@@ -8,10 +8,8 @@
 
 // Constants
 
-constexpr Block::id_t blockCount = 20;
-constexpr Color backgroundTint {120, 120, 120, 255};
-
-static inline std::unordered_map<std::string, Block::id_t> blockIds {
+constexpr blockid_t blockCount = 20;
+static inline std::unordered_map<std::string, blockid_t> blockIds {
    {"air", 0}, {"grass", 1}, {"dirt", 2}, {"clay", 3}, {"stone", 4},
    {"sand", 5}, {"sandstone", 6}, {"water", 7}, {"bricks", 8}, {"glass", 9},
    {"planks", 10}, {"stone_bricks", 11}, {"tiles", 12}, {"obsidian", 13}, {"lava", 14},
@@ -34,7 +32,7 @@ static inline std::array<Block::Type, blockCount> blockTypes {{
 
 // Block functions
 
-Block::id_t Block::getId(const std::string &name) {
+blockid_t Block::getId(const std::string &name) {
    return blockIds[name];
 }
 
@@ -57,7 +55,7 @@ void Map::setBlock(int x, int y, const std::string &name, bool isWall) {
    }
 }
 
-void Map::setBlock(int x, int y, Block::id_t id, bool isWall) {
+void Map::setBlock(int x, int y, blockid_t id, bool isWall) {
    setBlock(x, y, blockNames[id], isWall);
 }
 
@@ -145,7 +143,7 @@ void Map::render(Camera2D &camera) {
             x += 1;
          }
 
-         drawTextureBlock(*wall.texture, {(float)oldX, (float)y, float(x - oldX), 1}, backgroundTint);
+         drawTextureBlock(*wall.texture, {(float)oldX, (float)y, float(x - oldX), 1}, wallTint);
          x -= 1;
       }
    }

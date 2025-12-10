@@ -1,6 +1,5 @@
 #include "objs/furniture.hpp"
 #include "mngr/resource.hpp"
-#include "objs/generation.hpp"
 #include "objs/map.hpp"
 #include "util/random.hpp"
 #include <array>
@@ -19,8 +18,6 @@ static inline std::array<const char*, furnitureCount> furnitureTextureNames {
    "jungle_tree", "jungle_sapling", "cactus", "cactus_seed"
 };
 
-constexpr int texSize = 8;
-
 // Helper functions
 
 inline void setBlock(FurniturePiece &piece, int tx, int ty) {
@@ -35,7 +32,7 @@ inline bool isBlockSoil(Map &map, int x, int y) {
 
 // Furniture functions
 
-Furniture::Furniture(Type type, id_t texId, int value, int value2, int posX, int posY, int sizeX, int sizeY)
+Furniture::Furniture(Type type, objid_t texId, int value, int value2, int posX, int posY, int sizeX, int sizeY)
    : type(type), texId(texId), value(value), value2(value2), posX(posX), posY(posY), sizeX(sizeX), sizeY(sizeY) {
    pieces = std::vector<std::vector<FurniturePiece>>(sizeY, std::vector<FurniturePiece>(sizeX, FurniturePiece{}));   
 }
@@ -69,7 +66,7 @@ void Furniture::update(Map &map) {
       }
 
       if (value == 0) {
-         value2 = random(200, 1500);
+         value2 = random(saplingGrowTimeMin, saplingGrowTimeMax);
       }
 
       value += 1;
@@ -93,7 +90,7 @@ void Furniture::update(Map &map) {
       }
 
       if (value == 0) {
-         value2 = random(350, 1750);
+         value2 = random(cactusGrowSpeedMin, cactusGrowSpeedMax);
       }
 
       value += 1;
@@ -118,7 +115,7 @@ Furniture Furniture::get(int x, int y, Map &map, Type type, bool debug) {
       }
       
       bool palm = (map.isu(x, y + 1, Block::sand));
-      int height = (palm ? random(8, 22) : random(5, 18));
+      int height = (palm ? random(palmSizeMin, palmSizeMax) : random(treeSizeMin, treeSizeMax));
       for (int i = 0; i < height && i < map.sizeY; ++i) {
          if (!map.empty(x, y - i)) {
             height = i;
@@ -126,69 +123,69 @@ Furniture Furniture::get(int x, int y, Map &map, Type type, bool debug) {
          }
       }
 
-      if (!debug && (height < (palm ? 8 : 5))) {
+      if (!debug && (height < (palm ? palmSizeMin : treeSizeMin))) {
          return {};
       }
-      static std::unordered_map<Block::id_t, std::string> textureMap {
+      static std::unordered_map<blockid_t, std::string> textureMap {
          {Block::getId("grass"), "tree"}, {Block::getId("dirt"), "tree"}, {Block::getId("sand"), "palm"},
          {Block::getId("snow"), "pine"}, {Block::getId("mud"), "jungle_tree"}, {Block::getId("jungle_grass"), "jungle_tree"}
       };
 
       Furniture tree (textureMap[map.blocks[y + 1][x].id], x - 1, y - height + 1, 3, height, Furniture::tree);
-      int offsetTx = (chance(50) ? 0 : 3 * texSize);
+      int offsetTx = (chance(50) ? 0 : 3 * textureSize);
 
       for (int i = 0; i < (palm ? 3 : 2); ++i) {
          for (int j = 0; j < 3; ++j) {
-            setBlock(tree.pieces[i][j], offsetTx + j * texSize, i * texSize);
+            setBlock(tree.pieces[i][j], offsetTx + j * textureSize, i * textureSize);
          }
       }
 
       for (int i = (palm ? 3 : 2); i < height; ++i) {
          FurniturePiece &piece = tree.pieces[i][1];
          if (palm) {
-            setBlock(piece, random(0, 2) * texSize, (i + 1 == height ? 4 : 3) * texSize);
+            setBlock(piece, random(0, 2) * textureSize, (i + 1 == height ? 4 : 3) * textureSize);
             continue;
          }
 
-         setBlock(piece, 2 * texSize, 3 * texSize);
+         setBlock(piece, 2 * textureSize, 3 * textureSize);
 
          if (i + 1 == height) {
-            bool rightFree = (map.empty(tree.posX + 2, tree.posY + i) && isBlockSoil(map, tree.posX + 2, tree.posY + i + 1) && chance(25));
-            bool leftFree = (map.empty(tree.posX, tree.posY + i) && isBlockSoil(map, tree.posX, tree.posY + i + 1) && chance(25));
+            bool rightFree = (map.empty(tree.posX + 2, tree.posY + i) && isBlockSoil(map, tree.posX + 2, tree.posY + i + 1) && chance(treeRootChance));
+            bool leftFree = (map.empty(tree.posX, tree.posY + i) && isBlockSoil(map, tree.posX, tree.posY + i + 1) && chance(treeRootChance));
 
             if (rightFree) {
-               setBlock(tree.pieces[i][2], 4 * texSize, 4 * texSize);
-               piece.tx = 3 * texSize;
-               piece.ty = 4 * texSize;
+               setBlock(tree.pieces[i][2], 4 * textureSize, 4 * textureSize);
+               piece.tx = 3 * textureSize;
+               piece.ty = 4 * textureSize;
             }
             if (leftFree) {
-               setBlock(tree.pieces[i][0], 0 * texSize, 4 * texSize);
-               piece.tx = 1 * texSize;
-               piece.ty = 4 * texSize;
+               setBlock(tree.pieces[i][0], 0 * textureSize, 4 * textureSize);
+               piece.tx = 1 * textureSize;
+               piece.ty = 4 * textureSize;
             }
             if (rightFree && leftFree) {
-               piece.tx = 5 * texSize;
-               piece.ty = 4 * texSize;
+               piece.tx = 5 * textureSize;
+               piece.ty = 4 * textureSize;
             } else if (!rightFree && !leftFree) {
-               piece.ty = 4 * texSize;
+               piece.ty = 4 * textureSize;
             }
          } else {
-            bool rightFree = (map.empty(tree.posX + 2, tree.posY + i) && chance(15));
-            bool leftFree = (map.empty(tree.posX, tree.posY + i) && chance(15));
+            bool rightFree = (map.empty(tree.posX + 2, tree.posY + i) && chance(treeBranchChance));
+            bool leftFree = (map.empty(tree.posX, tree.posY + i) && chance(treeBranchChance));
 
             if (rightFree) {
-               setBlock(tree.pieces[i][2], random(3, 5) * texSize, 2 * texSize);
-               piece.tx = 3 * texSize;
-               piece.ty = 3 * texSize;
+               setBlock(tree.pieces[i][2], random(3, 5) * textureSize, 2 * textureSize);
+               piece.tx = 3 * textureSize;
+               piece.ty = 3 * textureSize;
             }
             if (leftFree) {
-               setBlock(tree.pieces[i][0], random(0, 2) * texSize, 2 * texSize);
-               piece.tx = 1 * texSize;
-               piece.ty = 3 * texSize;
+               setBlock(tree.pieces[i][0], random(0, 2) * textureSize, 2 * textureSize);
+               piece.tx = 1 * textureSize;
+               piece.ty = 3 * textureSize;
             }
             if (rightFree && leftFree) {
-               piece.tx = 5 * texSize;
-               piece.ty = 3 * texSize;
+               piece.tx = 5 * textureSize;
+               piece.ty = 3 * textureSize;
             }
          }
       }
@@ -200,18 +197,18 @@ Furniture Furniture::get(int x, int y, Map &map, Type type, bool debug) {
          return {};
       }
 
-      static std::unordered_map<Block::id_t, std::string> textureMap {
+      static std::unordered_map<blockid_t, std::string> textureMap {
          {Block::getId("grass"), "sapling"}, {Block::getId("dirt"), "sapling"}, {Block::getId("sand"), "palm_sapling"},
          {Block::getId("snow"), "pine_sapling"}, {Block::getId("mud"), "jungle_sapling"}, {Block::getId("jungle_grass"), "jungle_sapling"}
       };
-      id_t btype = map.blocks[y + 2][x].id;
+      objid_t btype = map.blocks[y + 2][x].id;
       Furniture sapling ((!textureMap.count(btype) ? "sapling" : textureMap[btype]), x, y, 1, 2, Furniture::sapling);
 
       int value = random(0, 100);
-      int offsetTx = (value < 33 ? 0 : (value < 66 ? texSize : 2 * texSize));
+      int offsetTx = (value < 33 ? 0 : (value < 66 ? textureSize : 2 * textureSize));
 
-      setBlock(sapling.pieces[0][0], offsetTx, 0 * texSize);
-      setBlock(sapling.pieces[1][0], offsetTx, 1 * texSize);
+      setBlock(sapling.pieces[0][0], offsetTx, 0 * textureSize);
+      setBlock(sapling.pieces[1][0], offsetTx, 1 * textureSize);
       return sapling;
    } break;
 
@@ -220,7 +217,7 @@ Furniture Furniture::get(int x, int y, Map &map, Type type, bool debug) {
          return {};
       }
 
-      int height = random(4, 9);
+      int height = random(cactusSizeMin, cactusSizeMax);
       for (int i = 0; i < height && i < map.sizeY; ++i) {
          if (!map.empty(x, y - i)) {
             height = i;
@@ -244,7 +241,7 @@ Furniture Furniture::get(int x, int y, Map &map, Type type, bool debug) {
             if (j == 1) {
                cactus.pieces[i][j].nil = false;
             } else if (i != cactus.sizeY - 1 && i != 0) {
-               cactus.pieces[i][j].nil = chance(50);
+               cactus.pieces[i][j].nil = chance(cactusBranchChance);
             }
          }
       }
@@ -258,32 +255,32 @@ Furniture Furniture::get(int x, int y, Map &map, Type type, bool debug) {
                bool leftStub = (!cactus.pieces[i][0].nil && i < cactus.sizeY + 1 && cactus.pieces[i + 1][0].nil);
 
                if (rightStub && leftStub) {
-                  setBlock(piece, 0 * texSize, 3 * texSize);
+                  setBlock(piece, 0 * textureSize, 3 * textureSize);
                } else if (rightStub) {
-                  setBlock(piece, 0 * texSize, 1 * texSize);
+                  setBlock(piece, 0 * textureSize, 1 * textureSize);
                } else if (leftStub) {
-                  setBlock(piece, 0 * texSize, 2 * texSize);
+                  setBlock(piece, 0 * textureSize, 2 * textureSize);
                } else {
                   if (i == 0) {
-                     setBlock(piece, 1 * texSize, (chance(10) ? 1 : 0) * texSize);
+                     setBlock(piece, 1 * textureSize, (chance(cactusFlowerChance) ? 1 : 0) * textureSize);
                   } else if (i == cactus.sizeY - 1) {
-                     setBlock(piece, 1 * texSize, 3 * texSize);
+                     setBlock(piece, 1 * textureSize, 3 * textureSize);
                   } else {
-                     setBlock(piece, 0 * texSize, 0 * texSize);
+                     setBlock(piece, 0 * textureSize, 0 * textureSize);
                   }
                }
                continue;
             } else if (!piece.nil) {
-               int offsetX = (j == 0 ? 2 : 3) * texSize;
+               int offsetX = (j == 0 ? 2 : 3) * textureSize;
 
                if (cactus.pieces[i - 1][j].nil && cactus.pieces[i + 1][j].nil) {
-                  setBlock(piece, offsetX, 3 * texSize);
+                  setBlock(piece, offsetX, 3 * textureSize);
                } else if (cactus.pieces[i - 1][j].nil) {
-                  setBlock(piece, offsetX, 0 * texSize);
+                  setBlock(piece, offsetX, 0 * textureSize);
                } else if (cactus.pieces[i + 1][j].nil) {
-                  setBlock(piece, offsetX, 2 * texSize);
+                  setBlock(piece, offsetX, 2 * textureSize);
                } else {
-                  setBlock(piece, offsetX, 1 * texSize);
+                  setBlock(piece, offsetX, 1 * textureSize);
                }
             }
          }
@@ -298,9 +295,9 @@ Furniture Furniture::get(int x, int y, Map &map, Type type, bool debug) {
 
       Furniture cactus_seed ("cactus_seed", x, y, 1, 1, Furniture::cactus_seed);
       int value = random(0, 100);
-      int offsetTx = (value < 33 ? 0 : (value < 66 ? texSize : 2 * texSize));
+      int offsetTx = (value < 33 ? 0 : (value < 66 ? textureSize : 2 * textureSize));
 
-      setBlock(cactus_seed.pieces[0][0], offsetTx * texSize, 0 * texSize);
+      setBlock(cactus_seed.pieces[0][0], offsetTx * textureSize, 0 * textureSize);
       return cactus_seed;
    } break;
 
@@ -324,8 +321,8 @@ void Furniture::preview(Map &map) {
          if (piece.nil) {
             continue;
          }
-         Color color = Fade((map.empty(x, y) ? WHITE : RED), .75f);
-         DrawTexturePro(getTexture(furnitureTextureNames[texId]), {(float)piece.tx, (float)piece.ty, texSize, texSize}, {(float)x, (float)y, 1.f, 1.f}, {0, 0}, 0, color);
+         Color color = Fade((map.empty(x, y) ? WHITE : RED), previewAlpha);
+         DrawTexturePro(getTexture(furnitureTextureNames[texId]), {(float)piece.tx, (float)piece.ty, textureSize, textureSize}, {(float)x, (float)y, 1.f, 1.f}, {0, 0}, 0, color);
       }
    }
 }
@@ -337,17 +334,17 @@ void Furniture::render(int minX, int minY, int maxX, int maxY) {
          if (y < minY || x < minX || piece.nil) {
             continue;
          }
-         DrawTexturePro(getTexture(furnitureTextureNames[texId]), {(float)piece.tx, (float)piece.ty, texSize, texSize}, {(float)x, (float)y, 1.f, 1.f}, {0, 0}, 0, WHITE);
+         DrawTexturePro(getTexture(furnitureTextureNames[texId]), {(float)piece.tx, (float)piece.ty, textureSize, textureSize}, {(float)x, (float)y, 1.f, 1.f}, {0, 0}, 0, WHITE);
       }
    }
 }
 
 // Id functions
 
-Furniture::id_t Furniture::getId(const std::string &name) {
+objid_t Furniture::getId(const std::string &name) {
    return furnitureTextureIds[name];
 }
 
-std::string Furniture::getName(id_t id) {
+std::string Furniture::getName(objid_t id) {
    return furnitureTextureNames[id];
 }

@@ -2,15 +2,6 @@
 #include "util/fileio.hpp"
 #include "util/random.hpp"
 
-// Constants
-
-constexpr float startY = .5f;
-constexpr float seaLevel = .4f;
-constexpr int rockOffsetStart = 12;
-constexpr int rockOffsetMin = 5;
-constexpr int rockOffsetMax = 25;
-constexpr int maxWaterLength = 100;
-
 // Biome constants
 
 struct BiomeData {

@@ -2,26 +2,26 @@
 #define OBJS_MAP_HPP
 
 #include "objs/furniture.hpp"
+#include "util/config.hpp"
 #include <string>
 
 // Block
 
 struct Block {
    enum Type { air, grass, dirt, solid, platform, transparent, sand, snow, ice, water, lava };
-   using id_t = unsigned char;
-   
+
    Texture *texture = nullptr;
    Type type = Type::air;
 
    // Unsigned chars can only hold 256 unique IDs. Currently trying to save
    // block space, so it's a problem for later
-   id_t id = 0;
+   blockid_t id = 0;
    bool furniture = false;
 
    // Values used by physics updates, specific to the block type
    unsigned char value = 0, value2 = 0;
 
-   static id_t getId(const std::string &name);
+   static blockid_t getId(const std::string &name);
 };
 
 // Map
@@ -35,7 +35,7 @@ struct Map {
 
    void init();
    void setBlock(int x, int y, const std::string &name, bool isWall = false);
-   void setBlock(int x, int y, Block::id_t id, bool isWall = false);
+   void setBlock(int x, int y, blockid_t id, bool isWall = false);
    void deleteBlock(int x, int y, bool isWall = false);
    void moveBlock(int oldX, int oldY, int newX, int newY);
 

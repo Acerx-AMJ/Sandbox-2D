@@ -2,6 +2,7 @@
 #include "game/menuState.hpp"
 #include "mngr/resource.hpp"
 #include "mngr/sound.hpp"
+#include "util/config.hpp"
 #include "util/debug.hpp"
 #include "util/fileio.hpp"
 #include "util/math.hpp"
@@ -12,14 +13,6 @@
 #include <algorithm>
 #include <cmath>
 #include <raymath.h>
-
-// Constants
-
-constexpr float cameraFollowSpeed = .416f;
-constexpr float minCameraZoom = 12.5f;
-constexpr float maxCameraZoom = 200.f;
-constexpr float minCameraZoomDebug = 1.25f;
-constexpr float maxCameraZoomDebug = 400.f;
 
 // Constructors
 
@@ -32,11 +25,11 @@ GameState::GameState(const std::string &worldName)
    camera.rotation = 0.0f;
 
    // Init UI
-   continueButton.rectangle = {GetScreenWidth() / 2.f, GetScreenHeight() / 2.f, 210.f, 70.f};
+   continueButton.rectangle = {GetScreenWidth() / 2.f, GetScreenHeight() / 2.f, buttonWidth, buttonHeight};
    continueButton.text = "Continue";
-   menuButton.rectangle = {continueButton.rectangle.x, continueButton.rectangle.y + 90.f, 210.f, 70.f};
+   menuButton.rectangle = {continueButton.rectangle.x, continueButton.rectangle.y + buttonPaddingY, buttonWidth, buttonHeight};
    menuButton.text = "Save & Quit";
-   pauseButton.rectangle = {GetScreenWidth() - 105.f, GetScreenHeight() - 35.f, 210.f, 70.f};
+   pauseButton.rectangle = {GetScreenWidth() - buttonWidth / 2.f, GetScreenHeight() - buttonHeight / 2.f, buttonWidth, buttonHeight};
    pauseButton.text = "Pause";
    continueButton.texture = menuButton.texture = &getTexture("button");
 }
@@ -155,8 +148,8 @@ void GameState::updatePhysics() {
    /************************************/
 
    physicsTimer += GetFrameTime();
-   if (physicsTimer >= .1f) {
-      physicsTimer -= .1f;
+   if (physicsTimer >= physicsUpdateTime) {
+      physicsTimer -= physicsUpdateTime;
    } else {
       return;
    }
@@ -197,7 +190,7 @@ void GameState::updatePhysics() {
 
                // Update lava slower than water
                ++map[y][x].value;
-               if (map[y][x].value >= 6) {
+               if (map[y][x].value >= lavaUpdateSpeed) {
                   map[y][x].value = 0;
                } else {
                   continue;
@@ -241,10 +234,10 @@ void GameState::updatePhysics() {
             }
 
             if (map[y][x].value2 == 0) {
-               map[y][x].value2 = random(175, 255);
+               map[y][x].value2 = random(cactusGrowSpeedMin, cactusGrowSpeedMax);
             }
 
-            map[y][x].value += chance(2);
+            map[y][x].value += chance(1);
             if (map[y][x].value >= map[y][x].value2 && map[y][x].value2 != 0 && map.empty(x, y - 1) && map.empty(x, y - 2)) {
                map[y][x].value = map[y][x].value2 = 0;
                Furniture::generate(x, y - 1, map, Furniture::cactus_seed);
@@ -254,7 +247,7 @@ void GameState::updatePhysics() {
          // Update grass and dirt
          if (block.type == Block::dirt && (map.is(x, y - 1, Block::air) || map.is(x, y - 1, Block::water) || map.is(x, y - 1, Block::platform))) {
             if (map[y][x].value2 == 0) {
-               map[y][x].value2 = random(100, 255);
+               map[y][x].value2 = random(grassGrowSpeedMin, grassGrowSpeedMax);
             }
 
             ++map[y][x].value;
@@ -266,7 +259,7 @@ void GameState::updatePhysics() {
 
          if (block.type == Block::grass && !map.is(x, y - 1, Block::air) && !map.is(x, y - 1, Block::water) && !map.is(x, y - 1, Block::platform)) {
             if (map[y][x].value2 == 0) {
-               map[y][x].value2 = random(100, 255);
+               map[y][x].value2 = random(grassGrowSpeedMin, grassGrowSpeedMax);
             }
 
             ++map[y][x].value;
@@ -294,8 +287,8 @@ void GameState::render() {
    // Draw parallax background
    float delta = (paused ? 0 : player.delta.x);
    drawTextureNoOrigin(getTexture("sky"), {0, 0}, getScreenSize());
-   drawParallaxTexture(backgroundTexture, scrollingBg, delta * 75.f, true);
-   drawParallaxTexture(foregroundTexture, scrollingFg, delta * 100.f, false);
+   drawParallaxTexture(backgroundTexture, scrollingBg, delta * parallaxBgSpeed, true);
+   drawParallaxTexture(foregroundTexture, scrollingFg, delta * parallaxFgSpeed, false);
 
    BeginMode2D(camera);
    map.render(camera);
@@ -317,7 +310,7 @@ void GameState::render() {
          obj.posY = mousePos.y;
          obj.preview(map);
       } else {
-         drawTextureBlock(getTexture(blockMap[index]), {(float)(int)mousePos.x, (float)(int)mousePos.y, 1.f, 1.f}, Fade((drawWall ? Color{120, 120, 120, 255} : (map.blocks[mousePos.y][mousePos.x].furniture ? RED : WHITE)), .75f));
+         drawTextureBlock(getTexture(blockMap[index]), {(float)(int)mousePos.x, (float)(int)mousePos.y, 1.f, 1.f}, Fade((drawWall ? wallTint : (map.blocks[mousePos.y][mousePos.x].furniture ? RED : WHITE)), previewAlpha));
       }
    }
    /************************************/
@@ -326,14 +319,14 @@ void GameState::render() {
    EndMode2D();
 
    // Draw the UI
-   for (int y = 0; y < (inventoryOpen ? 4 : 1); ++y) {
-      for (int x = 0; x < 10; ++x) {
-         Vector2 position = {x * 65.f + 15.f, y * 65.f + 15.f};
-         drawTextureNoOrigin(getTexture("small_frame"), position, {60.f, 60.f});
+   for (float y = 0; y < (inventoryOpen ? inventoryHeight : 1); ++y) {
+      for (float x = 0; x < inventoryWidth; ++x) {
+         Vector2 position = Vector2Add(Vector2Multiply(itemframePadding, {x, y}), itemframeTopLeft);
+         drawTextureNoOrigin(getTexture("small_frame"), position, itemframeSize);
 
          if (y == 0) {
-            Vector2 textPosition = Vector2Add(position, {15.f, 15.f});
-            drawText(textPosition, std::to_string(x + 1).c_str(), 25);
+            Vector2 textPosition = Vector2Add(position, itemframeIndexOffset);
+            drawText(textPosition, std::to_string((int)x + 1).c_str(), 25);
          }
       }
    }

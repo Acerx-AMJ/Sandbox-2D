@@ -1,4 +1,5 @@
 #include "mngr/sound.hpp"
+#include "util/config.hpp"
 #include "util/format.hpp" // IWYU pragma: export
 #include "util/random.hpp"
 #include <filesystem>
@@ -53,7 +54,7 @@ void playSound(const std::string &name, float volume) {
    } else {
       sound = sounds[name];
    }
-   SetSoundPitch(sound, random(.95f, 1.05f));
+   SetSoundPitch(sound, random(soundPitchMin, soundPitchMax));
    SetSoundVolume(sound, volume);
    PlaySound(sound);
 }

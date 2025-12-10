@@ -2,6 +2,7 @@
 #include "game/menuState.hpp"
 #include "mngr/resource.hpp"
 #include "objs/generation.hpp"
+#include "util/config.hpp"
 #include "util/fileio.hpp"
 #include "util/parallax.hpp"
 #include "util/position.hpp"
@@ -9,29 +10,24 @@
 #include <cmath>
 #include <filesystem>
 
-// Constants
-
-constexpr int defaultMapSizeX = 2000;
-constexpr int defaultMapSizeY = 750;
-
 // Constructors
 
 MenuState::MenuState()
    : backgroundTexture(getRandomBackground()), foregroundTexture(getRandomForeground()) {
    // Init title screen
-   playButton.rectangle = {GetScreenWidth() / 2.f, GetScreenHeight() / 2.f, 210.f, 70.f};
+   playButton.rectangle = {GetScreenWidth() / 2.f, GetScreenHeight() / 2.f, buttonWidth, buttonHeight};
    playButton.text = "Play";
-   optionsButton.rectangle = {playButton.rectangle.x, playButton.rectangle.y + 90.f, 210.f, 70.f};
+   optionsButton.rectangle = {playButton.rectangle.x, playButton.rectangle.y + buttonPaddingY, buttonWidth, buttonHeight};
    optionsButton.text = "Options";
-   quitButton.rectangle = {optionsButton.rectangle.x, optionsButton.rectangle.y + 90.f, 210.f, 70.f};
+   quitButton.rectangle = {optionsButton.rectangle.x, optionsButton.rectangle.y + buttonPaddingY, buttonWidth, buttonHeight};
    quitButton.text = "Quit";
 
    // Init world selection screen
-   worldFrame.rectangle = {280.f, 200.f, GetScreenWidth() - 600.f, GetScreenHeight() - 360.f};
+   worldFrame.rectangle = {worldFramePosition.x, worldFramePosition.y, GetScreenWidth() - worldFrameSizeOffset.x, GetScreenHeight() - worldFrameSizeOffset.y};
    worldFrame.scrollHeight = worldFrame.rectangle.height;
-   backButton.rectangle = {GetScreenWidth() / 2.f - 120.f, worldFrame.rectangle.y + worldFrame.rectangle.height + 90.f, 210.f, 70.f};
+   backButton.rectangle = {GetScreenWidth() / 2.f - worldCreationButtonOffsetX, worldFrame.rectangle.y + worldFrame.rectangle.height + buttonPaddingY, buttonWidth, buttonHeight};
    backButton.text = "Back";
-   newButton.rectangle = {GetScreenWidth() / 2.f + 120.f, worldFrame.rectangle.y + worldFrame.rectangle.height + 90.f, 210.f, 70.f};
+   newButton.rectangle = {GetScreenWidth() / 2.f + worldCreationButtonOffsetX, worldFrame.rectangle.y + worldFrame.rectangle.height + buttonPaddingY, buttonWidth, buttonHeight};
    newButton.text = "New";
 
    loadWorlds();
@@ -39,8 +35,8 @@ MenuState::MenuState()
    // Init world creation screen
    createButton.rectangle = newButton.rectangle;
    createButton.text = "Create";
-   worldName.rectangle = {GetScreenWidth() / 2.f - 210.f, GetScreenHeight() / 2.f - 70.f, 420.f, 140.f};
-   worldName.maxChars = 48;
+   worldName.rectangle = {GetScreenWidth() / 2.f - worldNameSize.x / 2.f, GetScreenHeight() / 2.f - worldNameSize.y / 2.f, worldNameSize.x, worldNameSize.y};
+   worldName.maxChars = maxWorldNameSize;
    shouldWorldBeFlat.rectangle = {GetScreenWidth() / 2.f - 35.f, worldName.rectangle.y + 200.f, 70.f, 70.f};
 
    playButton.texture = optionsButton.texture = quitButton.texture = backButton.texture = newButton.texture = createButton.texture = &getTexture("button");
@@ -130,8 +126,8 @@ void MenuState::updateGeneratingLevel() {
 void MenuState::render() {
    // Render the parallax background
    drawTextureNoOrigin(getTexture("sky"), {0, 0}, getScreenSize());
-   drawParallaxTexture(backgroundTexture, scrollingBg, 75.f, true);
-   drawParallaxTexture(foregroundTexture, scrollingFg, 100.f, false);
+   drawParallaxTexture(backgroundTexture, scrollingBg, parallaxBgSpeed, true);
+   drawParallaxTexture(foregroundTexture, scrollingFg, parallaxFgSpeed, false);
 
    // Render everything else
    switch (phase) {
@@ -143,14 +139,14 @@ void MenuState::render() {
 }
 
 void MenuState::renderTitle() {
-   drawText(getScreenCenter({0.f, -200.f}), "SANDBOX 2D", 180);
+   drawText(getScreenCenter({0.f, titleOffsetX}), "SANDBOX 2D", 180);
    playButton.render();
    optionsButton.render();
    quitButton.render();
 }
 
 void MenuState::renderLevelSelection() {
-   drawText(getScreenCenter({0.f, -400.f}), "SELECT WORLD", 180);
+   drawText(getScreenCenter({0.f, titleOffsetX2}), "SELECT WORLD", 180);
    backButton.render();
    newButton.render();
    worldFrame.render();
@@ -164,7 +160,7 @@ void MenuState::renderLevelSelection() {
 }
 
 void MenuState::renderLevelCreation() {
-   drawText(getScreenCenter({0.f, -400.f}), "CREATE WORLD", 180);
+   drawText(getScreenCenter({0.f, titleOffsetX2}), "CREATE WORLD", 180);
    backButton.render();
    createButton.render();
    worldName.render();

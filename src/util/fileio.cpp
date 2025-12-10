@@ -89,7 +89,7 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
       for (int x = 0; x < map.sizeX; ++x) {
          int id = 0;
          file >> id;
-         map.setBlock(x, y, (Block::id_t)id);
+         map.setBlock(x, y, (blockid_t)id);
       }
    }
 
@@ -97,7 +97,7 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
       for (int x = 0; x < map.sizeX; ++x) {
          int id = 0;
          file >> id;
-         map.setBlock(x, y, (Block::id_t)id, true);
+         map.setBlock(x, y, (blockid_t)id, true);
       }
    }
 

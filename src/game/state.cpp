@@ -1,9 +1,6 @@
 #include "game/state.hpp"
+#include "util/config.hpp"
 #include <raylib.h>
-
-// Constants
-
-constexpr float fadeTime = .4f;
 
 // Update functions
 
