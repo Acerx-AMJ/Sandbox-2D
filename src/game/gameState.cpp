@@ -54,7 +54,7 @@ void GameState::updatePauseScreen() {
    
    if (IsKeyReleased(KEY_E)) {
       playSound("click");
-      inventoryOpen = !inventoryOpen;
+      inventory.open = !inventory.open;
    }
 
    if (IsKeyReleased(KEY_ESCAPE)) {
@@ -319,17 +319,7 @@ void GameState::render() {
    EndMode2D();
 
    // Draw the UI
-   for (float y = 0; y < (inventoryOpen ? inventoryHeight : 1); ++y) {
-      for (float x = 0; x < inventoryWidth; ++x) {
-         Vector2 position = Vector2Add(Vector2Multiply(itemframePadding, {x, y}), itemframeTopLeft);
-         drawTextureNoOrigin(getTexture("small_frame"), position, itemframeSize);
-
-         if (y == 0) {
-            Vector2 textPosition = Vector2Add(position, itemframeIndexOffset);
-            drawText(textPosition, std::to_string((int)x + 1).c_str(), 25);
-         }
-      }
-   }
+   inventory.render();
 
    if (paused) {
       continueButton.render();

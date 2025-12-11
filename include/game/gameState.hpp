@@ -2,6 +2,7 @@
 #define GAME_GAMESTATE_HPP
 
 #include "game/state.hpp"
+#include "objs/inventory.hpp"
 #include "objs/player.hpp"
 #include "ui/button.hpp"
 
@@ -27,6 +28,7 @@ private:
    Map map;
    Camera2D camera;
    Player player;
+   Inventory inventory;
 
    Texture &backgroundTexture, &foregroundTexture;
    float scrollingBg = 0.f, scrollingFg = 0.f;
@@ -35,7 +37,7 @@ private:
    float physicsTimer = 0.f;
 
    Button continueButton, menuButton, pauseButton;
-   bool inventoryOpen = false, paused = false;
+   bool paused = false;
 };
 
 #endif
