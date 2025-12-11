@@ -32,6 +32,15 @@ GameState::GameState(const std::string &worldName)
    pauseButton.rectangle = {GetScreenWidth() - buttonWidth / 2.f, GetScreenHeight() - buttonHeight / 2.f, buttonWidth, buttonHeight};
    pauseButton.text = "Pause";
    continueButton.texture = menuButton.texture = &getTexture("button");
+
+   /********************************************************/
+   // Give player some items
+   inventory.items[0][0] = Item{3, false, 50};
+   inventory.items[0][1] = Item{4, false, 9999};
+   inventory.items[2][6] = Item{8, false, 1};
+   inventory.items[0][5] = Item{1, true, 5};
+   inventory.items[3][6] = Item{9, true, 40};
+   /********************************************************/
 }
 
 GameState::~GameState() {

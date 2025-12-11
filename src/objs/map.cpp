@@ -36,6 +36,10 @@ blockid_t Block::getId(const std::string &name) {
    return blockIds[name];
 }
 
+std::string Block::getName(blockid_t id) {
+   return blockNames[id];
+}
+
 // Set block functions
 
 void Map::init() {

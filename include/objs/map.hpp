@@ -22,6 +22,7 @@ struct Block {
    unsigned char value = 0, value2 = 0;
 
    static blockid_t getId(const std::string &name);
+   static std::string getName(blockid_t id);
 };
 
 // Map

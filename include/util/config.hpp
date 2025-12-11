@@ -134,6 +134,8 @@ constexpr Vector2 itemframeSize        = {60.0f, 60.0f};
 constexpr Vector2 itemframePadding     = {itemframeSize.x + 5.f, itemframeSize.y + 5.f};
 constexpr Vector2 itemframeTopLeft     = {15.0f, 15.0f};
 constexpr Vector2 itemframeIndexOffset = {15.0f, 15.0f};
+constexpr Vector2 itemframeItemSize    = {30.0f, 30.0f};
+constexpr Vector2 itemframeItemOffset  = {(itemframeSize.x - itemframeItemSize.x) / 2.f, (itemframeSize.y - itemframeItemSize.y) / 2.f};
 
 constexpr float titleOffsetX  = -200.0f;
 constexpr float titleOffsetX2 = -400.0f;

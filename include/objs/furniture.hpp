@@ -9,6 +9,11 @@ struct Map;
 
 // Furniture
 
+struct FurnitureTexture {
+   Texture &texture;
+   float sizeX = 0, sizeY = 0;
+};
+
 struct FurniturePiece {
    unsigned char tx = 0, ty = 0;
    bool nil = true;
@@ -49,6 +54,7 @@ struct Furniture {
 
    static objid_t getId(const std::string &name);
    static std::string getName(objid_t id);
+   static FurnitureTexture getFurnitureIcon(objid_t id);
 };
 
 #endif
