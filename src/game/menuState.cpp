@@ -125,9 +125,11 @@ void MenuState::updateGeneratingLevel() {
 
 void MenuState::render() {
    // Render the parallax background
-   drawTextureNoOrigin(getTexture("sky"), {0, 0}, getScreenSize());
-   drawParallaxTexture(backgroundTexture, scrollingBg, parallaxBgSpeed, true);
-   drawParallaxTexture(foregroundTexture, scrollingFg, parallaxFgSpeed, false);
+   drawSky(currentTime);
+   drawSunAndMoon(currentTime, menuSunSpeed, moonPhase, isNight);
+
+   drawParallaxTexture(backgroundTexture, scrollingBg, parallaxBgSpeed, currentTime, true);
+   drawParallaxTexture(foregroundTexture, scrollingFg, parallaxFgSpeed, currentTime, false);
 
    // Render everything else
    switch (phase) {

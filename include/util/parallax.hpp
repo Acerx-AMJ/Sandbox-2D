@@ -3,8 +3,15 @@
 
 #include <raylib.h>
 
-void drawParallaxTexture(const Texture &texture, float &progress, float speed, bool background);
+// Parallax functions
+
+void drawSky(float currentTime);
+void drawParallaxTexture(const Texture &texture, float &progress, float speed, float currentTime, bool background);
 Texture& getRandomBackground();
 Texture& getRandomForeground();
+
+// Sun functions
+
+void drawSunAndMoon(float &currentTime, float speed, int &moonPhase, bool &isNight);
 
 #endif

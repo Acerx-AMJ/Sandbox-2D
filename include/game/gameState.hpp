@@ -31,7 +31,9 @@ private:
    Inventory inventory;
 
    Texture &backgroundTexture, &foregroundTexture;
-   float scrollingBg = 0.f, scrollingFg = 0.f;
+   float scrollingBg = 0.f, scrollingFg = 0.f, currentTime = 0.f;
+   int moonPhase = 0;
+   bool isNight = false;
 
    std::string worldName;
    float physicsTimer = 0.f;

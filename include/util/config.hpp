@@ -27,10 +27,21 @@ constexpr int grassGrowSpeedMax   = 255;
 
 // Parallax constants
 
-constexpr Color backgroundTint  = {190, 190, 170, 255};
-constexpr Color foregroundTint  = {210, 210, 190, 255};
 constexpr float parallaxBgSpeed = 75.0f;
 constexpr float parallaxFgSpeed = 100.0f;
+constexpr float menuSunSpeed    = 15.0f;
+constexpr float gameSunSpeed    = 3.0f;
+
+constexpr int moonPhaseCount = 8;
+constexpr Vector2 sunSize    = {90.0f, 90.0f};
+constexpr Vector2 moonSize   = {60.0f, 60.0f};
+
+constexpr Color skyColorNight       = {30, 30, 30, 255};
+constexpr Color skyColorDay         = {255, 255, 255, 255};
+constexpr Color backgroundTintNight = {35, 35, 35, 255};
+constexpr Color backgroundTintDay   = {190, 190, 170, 255};
+constexpr Color foregroundTintNight = {40, 40, 40, 255};
+constexpr Color foregroundTintDay   = {210, 210, 190, 255};
 
 // Block constants
 

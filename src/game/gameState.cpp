@@ -294,10 +294,12 @@ void GameState::updatePhysics() {
 
 void GameState::render() {
    // Draw parallax background
+   drawSky(currentTime);
+   drawSunAndMoon(currentTime, (paused ? 0 : gameSunSpeed), moonPhase, isNight);
+
    float delta = (paused ? 0 : player.delta.x);
-   drawTextureNoOrigin(getTexture("sky"), {0, 0}, getScreenSize());
-   drawParallaxTexture(backgroundTexture, scrollingBg, delta * parallaxBgSpeed, true);
-   drawParallaxTexture(foregroundTexture, scrollingFg, delta * parallaxFgSpeed, false);
+   drawParallaxTexture(backgroundTexture, scrollingBg, delta * parallaxBgSpeed, currentTime, true);
+   drawParallaxTexture(foregroundTexture, scrollingFg, delta * parallaxFgSpeed, currentTime, false);
 
    BeginMode2D(camera);
    map.render(camera);
