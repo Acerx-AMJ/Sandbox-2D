@@ -40,6 +40,7 @@ MenuState::MenuState()
    shouldWorldBeFlat.rectangle = {GetScreenWidth() / 2.f - 35.f, worldName.rectangle.y + 200.f, 70.f, 70.f};
 
    playButton.texture = optionsButton.texture = quitButton.texture = backButton.texture = newButton.texture = createButton.texture = &getTexture("button");
+   resetBackground();
 }
 
 // Update
@@ -124,14 +125,8 @@ void MenuState::updateGeneratingLevel() {
 // Render
 
 void MenuState::render() {
-   // Render the parallax background
-   drawSky(currentTime);
-   drawSunAndMoon(currentTime, menuSunSpeed, moonPhase, isNight);
+   drawBackground(foregroundTexture, backgroundTexture, parallaxBgSpeed, parallaxFgSpeed, menuSunSpeed);
 
-   drawParallaxTexture(backgroundTexture, scrollingBg, parallaxBgSpeed, currentTime, true);
-   drawParallaxTexture(foregroundTexture, scrollingFg, parallaxFgSpeed, currentTime, false);
-
-   // Render everything else
    switch (phase) {
    case Phase::title:           renderTitle();           break;
    case Phase::levelSelection:  renderLevelSelection();  break;

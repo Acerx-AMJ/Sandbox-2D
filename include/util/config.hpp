@@ -32,9 +32,13 @@ constexpr float parallaxFgSpeed = 100.0f;
 constexpr float menuSunSpeed    = 15.0f;
 constexpr float gameSunSpeed    = 3.0f;
 
-constexpr int moonPhaseCount = 8;
-constexpr Vector2 sunSize    = {90.0f, 90.0f};
-constexpr Vector2 moonSize   = {60.0f, 60.0f};
+constexpr int starCountMin    = 10;
+constexpr int starCountMax    = 50;
+constexpr int moonPhaseCount  = 8;
+constexpr Vector2 sunSize     = {90.0f, 90.0f};
+constexpr Vector2 moonSize    = {60.0f, 60.0f};
+constexpr Vector2 starSizeMin = {20.0f, 20.0f};
+constexpr Vector2 starSizeMax = {50.0f, 50.0f};
 
 constexpr Color skyColorNight       = {30, 30, 30, 255};
 constexpr Color skyColorDay         = {255, 255, 255, 255};

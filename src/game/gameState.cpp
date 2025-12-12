@@ -41,6 +41,7 @@ GameState::GameState(const std::string &worldName)
    inventory.items[0][5] = Item{1, true, 5};
    inventory.items[3][6] = Item{9, true, 40};
    /********************************************************/
+   resetBackground();
 }
 
 GameState::~GameState() {
@@ -294,12 +295,8 @@ void GameState::updatePhysics() {
 
 void GameState::render() {
    // Draw parallax background
-   drawSky(currentTime);
-   drawSunAndMoon(currentTime, (paused ? 0 : gameSunSpeed), moonPhase, isNight);
-
    float delta = (paused ? 0 : player.delta.x);
-   drawParallaxTexture(backgroundTexture, scrollingBg, delta * parallaxBgSpeed, currentTime, true);
-   drawParallaxTexture(foregroundTexture, scrollingFg, delta * parallaxFgSpeed, currentTime, false);
+   drawBackground(foregroundTexture, backgroundTexture, delta * parallaxBgSpeed, delta * parallaxFgSpeed, (paused ? 0 : gameSunSpeed));
 
    BeginMode2D(camera);
    map.render(camera);

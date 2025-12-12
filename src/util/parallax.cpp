@@ -18,6 +18,11 @@ static inline std::vector<std::string> foregroundTextures {
    "bg_trees1", "bg_trees2", "bg_trees3", "bg_trees4"
 };
 
+struct Star {
+   Vector2 size, position;
+   unsigned char frameX = 0;
+};
+
 // Color helper functions
 
 inline Color fadeColor(const Color &a, const Color &b, float t) {
@@ -40,31 +45,104 @@ float getFadeStrengthBasedOnTime(float currentTime) {
    return 0.0f;
 }
 
-// Parallax functions
+// Static members
 
-void drawSky(float currentTime) {
-   float t = getFadeStrengthBasedOnTime(currentTime);
-   DrawTexturePro(getTexture("sky"), getBox(getTexture("sky")), {0, 0, getScreenSize().x, getScreenSize().y}, {0, 0}, 0, fadeColor(skyColorNight, skyColorDay, t));
+static Star stars[starCountMax];
+static int starCount = 0;
+static float fgProgress = 0;
+static float bgProgress = 0;
+static float currentTime = 0;
+static int moonPhase = -1;
+static bool isNight = false;
+
+// Background functions
+
+void resetBackground() {
+   fgProgress = bgProgress = currentTime = 0;
+   moonPhase = -1;
+   isNight = false;
 }
 
-void drawParallaxTexture(const Texture &texture, float &progress, float speed, float currentTime, bool background) {
+void drawBackground(const Texture &fgTexture, const Texture &bgTexture, float bgSpeed, float fgSpeed, float daySpeed) {
    Vector2 screenSize = getScreenSize();
-   progress -= speed * GetFrameTime();
+   Vector2 origin = getOrigin(screenSize);
+
+   bool wasNight = isNight;
+   int lastMoonPhase = moonPhase;
+
+   // Update parallax backgrounds
+   bgProgress -= bgSpeed * GetFrameTime();
+   fgProgress -= fgSpeed * GetFrameTime();
    
-   if (progress <= -screenSize.x) {
-      progress = 0.f;
+   if (bgProgress <= -screenSize.x) {
+      bgProgress = 0.f;
    }
-   if (progress > 0.f) {
-      progress = -screenSize.x;
+   if (bgProgress > 0.f) {
+      bgProgress = -screenSize.x;
    }
 
-   Color colorDay = (background ? backgroundTintDay : foregroundTintDay);
-   Color colorNight = (background ? backgroundTintNight : foregroundTintNight);
-   Color color = fadeColor(colorNight, colorDay, getFadeStrengthBasedOnTime(currentTime));
+   if (fgProgress <= -screenSize.x) {
+      fgProgress = 0.f;
+   }
+   if (fgProgress > 0.f) {
+      fgProgress = -screenSize.x;
+   }
 
-   drawTextureNoOrigin(texture, {progress, 0}, screenSize, color);
-   drawTextureNoOrigin(texture, {screenSize.x + progress, 0}, screenSize, color);
+   // Update night
+   currentTime = std::fmod(currentTime + daySpeed * GetFrameTime(), 360.0f);
+   isNight = (currentTime >= 180.0f);
+
+   if ((wasNight && !isNight) || moonPhase < 0) {
+      moonPhase = (moonPhase + 1) % moonPhaseCount;
+   }
+
+   float t = getFadeStrengthBasedOnTime(currentTime);
+
+   // Draw the sky
+   DrawTexturePro(getTexture("sky"), getBox(getTexture("sky")), {0, 0, getScreenSize().x, getScreenSize().y}, {0, 0}, 0, fadeColor(skyColorNight, skyColorDay, t));
+
+   // Draw the stars
+   if (lastMoonPhase != moonPhase) {
+      starCount = random(starCountMin, starCountMax);
+      for (int i = 0; i < starCount; ++i) {
+         Star &star = stars[i];
+         star.size.x = star.size.y = random(starSizeMin.x, starSizeMax.x);
+         
+         star.position = {random(0.0f, (float)GetScreenWidth()), random(0.0f, GetScreenHeight() / 2.f)};
+         star.frameX = random(0, 3);
+      }
+   }
+
+   Texture &starTexture = getTexture("stars");
+   for (int i = 0; i < starCount; ++i) {
+      Star &star = stars[i];
+      DrawTexturePro(starTexture, {(float)star.frameX * textureSize, 0.0f, (float)textureSize, (float)starTexture.height}, {star.position.x, star.position.y, star.size.x, star.size.y}, {0, 0}, 0, Fade(WHITE, 0.5f - t));
+   }
+
+   // Draw either moon or sun based on the time
+   if (isNight) {
+      Texture &texture = getTexture("moon");
+      Vector2 position = {origin.x, screenSize.y};
+
+      DrawTexturePro(texture, {(float)moonPhase * textureSize * 2.0f, 0.0f, (float)textureSize * 2.0f, (float)texture.height}, {position.x, position.y, moonSize.x, moonSize.y}, origin, currentTime - 180.0f, WHITE);
+   } else {
+      Texture &texture = getTexture("sun");
+      Vector2 position = {origin.x, screenSize.y};
+
+      DrawTexturePro(texture, getBox(texture), {position.x, position.y, sunSize.x, sunSize.y}, origin, currentTime, WHITE);
+   }
+
+   // Draw backgrounds
+   Color bgColor = fadeColor(backgroundTintNight, backgroundTintDay, t);
+   drawTextureNoOrigin(bgTexture, {bgProgress, 0}, screenSize, bgColor);
+   drawTextureNoOrigin(bgTexture, {screenSize.x + bgProgress, 0}, screenSize, bgColor);
+
+   Color fgColor = fadeColor(foregroundTintNight, foregroundTintDay, t);
+   drawTextureNoOrigin(fgTexture, {fgProgress, 0}, screenSize, fgColor);
+   drawTextureNoOrigin(fgTexture, {screenSize.x + fgProgress, 0}, screenSize, fgColor);
 }
+
+// Texture functions
 
 Texture& getRandomBackground() {
    return getTexture(random(backgroundTextures));
@@ -72,31 +150,4 @@ Texture& getRandomBackground() {
 
 Texture& getRandomForeground() {
    return getTexture(random(foregroundTextures));
-}
-
-// Sun functions
-
-void drawSunAndMoon(float &currentTime, float speed, int &moonPhase, bool &isNight) {
-   Vector2 screenSize = getScreenSize();
-   currentTime = std::fmod(currentTime + speed * GetFrameTime(), 360.0f);
-
-   Vector2 origin = getOrigin(screenSize);
-   Vector2 position = {origin.x, screenSize.y};
-
-   bool wasNight = isNight;
-   isNight = (currentTime >= 180.0f);
-
-   // Change moon phases
-   if (wasNight && !isNight) {
-      moonPhase = (moonPhase + 1) % moonPhaseCount;
-   }
-
-   // Draw either moon or sun based on the time
-   if (isNight) {
-      Texture &texture = getTexture("moon");
-      DrawTexturePro(texture, {(float)moonPhase * textureSize * 2.0f, 0.0f, (float)textureSize * 2.0f, (float)texture.height}, {position.x, position.y, moonSize.x, moonSize.y}, origin, currentTime - 180.0f, WHITE);
-   } else {
-      Texture &texture = getTexture("sun");
-      DrawTexturePro(texture, getBox(texture), {position.x, position.y, sunSize.x, sunSize.y}, origin, currentTime, WHITE);
-   }
 }
