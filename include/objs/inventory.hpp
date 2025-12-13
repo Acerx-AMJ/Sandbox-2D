@@ -12,6 +12,9 @@ struct Inventory {
    bool anySelected = false;
    Item *selectedItem = nullptr;
 
+   bool anyTrashed = false;
+   Item trashedItem;
+
    void update();
    void render();
    void renderItem(Item &item, const Vector2 &position);

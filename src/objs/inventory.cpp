@@ -87,12 +87,22 @@ void Inventory::update() {
             continue;
          }
 
+         // Handle trashing items
+         if (IsKeyDown(KEY_LEFT_CONTROL) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && open && items[y][x].id != 0) {
+            // TODO: add trash sound
+            anyTrashed = true;
+            trashedItem = std::move(items[y][x]);
+            items[y][x] = Item{};
+            return;
+         }
+
          // When pressing on keys while the inventory is closed, select the item
-         if (!open && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-            playSound("click");
+         if (y == 0 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            if (!open) {
+               playSound("click");
+            }
             selectedX = x;
             selectedY = 0;
-            return;
          }
 
          // Handle swapping/discarding items
@@ -122,7 +132,12 @@ void Inventory::update() {
 breakOut:
 
    // Discard items here
-   if (shouldDiscard || (anySelected && !open)) {
+   bool pressedOutside = (anySelected && open && IsMouseButtonPressed(MOUSE_BUTTON_LEFT));
+   if (shouldDiscard || (anySelected && !open) || pressedOutside) {
+      if (pressedOutside) {
+         playSound("click");
+      }
+      
       anySelected = false;
       selectedItem = nullptr;
    }
@@ -152,6 +167,17 @@ void Inventory::render() {
       }
    }
 
+   // Render trash frame if inventory is open
+   if (open) {
+      Vector2 position = Vector2Add(Vector2Multiply(itemframePadding, {(float)inventoryWidth - 1, (float)inventoryHeight}), itemframeTopLeft);
+      drawTextureNoOrigin(getTexture((anyTrashed ? "small_frame" : "small_frame_trash")), position, itemframeSize);
+
+      if (anyTrashed) {
+         renderItem(trashedItem, position);
+      }
+   }
+
+   // Render selected item
    if (anySelected) {
       renderItem(*selectedItem, GetMousePosition());
    }
