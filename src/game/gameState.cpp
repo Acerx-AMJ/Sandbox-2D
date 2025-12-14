@@ -37,11 +37,11 @@ GameState::GameState(const std::string &worldName)
 
    /********************************************************/
    // Give player some items
-   inventory.items[0][0] = Item{3, false, 50};
-   inventory.items[0][1] = Item{4, false, 9999};
-   inventory.items[2][6] = Item{8, false, 1};
-   inventory.items[0][5] = Item{1, true, 5};
-   inventory.items[3][6] = Item{9, true, 40};
+   inventory.items[0][0] = Item{3, false, false, 50};
+   inventory.items[0][1] = Item{4, false, false, 9999};
+   inventory.items[2][6] = Item{8, false, false, 1};
+   inventory.items[0][5] = Item{1, true,  false, 5};
+   inventory.items[3][6] = Item{9, true,  false, 40};
    /********************************************************/
 }
 

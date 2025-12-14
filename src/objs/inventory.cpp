@@ -91,17 +91,30 @@ void Inventory::update() {
             continue;
          }
 
-         // Handle trashing items
-         if (IsKeyDown(KEY_LEFT_CONTROL) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && open && items[y][x].id != 0) {
-            // TODO: add trash sound
-            wasTrashed = false;
-            anyTrashed = true;
-            trashedItem = std::move(items[y][x]);
-            items[y][x] = Item{};
+         Item &item = items[y][x];
+
+         // Handle favoriting items
+         if (IsKeyDown(KEY_LEFT_ALT) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && open && item.id != 0) {
+            playSound("click");
+            item.favorite = !item.favorite;
             return;
          }
 
-         // When pressing on keys while the inventory is closed, select the item
+         // Handle trashing items
+         if (IsKeyDown(KEY_LEFT_CONTROL) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && open && item.id != 0) {
+            if (item.favorite) {
+               return;
+            }
+
+            // TODO: add trash sound
+            wasTrashed = false;
+            anyTrashed = true;
+            trashedItem = std::move(item);
+            item = Item{};
+            return;
+         }
+
+         // When pressing on frames while the inventory is closed, select the item
          if (y == 0 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             if (!open) {
                playSound("click");
@@ -114,14 +127,14 @@ void Inventory::update() {
          if (open && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && anySelected) {
             playSound("click");
 
-            if (&items[y][x] == selectedItem) {
+            if (&item == selectedItem) {
                shouldDiscard = true;
                goto breakOut;
             } else {
                if (wasTrashed) {
-                  anyTrashed = (items[y][x].id != 0);
+                  anyTrashed = (item.id != 0);
                }
-               std::swap(items[y][x], *selectedItem);
+               std::swap(item, *selectedItem);
                wasTrashed = false;
                anySelected = false;
                selectedItem = nullptr;
@@ -130,10 +143,10 @@ void Inventory::update() {
          }
 
          // Handle dragging items around
-         if (open && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !anySelected && items[y][x].id != 0) {
+         if (open && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !anySelected && item.id != 0) {
             playSound("click");
             anySelected = true;
-            selectedItem = &items[y][x];
+            selectedItem = &item;
             return;
          }
       }
@@ -149,7 +162,13 @@ void Inventory::update() {
          goto breakOut;
       }
 
+      // Trash the item
       if (anySelected) {
+         if (selectedItem->favorite) {
+            shouldDiscard = true;
+            goto breakOut;
+         }
+
          playSound("click");
          anyTrashed = true;
          trashedItem = *selectedItem;
@@ -162,6 +181,7 @@ void Inventory::update() {
          return;
       }
 
+      // Un-trash the item
       if (!anySelected && anyTrashed) {
          playSound("click");
          anySelected = true;
@@ -197,13 +217,14 @@ void Inventory::render() {
    for (int y = 0; y < (open ? inventoryHeight : 1); ++y) {
       for (int x = 0; x < inventoryWidth; ++x) {
          Vector2 position = Vector2Add(Vector2Multiply(itemframePadding, {(float)x, (float)y}), itemframeTopLeft);
+         Item &item = items[y][x];
+
          if (x == selectedX && y == selectedY) {
-            drawTextureNoOrigin(getTexture("small_frame_selected"), Vector2Subtract(position, selectedItemFrameOffset), selectedItemFrameSize);
+            drawTextureNoOrigin(getTexture((item.favorite ? "small_frame_favorite_selected" : "small_frame_selected")), Vector2Subtract(position, selectedItemFrameOffset), selectedItemFrameSize);
          } else {
-            drawTextureNoOrigin(getTexture("small_frame"), position, itemframeSize);
+            drawTextureNoOrigin(getTexture((item.favorite ? "small_frame_favorite" : "small_frame")), position, itemframeSize);
          }
 
-         Item &item = items[y][x];
          if (!anySelected || &item != selectedItem) {
             renderItem(item, position);
          }

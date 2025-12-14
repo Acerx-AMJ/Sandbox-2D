@@ -4,6 +4,7 @@
 struct Item {
    unsigned char id = 0;
    bool isFurniture = false;
+   bool favorite = false;
    int count = 0;
 };
 
