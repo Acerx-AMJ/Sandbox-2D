@@ -35,13 +35,15 @@ void Player::updatePlayer(Map &map) {
 // Movement functions
 
 void Player::updateMovement() {
-   int directionX = IsKeyDown(moveRightKey) - IsKeyDown(moveLeftKey);
-
+   // Hanlde gravity
    if (!onGround) {
       velocity.y = min(maxGravity, velocity.y + gravity);
    } else {
       velocity.y = min(maxGravity, gravity);
    }
+
+   // Handle movement
+   int directionX = IsKeyDown(moveRightKey) - IsKeyDown(moveLeftKey);
 
    if (directionX != 0) {
       float speedX = (onGround ? playerSpeed : playerSpeed * airMultiplier);
@@ -50,17 +52,26 @@ void Player::updateMovement() {
       velocity.x = lerp(velocity.x, 0.f, deceleration * iceMultiplier);
    }
 
-   if (IsKeyDown(jumpKey) && canJump) {
-      playSound("jump");
-      velocity.y = jumpSpeed;
-      canJump = false;
+   // Handle jumping
+   if (!onGround && IsKeyDown(jumpKey)) {
+      foxTimer = foxTime;
+   } else {
+      foxTimer -= playerUpdateSpeed;
    }
 
    if (onGround) {
-      canJump = true;
-   } else if (!IsKeyDown(jumpKey)) {
-      canJump = false;
+      coyoteTimer = coyoteTime;
+   } else {
+      coyoteTimer -= playerUpdateSpeed;
    }
+
+   if ((IsKeyDown(jumpKey) && coyoteTimer > 0) || (onGround && foxTimer > 0)) {
+      playSound("jump");
+      velocity.y = jumpSpeed;
+      coyoteTimer = 0.f;
+   }
+
+   // Do everything else
    velocity.x *= waterMultiplier;
    velocity.y *= waterMultiplier;
 
@@ -93,8 +104,9 @@ void Player::updateCollisions(Map &map) {
    int waterTileCount = 0, lavaTileCount = 0, iceTileCount = 0;
 
    if (position.y < 0) {
+      velocity.y = max(0.f, velocity.y);
       position.y = 0;
-      canGoUpSlopes = canJump = false;
+      canGoUpSlopes = onGround = false;
       collisionY = true;
    } else if (position.y > map.sizeY - playerSize.y) {
       position.y = map.sizeY - playerSize.y;
@@ -120,8 +132,8 @@ void Player::updateCollisions(Map &map) {
          if (previousPosition.y >= y + 1.f && !map.isu(x, y, Block::platform)) {
             velocity.y = max(0.f, velocity.y);
             position.y = y + 1.f;
-            canJump = false;
             collisionY = true;
+            onGround = false;
          }
 
          if (previousPosition.y + playerSize.y <= y) {

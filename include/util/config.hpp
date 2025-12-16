@@ -133,6 +133,9 @@ constexpr float acceleration      = 0.083f;
 constexpr float deceleration      = 0.167f;
 constexpr float playerSmoothing   = 0.166f;
 
+constexpr float coyoteTime = 0.1f;
+constexpr float foxTime    = 0.1f;
+
 // UI constants
 
 constexpr float fadeTime = 0.4f;
