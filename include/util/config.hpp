@@ -126,13 +126,12 @@ constexpr float playerSpeed       = 2.182f;
 constexpr float airMultiplier     = 0.6f;
 constexpr float debugFlySpeed     = playerSpeed * 2.f;
 constexpr float debugFastFlySpeed = playerSpeed * 5.f;
-constexpr float jumpSpeed         = -3.333f;
+constexpr float jumpSpeed         = -6.5f;
 constexpr float gravity           = 0.267f;
 constexpr float maxGravity        = 7.333f;
 constexpr float acceleration      = 0.083f;
 constexpr float deceleration      = 0.167f;
 constexpr float playerSmoothing   = 0.166f;
-constexpr float jumpHoldTime      = 0.4f;
 
 // UI constants
 

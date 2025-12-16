@@ -50,26 +50,16 @@ void Player::updateMovement() {
       velocity.x = lerp(velocity.x, 0.f, deceleration * iceMultiplier);
    }
 
-   if (IsKeyDown(jumpKey) && canHoldJump) {
-      if (!justJumped) {
-         playSound("jump");
-         justJumped = true;
-      }
+   if (IsKeyDown(jumpKey) && canJump) {
+      playSound("jump");
       velocity.y = jumpSpeed;
-
-      holdJumpTimer += playerUpdateSpeed;
-      if (holdJumpTimer >= jumpHoldTime) {
-         canHoldJump = justJumped = false;
-      }
-   } else {
-      justJumped = false;
+      canJump = false;
    }
 
    if (onGround) {
-      canHoldJump = true;
-      holdJumpTimer = 0.f;
+      canJump = true;
    } else if (!IsKeyDown(jumpKey)) {
-      canHoldJump = false;
+      canJump = false;
    }
    velocity.x *= waterMultiplier;
    velocity.y *= waterMultiplier;
@@ -104,7 +94,7 @@ void Player::updateCollisions(Map &map) {
 
    if (position.y < 0) {
       position.y = 0;
-      canGoUpSlopes = canHoldJump = false;
+      canGoUpSlopes = canJump = false;
       collisionY = true;
    } else if (position.y > map.sizeY - playerSize.y) {
       position.y = map.sizeY - playerSize.y;
@@ -128,8 +118,9 @@ void Player::updateCollisions(Map &map) {
          }
 
          if (previousPosition.y >= y + 1.f && !map.isu(x, y, Block::platform)) {
+            velocity.y = max(0.f, velocity.y);
             position.y = y + 1.f;
-            canHoldJump = false;
+            canJump = false;
             collisionY = true;
          }
 

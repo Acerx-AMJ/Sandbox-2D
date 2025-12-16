@@ -7,13 +7,11 @@
 
 struct Player {
    Vector2 position, velocity, previousPosition, delta;
-   bool onGround = false, canHoldJump = true, justJumped = false;
+   bool onGround = false, canJump = true;
    bool feetCollision = false, torsoCollision = false;
    int feetCollisionY = 0;
 
    float waterMultiplier = 1.f, iceMultiplier = 1.f;
-   float holdJumpTimer = 0.f;
-
    float updateTimer = 0.f, fallTimer = 0.f, walkTimer = 0.f;
    int walkFrame = 6;
    bool flipX = false;
