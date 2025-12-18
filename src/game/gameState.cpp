@@ -144,6 +144,18 @@ void GameState::updatePhysics() {
    }
    /************************************/
 
+   // Update every frame (DT-dependant)
+   if (!droppedItems.empty()) {
+      for (auto &droppedItem: droppedItems) {
+         droppedItem.update(map);
+      }
+
+      droppedItems.erase(std::remove_if(droppedItems.begin(), droppedItems.end(), [](DroppedItem &i) -> bool {
+         return i.lifetime >= 60.0f * 15.0f;
+      }), droppedItems.end());
+   }
+
+   // Update in specific intervals (DT-independant)
    physicsTimer += GetFrameTime();
    if (physicsTimer >= physicsUpdateTime) {
       physicsTimer -= physicsUpdateTime;
@@ -309,6 +321,15 @@ void GameState::render() {
       }
    }
    /************************************/
+
+   if (!droppedItems.empty()) {
+      updateTimer += GetFrameTime();
+      float offset = std::sin(updateTimer * 1.5f) * 0.25f;
+
+      for (auto &droppedItem : droppedItems) {
+         droppedItem.render(offset);
+      }
+   }
 
    player.render();
    EndMode2D();

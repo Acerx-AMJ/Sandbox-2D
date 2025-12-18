@@ -134,9 +134,10 @@ constexpr float foxTime    = 0.1f;
 
 // UI constants
 
-constexpr int itemStackSize = 9999;
-constexpr int equipmentStackSize = 1;
-constexpr int potionStackSize = 99;
+constexpr int itemStackSize       = 9999;
+constexpr int equipmentStackSize  = 1;
+constexpr int potionStackSize     = 99;
+constexpr Vector2 droppedItemSize = {0.8f, 0.8f};
 
 constexpr float fadeTime = 0.4f;
 

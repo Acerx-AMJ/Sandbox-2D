@@ -2,8 +2,8 @@
 #include "util/position.hpp"
 #include "util/render.hpp"
 
-void drawText(const Vector2 &position, const char *text, float fontSize, const Color &color) {
-   DrawTextPro(getFont("andy"), text, position, getOrigin(text, fontSize, 1), 0, fontSize, 1, color);
+void drawText(const Vector2 &position, const char *text, float fontSize, const Color &color, float spacing) {
+   DrawTextPro(getFont("andy"), text, position, getOrigin(text, fontSize, 1), 0, fontSize, spacing, color);
 }
 
 void drawTexture(const Texture &texture, const Vector2 &position, const Vector2 &size, float rotation, const Color &color) {

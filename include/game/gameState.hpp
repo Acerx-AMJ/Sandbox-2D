@@ -29,10 +29,11 @@ private:
    Camera2D camera;
    Player player;
    Inventory inventory;
+   std::vector<DroppedItem> droppedItems;
 
    Texture &backgroundTexture, &foregroundTexture;
    std::string worldName;
-   float physicsTimer = 0.f;
+   float physicsTimer = 0.0f, updateTimer = 0.0f;
 
    Button continueButton, menuButton, pauseButton;
    bool paused = false;
