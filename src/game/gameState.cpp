@@ -17,7 +17,7 @@
 // Constructors
 
 GameState::GameState(const std::string &worldName)
-   : backgroundTexture(getRandomBackground()), foregroundTexture(getRandomForeground()), worldName(worldName) {
+   : inventory(map, player, droppedItems), backgroundTexture(getRandomBackground()), foregroundTexture(getRandomForeground()), worldName(worldName) {
    resetBackground();
    loadWorldData(worldName, player, camera.zoom, map, inventory);
 
@@ -38,7 +38,7 @@ GameState::GameState(const std::string &worldName)
 
 GameState::~GameState() {
    inventory.discardItem();
-   saveWorldData(worldName, player.position.x, player.position.y, camera.zoom, map, inventory);
+   saveWorldData(worldName, player.position.x, player.position.y, camera.zoom, map, &inventory);
 }
 
 // Update functions
@@ -147,7 +147,7 @@ void GameState::updatePhysics() {
    // Update every frame (DT-dependant)
    if (!droppedItems.empty()) {
       for (auto &droppedItem: droppedItems) {
-         droppedItem.update(map);
+         droppedItem.update();
       }
 
       droppedItems.erase(std::remove_if(droppedItems.begin(), droppedItems.end(), [](DroppedItem &i) -> bool {

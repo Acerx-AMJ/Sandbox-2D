@@ -2,9 +2,15 @@
 #define OBJS_INVENTORY_HPP
 
 #include "objs/item.hpp"
+#include "objs/player.hpp"
 #include "util/config.hpp"
+#include <vector>
 
 struct Inventory {
+   Map &map;
+   Player &player;
+   std::vector<DroppedItem> &droppedItems;
+
    Item items[inventoryHeight][inventoryWidth];
    int selectedX = 0, selectedY = 0;
    bool open = false;
@@ -12,6 +18,10 @@ struct Inventory {
    bool anySelected = false;
    SelectedItem selectedItem;
    Item trashedItem;
+
+   // Constructors
+
+   Inventory(Map &map, Player &player, std::vector<DroppedItem> &droppedItems);
 
    // Update functions
 
@@ -37,6 +47,7 @@ struct Inventory {
 
    // Item functions
    
+   void dropItem(Item &item);
    bool placeItem(Item &item);
    int getItemStackSize(const Item &item);
    int addItemCount(Item &item1, Item &item2);

@@ -1,8 +1,6 @@
 #ifndef OBJS_ITEM_HPP
 #define OBJS_ITEM_HPP
 
-struct Map;
-
 struct Item {
    enum Type { item, equipment, potion };
 
@@ -28,10 +26,12 @@ struct DroppedItem {
    bool isFurniture = false;
    int count = 0;
 
-   float x = 0, y = 0;
+   int tileX = 0, tileY = 0;
    float lifetime = 0.f;
 
-   void update(Map &map);
+   DroppedItem(Item &item, int tileX, int tileY);
+
+   void update();
    void render(float offsetY);
 };
 

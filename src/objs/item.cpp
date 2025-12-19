@@ -1,7 +1,6 @@
 #include "objs/item.hpp"
 #include "mngr/resource.hpp"
 #include "objs/map.hpp"
-#include "util/config.hpp"
 #include "util/render.hpp"
 #include <raylib.h>
 #include <raymath.h>
@@ -17,19 +16,19 @@ void SelectedItem::reset()  {
 
 // Dropped item functions
 
-void DroppedItem::update(Map &map) {
+DroppedItem::DroppedItem(Item &item, int tileX, int tileY)
+   : type(item.type), id(item.id), isFurniture(item.isFurniture), count(item.count), tileX(tileX), tileY(tileY), lifetime(0.0f) {}
+
+void DroppedItem::update() {
    lifetime += GetFrameTime();
-   if (map.empty(x, y + 2)) {
-      y += GetFrameTime() * 9.f;
-   }
 }
 
 void DroppedItem::render(float offsetY) {
-   Vector2 position = {x + 0.5f, y + 0.5f + offsetY};
+   Vector2 position = {tileX + 0.5f, tileY + 0.5f - offsetY};
    Vector2 size = droppedItemSize;
 
    if (!isFurniture) {
-      drawTexture(getTexture(Block::getName(id)), position, size);
+      drawTexture(getTexture(Block::getName(id)), position, size, 0.0f, WHITE);
    } else {
       FurnitureTexture texture = Furniture::getFurnitureIcon(id);
 

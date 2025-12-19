@@ -1,5 +1,4 @@
 #include "objs/generation.hpp"
-#include "objs/inventory.hpp"
 #include "util/fileio.hpp"
 #include "util/random.hpp"
 
@@ -55,7 +54,7 @@ void MapGenerator::generate() {
       generateWater();
       generateTrees();
    }
-   saveWorldData(name, map.sizeX / 2.f, 0.f, 50.f, map, Inventory{});
+   saveWorldData(name, map.sizeX / 2.f, 0.f, 50.f, map, nullptr);
 }
 
 void MapGenerator::generateTerrain() {

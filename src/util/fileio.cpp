@@ -28,7 +28,7 @@ std::string getRandomLineFromFile(const std::string &path) {
 // World saving functions
 // Save and load functions must follow the same data arrangement
 
-void saveWorldData(const std::string &name, float playerX, float playerY, float zoom, const Map &map, const Inventory &inventory) {
+void saveWorldData(const std::string &name, float playerX, float playerY, float zoom, const Map &map, const Inventory *inventory) {
    std::ofstream file (format("data/worlds/{}.txt", name));
    assert(file.is_open(), "Failed to save world 'data/worlds/{}.txt'.", name);
 
@@ -39,12 +39,23 @@ void saveWorldData(const std::string &name, float playerX, float playerY, float 
    file << zoom << ' ';
    file << getLastTimeOfDay() << ' ';
    file << getLastMoonPhase() << ' ';
-   file << inventory.selectedX << ' ';
-   file << inventory.selectedY << '\n';
+
+   if (inventory) {
+      file << inventory->selectedX << ' ';
+      file << inventory->selectedY << '\n';
+   } else {
+      file << 0 << ' ' << 0 << '\n';
+   }
 
    for (int y = 0; y < inventoryHeight; ++y) {
       for (int x = 0; x < inventoryWidth; ++x) {
-         const Item &item = inventory.items[y][x];
+         Item item;
+         if (inventory) {
+            item = inventory->items[y][x];
+         } else {
+            item = Item{};
+         }
+
          file << (int)item.type << ' ';
          file << (int)item.id << ' ';
          file << item.isFurniture << ' ';

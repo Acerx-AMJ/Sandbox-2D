@@ -7,6 +7,13 @@
 #include "util/render.hpp"
 #include <raymath.h>
 
+// Constructors
+
+Inventory::Inventory(Map &map, Player &player, std::vector<DroppedItem> &droppedItems)
+   : map(map), player(player), droppedItems(droppedItems) {}
+
+// Update functions
+
 void Inventory::update() {
    toggleInventoryOpen();
 
@@ -96,6 +103,7 @@ void Inventory::update() {
                }
             } else {
                if (item.id == 0) {
+                  selectedItem.item.favorite = false;
                   item = selectedItem.item;
                } else if (item.id != selectedItem.item.id) {
                   discardItem();
@@ -128,6 +136,7 @@ void Inventory::update() {
             } else if (item.id != selectedItem.item.id || getItemStackSize(selectedItem.item) <= selectedItem.item.count) {
                return;
             } else {
+               selectedItem.item.favorite = (selectedItem.item.favorite || item.favorite);
                selectedItem.item.count += 1;
             }
 
@@ -198,6 +207,7 @@ void Inventory::update() {
          } else if (trashedItem.id != selectedItem.item.id || getItemStackSize(selectedItem.item) <= selectedItem.item.count) {
             return;
          } else {
+            selectedItem.item.favorite = (selectedItem.item.favorite || trashedItem.favorite);
             selectedItem.item.count += 1;
          }
 
@@ -240,12 +250,23 @@ void Inventory::switchOnMouseWheel() {
 }
 
 void Inventory::handleDiscarding() {
-   bool pressedOutside = (anySelected && open && isMousePressedOutsideUI(MOUSE_BUTTON_LEFT));
-   if (pressedOutside) {
+   // Pressed outside of the inventory
+   if (anySelected && open && isMousePressedOutsideUI(MOUSE_BUTTON_LEFT)) {
       playSound("click");
+
+      if (!selectedItem.item.favorite) {
+         dropItem(selectedItem.item);
+
+         if (selectedItem.fullSelect) {
+            *selectedItem.address = Item{};
+         }
+         selectedItem.reset();
+         anySelected = false;
+         return;
+      }
    }
 
-   if ((anySelected && !open) || pressedOutside) {
+   if (anySelected && !open) {
       discardItem();
    }
 }
@@ -302,6 +323,15 @@ Texture& Inventory::getTrashTexture(bool trashOccupied) {
 }
 
 // Item functions
+
+void Inventory::dropItem(Item &item) {
+   Vector2 playerCenter = player.getCenter();
+   playerCenter.x += (player.flipX ? 3 : -3);
+   playerCenter.x = clamp<int>(playerCenter.x, 0, map.sizeX - 1);
+   
+   DroppedItem droppedItem (item, playerCenter.x, playerCenter.y);
+   droppedItems.push_back(droppedItem);
+}
 
 bool Inventory::placeItem(Item &item) {
    Item *firstAvailableSpot = nullptr;
