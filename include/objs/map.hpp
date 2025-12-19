@@ -57,7 +57,7 @@ struct Map {
 
    // Render map
 
-   void render(Camera2D &camera);
+   void render(const Rectangle &cameraBounds);
 };
 
 #endif

@@ -29,6 +29,8 @@ private:
    Camera2D camera;
    Player player;
    Inventory inventory;
+
+   Rectangle cameraBounds;
    std::vector<DroppedItem> droppedItems;
 
    Texture &backgroundTexture, &foregroundTexture;

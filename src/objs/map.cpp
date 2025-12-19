@@ -1,7 +1,5 @@
 #include "mngr/resource.hpp"
 #include "objs/map.hpp"
-#include "util/math.hpp"
-#include "util/position.hpp"
 #include "util/render.hpp"
 #include <array>
 #include <unordered_map>
@@ -127,23 +125,16 @@ std::vector<Block>& Map::operator[](size_t index) {
 
 // Render functions
 
-void Map::render(Camera2D &camera) {
-   Rectangle bounds = getCameraBounds(camera);
-
-   int minX = max(0, int(bounds.x));
-   int minY = max(0, int(bounds.y));
-   int maxX = min(sizeX, int((bounds.x + bounds.width)) + 1);
-   int maxY = min(sizeY, int((bounds.y + bounds.height)) + 1);
-
-   for (int y = minY; y < maxY; ++y) {
-      for (int x = minX; x < maxX; ++x) {
+void Map::render(const Rectangle &cameraBounds) {
+   for (int y = cameraBounds.y; y < cameraBounds.height; ++y) {
+      for (int x = cameraBounds.x; x < cameraBounds.width; ++x) {
          Block &wall = walls[y][x];
          if (wall.type == Block::air || !isTransparent(x, y)) {
             continue;
          }
 
          int oldX = x;
-         while (x < maxX && walls[y][x].id == wall.id && isTransparent(x, y)) {
+         while (x < cameraBounds.width && walls[y][x].id == wall.id && isTransparent(x, y)) {
             x += 1;
          }
 
@@ -152,15 +143,15 @@ void Map::render(Camera2D &camera) {
       }
    }
 
-   for (int y = minY; y < maxY; ++y) {
-      for (int x = minX; x < maxX; ++x) {
+   for (int y = cameraBounds.y; y < cameraBounds.height; ++y) {
+      for (int x = cameraBounds.x; x < cameraBounds.width; ++x) {
          Block &block = blocks[y][x];
          if (block.type == Block::air) {
             continue;
          }
 
          int oldX = x;
-         while (x < maxX && blocks[y][x].id == block.id) {
+         while (x < cameraBounds.width && blocks[y][x].id == block.id) {
             x += 1;
          }
 
@@ -170,6 +161,6 @@ void Map::render(Camera2D &camera) {
    }
 
    for (Furniture &obj: furniture) {
-      obj.render(minX, minY, maxX, maxY);
+      obj.render(cameraBounds.x, cameraBounds.y, cameraBounds.width, cameraBounds.height);
    }
 }

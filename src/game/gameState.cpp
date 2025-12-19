@@ -86,6 +86,14 @@ void GameState::updateControls() {
    if (wheel != 0.f) {
       camera.zoom = clamp(std::exp(std::log(camera.zoom) + wheel * 0.2f), minCameraZoom, maxCameraZoom);
    }
+
+   cameraBounds = getCameraBounds(camera);
+
+   cameraBounds.x = max(0, int(cameraBounds.x));
+   cameraBounds.y = max(0, int(cameraBounds.y));
+   cameraBounds.width = min(map.sizeX, int((cameraBounds.x + cameraBounds.width)) + 2); // No fucking idea why it
+   cameraBounds.height = min(map.sizeY, int(cameraBounds.y + cameraBounds.height) + 2); // needs to be two
+
    player.updatePlayer(map);
    inventory.update();
 }
@@ -151,7 +159,7 @@ void GameState::updatePhysics() {
       }
 
       droppedItems.erase(std::remove_if(droppedItems.begin(), droppedItems.end(), [](DroppedItem &i) -> bool {
-         return i.lifetime >= 60.0f * 15.0f;
+         return i.lifetime >= droppedItemLifetime;
       }), droppedItems.end());
    }
 
@@ -298,7 +306,7 @@ void GameState::render() {
    drawBackground(foregroundTexture, backgroundTexture, delta * parallaxBgSpeed, delta * parallaxFgSpeed, (paused ? 0 : gameSunSpeed));
 
    BeginMode2D(camera);
-   map.render(camera);
+   map.render(cameraBounds);
 
    /************************************/
    // Scary method of rendering furniture and block preview correctly
@@ -324,10 +332,13 @@ void GameState::render() {
 
    if (!droppedItems.empty()) {
       updateTimer += GetFrameTime();
-      float offset = std::sin(updateTimer * 1.5f) * 0.25f;
+      float offset = std::sin(updateTimer * droppedItemFloatSpeed) * droppedItemFloatHeight;
 
       for (auto &droppedItem : droppedItems) {
-         droppedItem.render(offset);
+         if (droppedItem.tileX >= cameraBounds.x && droppedItem.tileX < cameraBounds.width - 2 // Renders items it shouldn't, right and bottom
+          && droppedItem.tileY >= cameraBounds.y && droppedItem.tileY < cameraBounds.height - 2) { // are not working as intended, TODO
+            droppedItem.render(offset);
+         }
       }
    }
 
