@@ -344,7 +344,7 @@ bool Inventory::placeItem(Item &item) {
       for (int x = 0; x < inventoryWidth; ++x) {
          Item &it = items[y][x];
 
-         if (it.id == item.id && addItemCount(it, item) <= 0) {
+         if (it.id == item.id && it.isFurniture == item.isFurniture && addItemCount(it, item) <= 0) {
             return true;
          } else if (!firstAvailableSpot && it.id == 0) {
             firstAvailableSpot = &it;

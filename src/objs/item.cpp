@@ -22,11 +22,18 @@ DroppedItem::DroppedItem(Item::Type type, unsigned char id, bool isFurniture, in
 DroppedItem::DroppedItem(Item &item, int tileX, int tileY)
    : type(item.type), id(item.id), isFurniture(item.isFurniture), count(item.count), tileX(tileX), tileY(tileY), lifetime(0.0f) {}
 
-void DroppedItem::update() {
+void DroppedItem::update(const Rectangle &cameraBounds) {
    lifetime += GetFrameTime();
+   inBounds = (tileX >= cameraBounds.x && tileX <= cameraBounds.width && tileY >= cameraBounds.y && tileY <= cameraBounds.height);
 }
 
-void DroppedItem::render(float offsetY) {
+void DroppedItem::render() {
+   if (!inBounds) {
+      return;
+   }
+
+   float offsetY = std::sin(lifetime * droppedItemFloatSpeed) * droppedItemFloatHeight;
+
    Vector2 position = {tileX + 0.5f, (tileY + 0.5f) - offsetY};
    Vector2 size = droppedItemSize;
 
@@ -47,4 +54,8 @@ void DroppedItem::render(float offsetY) {
       position.y -= 0.7f;
       drawText(position, std::to_string(count).c_str(), 0.75f, WHITE, 0.1f);
    }
+}
+
+Rectangle DroppedItem::getBounds() {
+   return {(float)tileX, (float)tileY, 1.0f, 1.0f};
 }

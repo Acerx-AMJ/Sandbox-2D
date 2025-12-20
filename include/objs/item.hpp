@@ -1,6 +1,8 @@
 #ifndef OBJS_ITEM_HPP
 #define OBJS_ITEM_HPP
 
+#include <raylib.h>
+
 struct Item {
    enum Type { item, equipment, potion };
 
@@ -28,12 +30,15 @@ struct DroppedItem {
 
    int tileX = 0, tileY = 0;
    float lifetime = 0.f;
+   bool inBounds = false;
 
    DroppedItem(Item::Type type, unsigned char id, bool isFurniture, int count, int tileX, int tileY, float lifetime);
    DroppedItem(Item &item, int tileX, int tileY);
 
-   void update();
-   void render(float offsetY);
+   void update(const Rectangle &cameraBounds);
+   void render();
+
+   Rectangle getBounds();
 };
 
 #endif

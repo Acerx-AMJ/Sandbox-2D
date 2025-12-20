@@ -44,6 +44,7 @@ void LoadingState::update() {
       saveSound("trash", {"trash1", "trash2", "trash3"});
       saveSound("jump", {"jump1", "jump2", "jump3", "jump4"});
       saveSound("footstep", {"footstep1", "footstep2", "footstep3", "footstep4"});
+      saveSound("pickup", {"pickup1", "pickup2", "pickup3", "pickup4"});
 
       load = Load::music;
    } else if (load == Load::music) {

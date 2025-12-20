@@ -147,12 +147,24 @@ void GameState::updatePhysics() {
 
    // Update every frame (DT-dependant)
    if (!droppedItems.empty()) {
+      Rectangle playerBounds = player.getBounds();
+      
       for (auto &droppedItem: droppedItems) {
-         droppedItem.update();
+         droppedItem.update(cameraBounds);
+
+         if (droppedItem.inBounds && CheckCollisionRecs(playerBounds, droppedItem.getBounds())) {
+            Item item {droppedItem.type, droppedItem.id, droppedItem.isFurniture, false, droppedItem.count};
+            int count = item.count;
+
+            droppedItem.count = (inventory.placeItem(item) ? 0 : item.count);
+            if (count != item.count) {
+               playSound("pickup");
+            }
+         }
       }
 
       droppedItems.erase(std::remove_if(droppedItems.begin(), droppedItems.end(), [](DroppedItem &i) -> bool {
-         return i.lifetime >= droppedItemLifetime;
+         return i.lifetime >= droppedItemLifetime || i.count <= 0;
       }), droppedItems.end());
    }
 
@@ -313,16 +325,8 @@ void GameState::render() {
    }
    /************************************/
 
-   if (!droppedItems.empty()) {
-      updateTimer += GetFrameTime();
-      float offset = std::sin(updateTimer * droppedItemFloatSpeed) * droppedItemFloatHeight;
-
-      for (auto &droppedItem : droppedItems) {
-         if (droppedItem.tileX >= cameraBounds.x && droppedItem.tileX <= cameraBounds.width
-          && droppedItem.tileY >= cameraBounds.y && droppedItem.tileY <= cameraBounds.height) {
-            droppedItem.render(offset);
-         }
-      }
+   for (auto &droppedItem : droppedItems) {
+      droppedItem.render();
    }
 
    player.render();
