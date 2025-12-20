@@ -136,6 +136,10 @@ void MenuState::updateLevelSelection() {
    }
 
    // Update world-specific buttons
+   if (anySelected) {
+      favoriteButton.text = (selectedButton->favorite ? "Unfavorite" : "Favorite");
+   }
+
    deleteButton.disabled = !anySelected;
    renameButton.disabled = !anySelected;
    favoriteButton.disabled = !anySelected;
@@ -155,7 +159,16 @@ void MenuState::updateLevelSelection() {
    }
 
    if (favoriteButton.clicked) {
-      
+      if (selectedButton->favorite) {
+         favoriteWorlds.erase(std::remove_if(favoriteWorlds.begin(), favoriteWorlds.end(), [this](std::string &s) -> bool {
+            return s == selectedButton->text;
+         }));
+      } else {
+         favoriteWorlds.push_back(selectedButton->text);
+      }
+
+      saveLinesToFile("data/favorites.txt", favoriteWorlds);
+      selectedButton->favorite = !selectedButton->favorite;
    }
 
    if (playWorldButton.clicked) {
@@ -228,8 +241,15 @@ void MenuState::renderLevelSelection() {
 
    float offsetY = worldFrame.getOffsetY();
    for (Button &button: worldButtons) {
-      if (worldFrame.inFrame(button.normalizeRect())) {
-         button.render(offsetY);
+      if (!worldFrame.inFrame(button.normalizeRect())) {
+         continue;
+      }
+
+      button.render(offsetY);
+      if (button.favorite) {
+         Vector2 position = {button.rectangle.x + (button.rectangle.width * button.scale) / 2.f - (button.rectangle.height * button.scale) / 2.f, button.rectangle.y - offsetY};
+
+         drawTexture(getTexture("star"), position, {worldStarSize * button.scale, worldStarSize * button.scale});
       }
    }
 }
@@ -258,28 +278,35 @@ State* MenuState::change() {
 }
 
 void MenuState::loadWorlds() {
-   worldButtons.clear();
+   favoriteWorlds = getAllLinesFromFile("data/favorites.txt");
    std::filesystem::create_directories("data/worlds/");
-   float offsetX = 56.666f;
 
+   worldButtons.clear();
    for (const auto &file: std::filesystem::directory_iterator("data/worlds")) {
       Button button;
-      button.rectangle = {360.f - offsetX / 2.f, 210.f + 110.f * worldButtons.size(), worldFrame.rectangle.width - 120.f - offsetX / 2.f, 100.f};
+      button.rectangle = {360.f - scrollBarWidth / 2.f, 210.f + 110.f * worldButtons.size(), worldFrame.rectangle.width - 120.f - scrollBarWidth / 2.f, 100.f};
       button.rectangle.x += button.rectangle.width / 2.f;
       button.rectangle.y += button.rectangle.height / 2.f;
       button.text = file.path().stem().string();
       button.texture = &getTexture("button_long");
+      button.favorite = isWorldFavorite(button.text);
+
       worldButtons.push_back(button);
       worldFrame.scrollHeight = std::max(worldFrame.rectangle.height, button.rectangle.y + button.rectangle.height / 2.f);
    }
-
-   std::sort(worldButtons.begin(), worldButtons.end(), [](Button &first, Button&) -> bool {
-      return first.favorite;
-   });
 }
 
 std::string MenuState::getRandomWorldName() {
    std::string adjective = getRandomLineFromFile("assets/adjectives.txt");
    std::string noun = getRandomLineFromFile("assets/nouns.txt");
    return adjective + " " + noun;
+}
+
+bool MenuState::isWorldFavorite(const std::string &name) {
+   for (const std::string &world: favoriteWorlds) {
+      if (world == name) {
+         return true;
+      }
+   }
+   return false;
 }

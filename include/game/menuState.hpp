@@ -33,8 +33,10 @@ struct MenuState: public State {
    // Other functions
 
    State* change() override;
+
    void loadWorlds();
    std::string getRandomWorldName();
+   bool isWorldFavorite(const std::string &name);
 
 private:
    enum class Phase { title, levelSelection, levelCreation, generatingLevel };
@@ -43,6 +45,7 @@ private:
    Button backButton, renameButton, deleteButton, favoriteButton, playWorldButton, newButton;
    Button backButtonCreation, createButton;
 
+   std::vector<std::string> favoriteWorlds;
    std::vector<Button> worldButtons;
    bool anySelected = false;
    Button *selectedButton = nullptr; 

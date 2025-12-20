@@ -153,6 +153,8 @@ constexpr float buttonScaleMin      = 0.98f;
 constexpr float buttonScaleMax      = 1.02f;
 constexpr Color buttonDisabledColor = {170, 170, 150, 255};
 
+constexpr float worldStarSize = 50.0f;
+
 constexpr float inputTextWrapPadding = 10.f;
 constexpr float inputTextFadeSpeed   = 0.3f;
 constexpr int inputTextFadeMin       = 190;

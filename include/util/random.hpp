@@ -17,6 +17,11 @@ inline T& random(std::vector<T> &vector) {
    return vector[random(0, vector.size() - 1)];
 }
 
+template<class T>
+inline T& random(std::vector<T> &&vector) {
+   return vector[random(0, vector.size() - 1)];
+}
+
 inline bool chance(int percent) {
    return random(0, 100) <= percent;
 }

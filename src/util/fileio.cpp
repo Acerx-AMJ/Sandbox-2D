@@ -11,9 +11,13 @@
 // File functions
 
 std::string getRandomLineFromFile(const std::string &path) {
+   return random(getAllLinesFromFile(path));
+}
+
+std::vector<std::string> getAllLinesFromFile(const std::string &path) {
    std::fstream file (path.c_str());
    if (!file.is_open()) {
-      return "";
+      return {};
    }
 
    std::vector<std::string> lines;
@@ -22,7 +26,16 @@ std::string getRandomLineFromFile(const std::string &path) {
    while (std::getline(file, line)) {
       lines.push_back(line);
    }
-   return random(lines);
+   return lines;
+}
+
+void saveLinesToFile(const std::string &path, const std::vector<std::string> &lines) {
+   std::ofstream file (path);
+   assert(file.is_open(), "Failed to write to file '{}'.", path);
+
+   for (const std::string &line: lines) {
+      file << line << '\n';
+   }
 }
 
 // World saving functions
@@ -114,7 +127,6 @@ void saveWorldData(const std::string &name, float playerX, float playerY, float 
    } else {
       file << 0 << '\n';
    }
-   file.close();
 }
 
 // World loading functions
