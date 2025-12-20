@@ -54,7 +54,7 @@ void MapGenerator::generate() {
       generateWater();
       generateTrees();
    }
-   saveWorldData(name, map.sizeX / 2.f, 0.f, 50.f, map, nullptr);
+   saveWorldData(name, map.sizeX / 2.f, 0.f, 50.f, map, nullptr, nullptr);
 }
 
 void MapGenerator::generateTerrain() {

@@ -16,6 +16,9 @@ void SelectedItem::reset()  {
 
 // Dropped item functions
 
+DroppedItem::DroppedItem(Item::Type type, unsigned char id, bool isFurniture, int count, int tileX, int tileY, float lifetime)
+   : type(type), id(id), isFurniture(isFurniture), count(count), tileX(tileX), tileY(tileY), lifetime(lifetime) {}
+
 DroppedItem::DroppedItem(Item &item, int tileX, int tileY)
    : type(item.type), id(item.id), isFurniture(item.isFurniture), count(item.count), tileX(tileX), tileY(tileY), lifetime(0.0f) {}
 

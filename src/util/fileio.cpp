@@ -28,7 +28,7 @@ std::string getRandomLineFromFile(const std::string &path) {
 // World saving functions
 // Save and load functions must follow the same data arrangement
 
-void saveWorldData(const std::string &name, float playerX, float playerY, float zoom, const Map &map, const Inventory *inventory) {
+void saveWorldData(const std::string &name, float playerX, float playerY, float zoom, const Map &map, const Inventory *inventory, const std::vector<DroppedItem> *droppedItems) {
    std::ofstream file (format("data/worlds/{}.txt", name));
    assert(file.is_open(), "Failed to save world 'data/worlds/{}.txt'.", name);
 
@@ -79,6 +79,7 @@ void saveWorldData(const std::string &name, float playerX, float playerY, float 
       file << '\n';
    }
 
+   file << map.furniture.size() << '\n';
    for (const Furniture &obj: map.furniture) {
       file << obj.posX << ' ';
       file << obj.posY << ' ';
@@ -98,12 +99,27 @@ void saveWorldData(const std::string &name, float playerX, float playerY, float 
       }
       file << '\n';
    }
+
+   if (droppedItems) {
+      file << droppedItems->size() << '\n';
+      for (const DroppedItem &item: *droppedItems) {
+         file << (int)item.type << ' ';
+         file << (int)item.id << ' ';
+         file << item.isFurniture << ' ';
+         file << item.count << ' ';
+         file << item.tileX << ' ';
+         file << item.tileY << ' ';
+         file << item.lifetime << '\n';
+      }
+   } else {
+      file << 0 << '\n';
+   }
    file.close();
 }
 
 // World loading functions
 
-void loadWorldData(const std::string &name, Player &player, float &zoom, Map &map, Inventory &inventory) {
+void loadWorldData(const std::string &name, Player &player, float &zoom, Map &map, Inventory &inventory, std::vector<DroppedItem> &droppedItems) {
    std::ifstream file (format("data/worlds/{}.txt", name));
    assert(file.is_open(), "Failed to load world 'data/worlds/{}.txt'.", name);
 
@@ -153,9 +169,12 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
    }
 
    // The beast behind loading furniture
-   int posX = 0;
-   while (file >> posX) {
-      int posY = 0, sizeX = 0, sizeY = 0, type = 0, value = 0, value2 = 0, texId = 0;
+   int furnitureCount = 0;
+   file >> furnitureCount;
+
+   for (int i = 0; i < furnitureCount; ++i) {
+      int posX = 0, posY = 0, sizeX = 0, sizeY = 0, type = 0, value = 0, value2 = 0, texId = 0;
+      file >> posX;
       file >> posY;
       file >> sizeX;
       file >> sizeY;
@@ -177,6 +196,24 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
          }
       }
       map.addFurniture(furniture);
+   }
+
+   int droppedItemCount = 0;
+   file >> droppedItemCount;
+
+   for (int i = 0; i < droppedItemCount; ++i) {
+      int type = 0, id = 0, isFurniture = 0, count = 0, tileX = 0, tileY = 0;
+      float lifetime = 0.0f;
+      file >> type;
+      file >> id;
+      file >> isFurniture;
+      file >> count;
+      file >> tileX;
+      file >> tileY;
+      file >> lifetime;
+
+      DroppedItem item {(Item::Type)type, (unsigned char)id, (bool)isFurniture, count, tileX, tileY, lifetime};
+      droppedItems.push_back(item);
    }
    player.init();
 }

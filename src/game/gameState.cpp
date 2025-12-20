@@ -19,7 +19,7 @@
 GameState::GameState(const std::string &worldName)
    : inventory(map, player, droppedItems), backgroundTexture(getRandomBackground()), foregroundTexture(getRandomForeground()), worldName(worldName) {
    resetBackground();
-   loadWorldData(worldName, player, camera.zoom, map, inventory);
+   loadWorldData(worldName, player, camera.zoom, map, inventory, droppedItems);
 
    camera.zoom = clamp(camera.zoom, minCameraZoom, maxCameraZoom);
    camera.target = player.getCenter();
@@ -39,7 +39,7 @@ GameState::GameState(const std::string &worldName)
 
 GameState::~GameState() {
    inventory.discardItem();
-   saveWorldData(worldName, player.position.x, player.position.y, camera.zoom, map, &inventory);
+   saveWorldData(worldName, player.position.x, player.position.y, camera.zoom, map, &inventory, &droppedItems);
 }
 
 // Update functions
