@@ -25,6 +25,7 @@ GameState::GameState(const std::string &worldName)
    camera.target = player.getCenter();
    camera.offset = getScreenCenter();
    camera.rotation = 0.0f;
+   calculateCameraBounds();
 
    // Init UI
    continueButton.rectangle = {GetScreenWidth() / 2.f, GetScreenHeight() / 2.f, buttonWidth, buttonHeight};
@@ -77,6 +78,7 @@ void GameState::updatePauseScreen() {
 
 void GameState::updateControls() {
    camera.target = lerp(camera.target, player.getCenter(), cameraFollowSpeed);
+   calculateCameraBounds();
 
    if (paused) {
       return;
@@ -86,13 +88,6 @@ void GameState::updateControls() {
    if (wheel != 0.f) {
       camera.zoom = clamp(std::exp(std::log(camera.zoom) + wheel * 0.2f), minCameraZoom, maxCameraZoom);
    }
-
-   cameraBounds = getCameraBounds(camera);
-
-   cameraBounds.x = max(0, int(cameraBounds.x));
-   cameraBounds.y = max(0, int(cameraBounds.y));
-   cameraBounds.width = min(map.sizeX - 1, int(cameraBounds.x + cameraBounds.width) + 1);
-   cameraBounds.height = min(map.sizeY - 1, int(cameraBounds.y + cameraBounds.height) + 1);
 
    player.updatePlayer(map);
    inventory.update();
@@ -295,12 +290,6 @@ void GameState::render() {
    float delta = (paused ? 0 : player.delta.x / GetFrameTime() / 60.0f); // To avoid delta time clash
    drawBackground(foregroundTexture, backgroundTexture, delta * parallaxBgSpeed, delta * parallaxFgSpeed, (paused ? 0 : gameSunSpeed));
 
-   static bool t = true;
-   if (IsKeyPressed(KEY_U)) {
-      t = !t;
-   }
-   if (t) camera.zoom /= 2.f;
-
    BeginMode2D(camera);
    map.render(cameraBounds);
 
@@ -340,7 +329,6 @@ void GameState::render() {
 
    player.render();
    EndMode2D();
-   if (t) camera.zoom *= 2.f;
 
    // Draw the UI
    inventory.render();
@@ -354,4 +342,13 @@ void GameState::render() {
 
 State* GameState::change() {
    return new MenuState();
+}
+
+void GameState::calculateCameraBounds() {
+   cameraBounds = getCameraBounds(camera);
+
+   cameraBounds.x = max(0, int(cameraBounds.x));
+   cameraBounds.y = max(0, int(cameraBounds.y));
+   cameraBounds.width = min(map.sizeX - 1, int(cameraBounds.x + cameraBounds.width) + 1);
+   cameraBounds.height = min(map.sizeY - 1, int(cameraBounds.y + cameraBounds.height) + 1);
 }

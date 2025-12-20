@@ -24,6 +24,8 @@ struct GameState: public State {
    void render() override;
    State* change() override;
 
+   void calculateCameraBounds();
+
 private:
    Map map;
    Camera2D camera;

@@ -114,7 +114,7 @@ constexpr int maxWaterLength  = 100;
 
 // Player constants
 
-constexpr Vector2 playerSize    = {2.f, 3.f};
+constexpr Vector2 playerSize    = {1.8f, 2.7f};
 constexpr float playerFrameSize = 16;
 
 constexpr float playerUpdateSpeed = 1.f / 60.f;

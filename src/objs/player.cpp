@@ -147,7 +147,7 @@ void Player::updateCollisions(Map &map) {
    position.x = lerp(position.x, position.x + velocity.x, playerSmoothing);
 
    Rectangle torso {position.x, position.y - 1.f, playerSize.x, playerSize.y};
-   Rectangle feet {position.x, position.y + 2.f, playerSize.x, 1.f};
+   Rectangle feet {position.x, position.y + (playerSize.y - 1.f), playerSize.x, 1.f};
    torsoCollision = feetCollision = false;
    feetCollisionY = 0;
 
