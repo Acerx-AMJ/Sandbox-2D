@@ -167,8 +167,17 @@ void MenuState::updateLevelSelection() {
          favoriteWorlds.push_back(selectedButton->text);
       }
 
-      saveLinesToFile("data/favorites.txt", favoriteWorlds);
+      std::string worldName = selectedButton->text;
       selectedButton->favorite = !selectedButton->favorite;
+      
+      saveLinesToFile("data/favorites.txt", favoriteWorlds);
+      sortWorldsByFavorites();
+
+      for (Button &button: worldButtons) {
+         if (button.text == worldName) {
+            selectedButton = &button;
+         }
+      }
    }
 
    if (playWorldButton.clicked) {
@@ -284,16 +293,12 @@ void MenuState::loadWorlds() {
    worldButtons.clear();
    for (const auto &file: std::filesystem::directory_iterator("data/worlds")) {
       Button button;
-      button.rectangle = {360.f - scrollBarWidth / 2.f, 210.f + 110.f * worldButtons.size(), worldFrame.rectangle.width - 120.f - scrollBarWidth / 2.f, 100.f};
-      button.rectangle.x += button.rectangle.width / 2.f;
-      button.rectangle.y += button.rectangle.height / 2.f;
       button.text = file.path().stem().string();
       button.texture = &getTexture("button_long");
       button.favorite = isWorldFavorite(button.text);
-
       worldButtons.push_back(button);
-      worldFrame.scrollHeight = std::max(worldFrame.rectangle.height, button.rectangle.y + button.rectangle.height / 2.f);
    }
+   sortWorldsByFavorites();
 }
 
 std::string MenuState::getRandomWorldName() {
@@ -309,4 +314,23 @@ bool MenuState::isWorldFavorite(const std::string &name) {
       }
    }
    return false;
+}
+
+void MenuState::sortWorldsByFavorites() {
+   std::sort(worldButtons.begin(), worldButtons.end(), [](Button &a, Button &b) -> bool {
+      if (a.favorite != b.favorite) {
+         return a.favorite && !b.favorite;
+      }
+      return a.text < b.text;
+   });
+
+   size_t index = 0;
+   for (Button &button: worldButtons) {
+      button.rectangle = {360.f - scrollBarWidth / 2.f, 210.f + 110.f * index, worldFrame.rectangle.width - 120.f - scrollBarWidth / 2.f, 100.f};
+      button.rectangle.x += button.rectangle.width / 2.f;
+      button.rectangle.y += button.rectangle.height / 2.f;
+
+      worldFrame.scrollHeight = std::max(worldFrame.rectangle.height, button.rectangle.y + button.rectangle.height / 2.f);
+      index += 1;
+   }
 }

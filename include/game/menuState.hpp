@@ -36,7 +36,9 @@ struct MenuState: public State {
 
    void loadWorlds();
    std::string getRandomWorldName();
+
    bool isWorldFavorite(const std::string &name);
+   void sortWorldsByFavorites();
 
 private:
    enum class Phase { title, levelSelection, levelCreation, generatingLevel };
