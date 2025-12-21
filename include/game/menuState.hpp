@@ -49,7 +49,7 @@ private:
 
    std::vector<std::string> favoriteWorlds;
    std::vector<Button> worldButtons;
-   bool anySelected = false;
+   bool anySelected = false, deleteClicked = false;
    Button *selectedButton = nullptr; 
 
    Scrollframe worldFrame;

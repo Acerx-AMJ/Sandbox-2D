@@ -5,6 +5,7 @@
 #include "ui/popup.hpp"
 #include "util/config.hpp"
 #include "util/fileio.hpp"
+#include "util/format.hpp"
 #include "util/parallax.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
@@ -152,8 +153,25 @@ void MenuState::updateLevelSelection() {
    playWorldButton.update();
 
    if (deleteButton.clicked) {
-      
+      if (selectedButton->favorite) {
+         insertPopup("Notice", format("World '{}' cannot be deleted as it is favorited. If you wish to proceed, please unfavorite it and try again.", selectedButton->text), false);
+         return;
+      }
+
+      insertPopup("Confirmation Request", format("Are you sure that you want to delete world '{}'? You won't be able to recover the world!.", selectedButton->text), true);
+      deleteClicked = true;
+      return;
    }
+
+   if (deleteClicked && isPopupConfirmed()) {
+      std::string fileName = format("data/worlds/{}.txt", selectedButton->text);
+
+      if (!std::filesystem::remove_all(fileName)) {
+         insertPopup("Notice", format("World '{}' could not be deleted. File '{}' was{}found. If file was not found, check the 'data/worlds/' folder, if it was, check your permissions.", selectedButton->text, fileName, (std::filesystem::exists(selectedButton->text) ? " " : " not ")), false);
+      }
+      loadWorlds();
+   }
+   deleteClicked = false;
 
    if (renameButton.clicked) {
 

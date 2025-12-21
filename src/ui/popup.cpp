@@ -41,7 +41,11 @@ void insertPopup(const std::string &header, const std::string &body, bool confir
 }
 
 bool isPopupConfirmed() {
-   return wasLastPopupConfirmed;
+   bool confirmed = wasLastPopupConfirmed;
+   if (confirmed) {
+      wasLastPopupConfirmed = false;
+   }
+   return confirmed;
 }
 
 bool anyPopups() {
