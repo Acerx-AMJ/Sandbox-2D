@@ -1,4 +1,5 @@
 #include "util/input.hpp"
+#include "mngr/sound.hpp"
 #include <raylib.h>
 #include <array>
 
@@ -34,4 +35,12 @@ bool isMousePressedOutsideUI(int mouse) {
 
 bool isMouseDownOutsideUI(int mouse) {
    return !mouseDownOnUI[mouse] && IsMouseButtonDown(mouse);
+}
+
+bool handleKeyPressWithSound(int key) {
+   bool isPressed = IsKeyPressed(key);
+   if (isPressed) {
+      playSound("click");
+   }
+   return isPressed;
 }

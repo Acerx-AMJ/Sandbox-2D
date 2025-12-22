@@ -13,8 +13,8 @@ struct Button {
    float scale = 1;
 
    void update(float offsetY = 0.f);
-   void render(float offsetY = 0.f);
-   Rectangle normalizeRect();
+   void render(float offsetY = 0.f) const;
+   Rectangle normalizeRect() const;
 };
 
 #endif

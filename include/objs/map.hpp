@@ -47,17 +47,17 @@ struct Map {
 
    // Get block functions
 
-   bool isPositionValid(int x, int y);
-   bool is(int x, int y, Block::Type type);
-   bool isu(int x, int y, Block::Type type); // Unsafe is variant
-   bool empty(int x, int y);
-   bool isTransparent(int x, int y); // Unsafe
+   bool isPositionValid(int x, int y) const;
+   bool is(int x, int y, Block::Type type) const;
+   bool isu(int x, int y, Block::Type type) const; // Unsafe is variant
+   bool empty(int x, int y) const;
+   bool isTransparent(int x, int y) const; // Unsafe
 
    std::vector<Block>& operator[](size_t index);
 
    // Render map
 
-   void render(const Rectangle &cameraBounds);
+   void render(const Rectangle &cameraBounds) const;
 };
 
 #endif

@@ -73,6 +73,7 @@ Sort headers alphabetically from A to Z. Include order is:
 - Try to avoid allocating memory on the heap yourself. Using standard containers like std::vector is completely fine.
 - Avoid templates outside utility functions.
 - Apply const correctness where possible.
+- Only group variables if no value is assigned to any (`int a, b, c;` and `int a = 1; int b = 2; int c = 3;`) 
 #### Error Handling
 - Try to handle gracefully without crashing.
 - If a failure is unrecoverable, use the util/format.hpp warn or assert functions.

@@ -98,23 +98,23 @@ void Map::removeFurniture(Furniture &object) {
 
 // Get block functions
 
-bool Map::isPositionValid(int x, int y) {
+bool Map::isPositionValid(int x, int y) const {
    return x >= 0 && x < sizeX && y >= 0 && y < sizeY;
 }
 
-bool Map::is(int x, int y, Block::Type type) {
+bool Map::is(int x, int y, Block::Type type) const {
    return isPositionValid(x, y) && blocks[y][x].type == type;
 }
 
-bool Map::isu(int x, int y, Block::Type type) {
+bool Map::isu(int x, int y, Block::Type type) const {
    return blocks[y][x].type == type;
 }
 
-bool Map::empty(int x, int y) {
+bool Map::empty(int x, int y) const {
    return isPositionValid(x, y) and !blocks[y][x].furniture && blocks[y][x].type == Block::air;
 }
 
-bool Map::isTransparent(int x, int y) {
+bool Map::isTransparent(int x, int y) const {
    Block::Type type = blocks[y][x].type;
    return type == Block::air || type == Block::water || type == Block::transparent || type == Block::platform;
 }
@@ -125,10 +125,10 @@ std::vector<Block>& Map::operator[](size_t index) {
 
 // Render functions
 
-void Map::render(const Rectangle &cameraBounds) {
+void Map::render(const Rectangle &cameraBounds) const {
    for (int y = cameraBounds.y; y <= cameraBounds.height; ++y) {
       for (int x = cameraBounds.x; x <= cameraBounds.width; ++x) {
-         Block &wall = walls[y][x];
+         const Block &wall = walls[y][x];
          if (wall.type == Block::air || !isTransparent(x, y)) {
             continue;
          }
@@ -145,7 +145,7 @@ void Map::render(const Rectangle &cameraBounds) {
 
    for (int y = cameraBounds.y; y <= cameraBounds.height; ++y) {
       for (int x = cameraBounds.x; x <= cameraBounds.width; ++x) {
-         Block &block = blocks[y][x];
+         const Block &block = blocks[y][x];
          if (block.type == Block::air) {
             continue;
          }
@@ -160,7 +160,7 @@ void Map::render(const Rectangle &cameraBounds) {
       }
    }
 
-   for (Furniture &obj: furniture) {
+   for (const Furniture &obj: furniture) {
       obj.render(cameraBounds);
    }
 }

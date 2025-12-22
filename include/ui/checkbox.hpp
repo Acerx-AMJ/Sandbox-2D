@@ -8,7 +8,7 @@ struct CheckBox {
    bool checked = false;
 
    void update();
-   void render();
+   void render() const;
 };
 
 #endif

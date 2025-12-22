@@ -42,13 +42,13 @@ struct Furniture {
 
    // Getter functions
 
-   static Furniture get(int x, int y, Map &map, Type type, bool debug = false);
+   static Furniture get(int x, int y, const Map &map, Type type, bool debug = false);
    static void generate(int x, int y, Map &map, Type type);
 
    // Render functions
 
-   void preview(Map &map);
-   void render(const Rectangle &cameraBounds);
+   void preview(const Map &map) const;
+   void render(const Rectangle &cameraBounds) const;
 
    // Id functions
 

@@ -10,4 +10,7 @@ bool isMousePressedUI(int mouse);
 bool isMousePressedOutsideUI(int mouse);
 bool isMouseDownOutsideUI(int mouse);
 
+// Checks if a key is pressed and if it is, plays a sound
+bool handleKeyPressWithSound(int key);
+
 #endif

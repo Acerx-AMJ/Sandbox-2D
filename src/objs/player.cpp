@@ -240,7 +240,7 @@ void Player::updateAnimation() {
 
 // Render functions
 
-void Player::render() {
+void Player::render() const {
    Texture2D &texture = getTexture("player");
    DrawTexturePro(texture, {frameX * playerFrameSize, 0.f, (flipX ? -playerFrameSize : playerFrameSize), (float)texture.height}, {position.x, position.y, playerSize.x, playerSize.y}, {0, 0}, 0, WHITE);
 }

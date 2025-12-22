@@ -9,13 +9,15 @@ struct State {
    float fadeTimer = 0.f;
    float alpha = 0.f;
 
-   // Virtual functions
+   // Constructors
 
    State() = default;
    virtual ~State() = default;
 
+   // Virtual functions
+
    virtual void update() = 0;
-   virtual void render() = 0;
+   virtual void render() const = 0;
    virtual State* change() = 0;
 
    // Update functions

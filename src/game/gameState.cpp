@@ -295,7 +295,7 @@ void GameState::updatePhysics() {
 
 // Other functions
 
-void GameState::render() {
+void GameState::render() const {
    // Draw parallax background
    float delta = (paused ? 0 : player.delta.x / GetFrameTime() / 60.0f); // To avoid delta time clash
    drawBackground(foregroundTexture, backgroundTexture, delta * parallaxBgSpeed, delta * parallaxFgSpeed, (paused ? 0 : gameSunSpeed));
@@ -325,7 +325,7 @@ void GameState::render() {
    }
    /************************************/
 
-   for (auto &droppedItem : droppedItems) {
+   for (const DroppedItem &droppedItem : droppedItems) {
       droppedItem.render();
    }
 

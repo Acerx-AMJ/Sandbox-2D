@@ -11,7 +11,7 @@ struct Input {
    int maxChars = 255, counter = 0;
 
    void update();
-   void render();
+   void render() const;
 };
 
 #endif

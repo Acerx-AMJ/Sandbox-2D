@@ -285,7 +285,7 @@ void Inventory::discardItem() {
 
 // Frame functions
 
-Vector2 Inventory::getFramePosition(float x, float y, bool isSelected) {
+Vector2 Inventory::getFramePosition(float x, float y, bool isSelected) const {
    Vector2 position = Vector2Add(Vector2Multiply(itemframePadding, {x, y}), itemframeTopLeft);
 
    if (isSelected) {
@@ -294,7 +294,7 @@ Vector2 Inventory::getFramePosition(float x, float y, bool isSelected) {
    return position;
 }
 
-Vector2 Inventory::getFrameSize(bool isSelected) {
+Vector2 Inventory::getFrameSize(bool isSelected) const {
    return (isSelected ? selectedItemFrameSize : itemframeSize);
 }
 
@@ -303,7 +303,7 @@ bool Inventory::mouseOnFrame(const Vector2 &position, const Vector2 &size) {
    return CheckCollisionPointRec(GetMousePosition(), bounds);
 }
 
-Texture& Inventory::getFrameTexture(bool isSelected, bool isFavorite) {
+const Texture& Inventory::getFrameTexture(bool isSelected, bool isFavorite) const {
    if (isSelected && isFavorite) {
       return getTexture("small_frame_favorite_selected");
    } else if (isSelected) {
@@ -315,7 +315,7 @@ Texture& Inventory::getFrameTexture(bool isSelected, bool isFavorite) {
    }
 }
 
-Texture& Inventory::getTrashTexture(bool trashOccupied) {
+const Texture& Inventory::getTrashTexture(bool trashOccupied) const {
    return getTexture(trashOccupied ? "small_frame" : "small_frame_trash");
 }
 
@@ -387,10 +387,10 @@ int Inventory::addItemCount(Item &item1, Item &item2) {
 
 // Render functions
 
-void Inventory::render() {
+void Inventory::render() const {
    for (int y = 0; y < (open ? inventoryHeight : 1); ++y) {
       for (int x = 0; x < inventoryWidth; ++x) {
-         Item &item = items[y][x];
+         const Item &item = items[y][x];
          bool isSelected = (x == selectedX && y == selectedY);
          bool isFavorite = item.favorite;
 
@@ -427,7 +427,7 @@ void Inventory::render() {
    }
 }
 
-void Inventory::renderItem(Item &item, const Vector2 &position, bool isSelected) {
+void Inventory::renderItem(const Item &item, const Vector2 &position, bool isSelected) const {
    Color drawColor = (isSelected ? Fade(WHITE, 0.75f) : WHITE);
 
    if (!item.isFurniture) {

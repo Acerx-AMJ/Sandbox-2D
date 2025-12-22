@@ -1,24 +1,24 @@
 #include "game/gameState.hpp"
 #include "game/menuState.hpp"
 #include "mngr/resource.hpp"
-#include "mngr/sound.hpp"
 #include "objs/generation.hpp"
 #include "ui/popup.hpp"
-#include "util/config.hpp"
 #include "util/fileio.hpp"
 #include "util/format.hpp"
+#include "util/input.hpp"
 #include "util/parallax.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
-#include <cmath>
 #include <filesystem>
 
 // Constructors
 
 MenuState::MenuState()
-   : backgroundTexture(getRandomBackground()), foregroundTexture(getRandomForeground()) {
+: backgroundTexture(getRandomBackground()), foregroundTexture(getRandomForeground()) {
+   const Vector2 center = getScreenCenter();
+
    // Init title screen
-   playButton.rectangle = {GetScreenWidth() / 2.f, GetScreenHeight() / 2.f, buttonWidth, buttonHeight};
+   playButton.rectangle = {center.x, center.y, buttonWidth, buttonHeight};
    playButton.text = "Play";
    optionsButton.rectangle = {playButton.rectangle.x, playButton.rectangle.y + buttonPaddingY, buttonWidth, buttonHeight};
    optionsButton.text = "Options";
@@ -31,7 +31,7 @@ MenuState::MenuState()
    worldFrame.rectangle = {worldFramePosition.x, worldFramePosition.y, GetScreenWidth() - worldFrameSizeOffset.x, GetScreenHeight() - worldFrameSizeOffset.y};
    worldFrame.scrollHeight = worldFrame.rectangle.height;
 
-   deleteButton.rectangle = {GetScreenWidth() / 2.f - worldButtonOffsetX, worldFrame.rectangle.y + worldFrame.rectangle.height + buttonPaddingY, buttonWidth, buttonHeight};
+   deleteButton.rectangle = {center.x - worldButtonOffsetX, worldFrame.rectangle.y + worldFrame.rectangle.height + buttonPaddingY, buttonWidth, buttonHeight};
    deleteButton.text = "Delete World";
    deleteButton.disabled = true;
    renameButton.rectangle = {deleteButton.rectangle.x - buttonPaddingX, deleteButton.rectangle.y, buttonWidth, buttonHeight};
@@ -40,7 +40,7 @@ MenuState::MenuState()
    backButton.rectangle = {renameButton.rectangle.x - buttonPaddingX, renameButton.rectangle.y, buttonWidth, buttonHeight};
    backButton.text = "Back";
 
-   favoriteButton.rectangle = {GetScreenWidth() / 2.f + worldButtonOffsetX, worldFrame.rectangle.y + worldFrame.rectangle.height + buttonPaddingY, buttonWidth, buttonHeight};
+   favoriteButton.rectangle = {center.x + worldButtonOffsetX, worldFrame.rectangle.y + worldFrame.rectangle.height + buttonPaddingY, buttonWidth, buttonHeight};
    favoriteButton.text = "Favorite";
    favoriteButton.disabled = true;
    playWorldButton.rectangle = {favoriteButton.rectangle.x + buttonPaddingX, favoriteButton.rectangle.y, buttonWidth, buttonHeight};
@@ -50,23 +50,23 @@ MenuState::MenuState()
    newButton.text = "New";
 
    backButton.texture = renameButton.texture = deleteButton.texture = favoriteButton.texture = playWorldButton.texture = newButton.texture = &getTexture("button");
-   loadWorlds();
+   loadWorldButtons();
 
    // Init world creation screen
    backButtonCreation.rectangle = deleteButton.rectangle;
    backButtonCreation.text = "Back";
-   createButton.rectangle = favoriteButton.rectangle;
-   createButton.text = "Create";
+   createButtonCreation.rectangle = favoriteButton.rectangle;
+   createButtonCreation.text = "Create";
 
-   worldName.rectangle = {GetScreenWidth() / 2.f - worldNameSize.x / 2.f, GetScreenHeight() / 2.f - worldNameSize.y / 2.f, worldNameSize.x, worldNameSize.y};
+   worldName.rectangle = {center.x - worldNameSize.x / 2.f, center.y - worldNameSize.y / 2.f, worldNameSize.x, worldNameSize.y};
    worldName.maxChars = maxWorldNameSize;
-   shouldWorldBeFlat.rectangle = {GetScreenWidth() / 2.f - 35.f, worldName.rectangle.y + 200.f, 70.f, 70.f};
+   shouldWorldBeFlat.rectangle = {center.x - 35.f, worldName.rectangle.y + 200.f, 70.f, 70.f};
 
-   backButtonCreation.texture = createButton.texture = &getTexture("button");
+   backButtonCreation.texture = createButtonCreation.texture = &getTexture("button");
 
    // Init world renaming screen
    backButtonRenaming = backButtonCreation;
-   renameButtonRenaming = createButton;
+   renameButtonRenaming = createButtonCreation;
    renameButtonRenaming.text = "Rename";
    renameInput = worldName;
    resetBackground();
@@ -91,7 +91,7 @@ void MenuState::updateTitle() {
    optionsButton.update();
    quitButton.update();
 
-   if (playButton.clicked) {
+   if (playButton.clicked || handleKeyPressWithSound(KEY_ENTER)) {
       phase = Phase::levelSelection;
    }
 
@@ -111,7 +111,7 @@ void MenuState::updateLevelSelection() {
    newButton.update();
    worldFrame.update();
 
-   float offsetY = worldFrame.getOffsetY();
+   const float offsetY = worldFrame.getOffsetY();
    bool anyClicked = false;
    
    for (Button &button: worldButtons) {
@@ -140,52 +140,26 @@ void MenuState::updateLevelSelection() {
       anyClicked = true;
    }
 
-   if (backButton.clicked) {
+   if (backButton.clicked || handleKeyPressWithSound(KEY_ESCAPE)) {
       phase = Phase::title;
    }
 
    if (newButton.clicked) {
       phase = Phase::levelCreation;
-      worldName.text = getRandomWorldName();
+      worldName.text = generateRandomWorldName();
    }
 
    // Quick world navigation
 
-   bool shouldGoDown = IsKeyPressed(KEY_DOWN);
-   bool shouldGoUp = IsKeyPressed(KEY_UP);
-
-   if (IsKeyDown(KEY_UP) && upKeyTimer >= worldSelectionKeyDelay) {
-      upKeyTimer = 0.0f;
-      shouldGoUp = true;
-   } else if (IsKeyDown(KEY_UP)) {
-      upKeyTimer += GetFrameTime();
-   } else {
-      upKeyTimer = 0.0f; // Reset the key if it's not down
-   }
-
-   if (IsKeyDown(KEY_DOWN) && downKeyTimer >= worldSelectionKeyDelay) {
-      downKeyTimer = 0.0f;
-      shouldGoDown = true;
-   } else if (IsKeyDown(KEY_DOWN)) {
-      downKeyTimer += GetFrameTime();
-   } else {
-      downKeyTimer = 0.0f;
-   }
+   const bool shouldGoDown = isKeyRepeating(KEY_DOWN, downKeyTimer, downKeyDelayTimer);
+   const bool shouldGoUp   = isKeyRepeating(KEY_UP, upKeyTimer, upKeyDelayTimer);
 
    if (!worldButtons.empty() && (shouldGoUp || shouldGoDown)) {
       if (!anySelected) {
          anySelected = true;
-         selectedButton = &(shouldGoUp ? worldButtons.back() : worldButtons.front());
+         selectedButton = (shouldGoUp ? &worldButtons.back() : &worldButtons.front());
       } else {
-         size_t currentIndex = 0, i = 0;
-         for (Button &button: worldButtons) {
-            if (&button == selectedButton) {
-               currentIndex = i;
-               break;
-            }
-            i += 1;
-         }
-
+         size_t currentIndex = getSelectedButtonIndex();
          currentIndex = (shouldGoUp ? (currentIndex - 1 + worldButtons.size()) : (currentIndex + 1)) % worldButtons.size();
          selectedButton->texture = &getTexture("button_long");
          selectedButton = &worldButtons.at(currentIndex);
@@ -194,6 +168,7 @@ void MenuState::updateLevelSelection() {
    }
 
    // Update world-specific buttons
+
    if (anySelected) {
       favoriteButton.text = (selectedButton->favorite ? "Unfavorite" : "Favorite");
    }
@@ -225,7 +200,7 @@ void MenuState::updateLevelSelection() {
       if (!std::filesystem::remove_all(fileName)) {
          insertPopup("Notice", format("World '{}' could not be deleted. File '{}' was{}found. If file was not found, check the 'data/worlds/' folder, if it was, check your permissions.", selectedButton->text, fileName, (std::filesystem::exists(selectedButton->text) ? " " : " not ")), false);
       }
-      loadWorlds();
+      loadWorldButtons();
    }
    deleteClicked = false;
 
@@ -237,9 +212,7 @@ void MenuState::updateLevelSelection() {
 
    if (favoriteButton.clicked) {
       if (selectedButton->favorite) {
-         favoriteWorlds.erase(std::remove_if(favoriteWorlds.begin(), favoriteWorlds.end(), [this](std::string &s) -> bool {
-            return s == selectedButton->text;
-         }));
+         favoriteWorlds.erase(std::remove(favoriteWorlds.begin(), favoriteWorlds.end(), selectedButton->text), favoriteWorlds.end());
       } else {
          favoriteWorlds.push_back(selectedButton->text);
       }
@@ -248,7 +221,7 @@ void MenuState::updateLevelSelection() {
       selectedButton->favorite = !selectedButton->favorite;
       
       saveLinesToFile("data/favorites.txt", favoriteWorlds);
-      sortWorldsByFavorites();
+      sortWorldButtonsByFavorites();
 
       for (Button &button: worldButtons) {
          if (button.text == worldName) {
@@ -257,17 +230,15 @@ void MenuState::updateLevelSelection() {
       }
    }
 
-   if (playWorldButton.clicked || (anySelected && IsKeyPressed(KEY_ENTER))) {
+   if (playWorldButton.clicked || (anySelected && handleKeyPressWithSound(KEY_ENTER))) {
       selectedWorld = selectedButton->text;
       fadingOut = playing = true;
       return;
    }
 
    // Ignore renameButton to make it reset after clicking. Required to avoid a graphical glitch
-   if (!anyClicked && !deleteButton.clicked /* && !renameButton.clicked */ && !favoriteButton.clicked && !playWorldButton.clicked && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-      if (selectedButton) {
-         selectedButton->texture = &getTexture("button_long");
-      }
+   if (selectedButton && !anyClicked && !deleteButton.clicked && !favoriteButton.clicked && !playWorldButton.clicked && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+      selectedButton->texture = &getTexture("button_long");
       selectedButton = nullptr;
       anySelected = false;
    }
@@ -277,19 +248,15 @@ void MenuState::updateLevelSelection() {
 
 void MenuState::updateLevelCreation() {
    backButtonCreation.update();
-   createButton.update();
+   createButtonCreation.update();
    worldName.update();
    shouldWorldBeFlat.update();
 
-   if (backButtonCreation.clicked) {
+   if (backButtonCreation.clicked || handleKeyPressWithSound(KEY_ESCAPE)) {
       phase = Phase::levelSelection;
    }
 
-   if (createButton.clicked || (IsKeyPressed(KEY_ENTER) && !worldName.typing)) {
-      if (!createButton.clicked) {
-         playSound("click");
-      }
-
+   if (createButtonCreation.clicked || (!worldName.typing && handleKeyPressWithSound(KEY_ENTER))) {
       // Input characters are capped at maxWorldNameSize already
       if (worldName.text.size() < minWorldNameSize) {
          insertPopup("Invalid World Name", format("World name must contain from {} to {} characters, but it has {} instead.", minWorldNameSize, maxWorldNameSize, worldName.text.size()), false);
@@ -307,15 +274,12 @@ void MenuState::updateLevelRenaming() {
    renameButtonRenaming.update();
    renameInput.update();
 
-   if (backButtonRenaming.clicked) {
+   if (backButtonRenaming.clicked || handleKeyPressWithSound(KEY_ESCAPE)) {
       phase = Phase::levelSelection;
    }
 
-   if (renameButtonRenaming.clicked || (IsKeyPressed(KEY_ENTER) && !renameInput.typing)) {
-      if (!renameButtonRenaming.clicked) {
-         playSound("click");
-      }
-
+   if (renameButtonRenaming.clicked || (!renameInput.typing && handleKeyPressWithSound(KEY_ENTER))) {
+      // Input characters are capped at maxWorldNameSize already
       if (renameInput.text.size() < minWorldNameSize) {
          insertPopup("Invalid World Name", format("World name must contain from {} to {} characters, but it has {} instead.", minWorldNameSize, maxWorldNameSize, renameInput.text.size()), false);
          return;
@@ -327,20 +291,15 @@ void MenuState::updateLevelRenaming() {
          return;
       }
 
-      // try catch blocks suck, so no error handling here
       std::filesystem::rename(format("data/worlds/{}.txt", selectedWorld), newName);
 
-      // Make sure renaming worlds doesn't change favorites
       if (wasFavoriteBeforeRenaming) {
-         favoriteWorlds.erase(std::remove_if(favoriteWorlds.begin(), favoriteWorlds.end(), [this](std::string &s) -> bool {
-            return s == renameInput.text;
-         }));
-
+         favoriteWorlds.erase(std::remove(favoriteWorlds.begin(), favoriteWorlds.end(), renameInput.text), favoriteWorlds.end());
          favoriteWorlds.push_back(renameInput.text);
          saveLinesToFile("data/favorites.txt", favoriteWorlds);
       }
 
-      loadWorlds();
+      loadWorldButtons();
       renameInput.text.clear();
       phase = Phase::levelSelection;
    }
@@ -352,13 +311,13 @@ void MenuState::updateGeneratingLevel() {
    MapGenerator generator (worldName.text, defaultMapSizeX, defaultMapSizeY, shouldWorldBeFlat.checked);
    generator.generate();
 
-   loadWorlds();
+   loadWorldButtons();
    phase = Phase::levelSelection;
 }
 
 // Render
 
-void MenuState::render() {
+void MenuState::render() const {
    drawBackground(foregroundTexture, backgroundTexture, parallaxBgSpeed, parallaxFgSpeed, menuSunSpeed);
 
    switch (phase) {
@@ -372,7 +331,7 @@ void MenuState::render() {
 
 // Render title
 
-void MenuState::renderTitle() {
+void MenuState::renderTitle() const {
    drawText(getScreenCenter({0.f, titleOffsetX}), "SANDBOX 2D", 180);
    playButton.render();
    optionsButton.render();
@@ -381,7 +340,7 @@ void MenuState::renderTitle() {
 
 // Render level selection screen
 
-void MenuState::renderLevelSelection() {
+void MenuState::renderLevelSelection() const {
    drawText(getScreenCenter({0.f, titleOffsetX2}), "SELECT WORLD", 180);
    backButton.render();
    renameButton.render();
@@ -391,27 +350,28 @@ void MenuState::renderLevelSelection() {
    newButton.render();
    worldFrame.render();
 
-   float offsetY = worldFrame.getOffsetY();
-   for (Button &button: worldButtons) {
+   const float offsetY = worldFrame.getOffsetY();
+   for (const Button &button: worldButtons) {
       if (!worldFrame.inFrame(button.normalizeRect())) {
          continue;
       }
 
       button.render(offsetY);
-      if (button.favorite) {
-         Vector2 position = {button.rectangle.x + (button.rectangle.width * button.scale) / 2.f - (button.rectangle.height * button.scale) / 2.f, button.rectangle.y - offsetY};
-
-         drawTexture(getTexture("star"), position, {worldStarSize * button.scale, worldStarSize * button.scale});
+      if (!button.favorite) {
+         continue;
       }
+
+      Vector2 position = {button.rectangle.x + (button.rectangle.width * button.scale) / 2.f - (button.rectangle.height * button.scale) / 2.f, button.rectangle.y - offsetY};
+      drawTexture(getTexture("star"), position, {worldStarSize * button.scale, worldStarSize * button.scale});
    }
 }
 
 // Render level creation screen
 
-void MenuState::renderLevelCreation() {
+void MenuState::renderLevelCreation() const {
    drawText(getScreenCenter({0.f, titleOffsetX2}), "CREATE WORLD", 180);
    backButtonCreation.render();
-   createButton.render();
+   createButtonCreation.render();
    worldName.render();
    shouldWorldBeFlat.render();
    drawText({worldName.rectangle.x - 125.f, worldName.rectangle.y + worldName.rectangle.height / 2.f}, "World Name:", 50);
@@ -420,7 +380,7 @@ void MenuState::renderLevelCreation() {
 
 // Render level renaming screen
 
-void MenuState::renderLevelRenaming() {
+void MenuState::renderLevelRenaming() const {
    drawText(getScreenCenter({0.0f, titleOffsetX2}), "RENAME WORLD", 180);
    backButtonRenaming.render();
    renameButtonRenaming.render();
@@ -433,20 +393,22 @@ void MenuState::renderLevelRenaming() {
 
 // Render level generation screen
 
-void MenuState::renderGeneratingLevel() {
+void MenuState::renderGeneratingLevel() const {
    drawText(getScreenCenter(), (std::string("Generating World '") + worldName.text + "'...").c_str(), 50);
 }
 
-// Other functions
+// Change states
 
 State* MenuState::change() {
    if (playing) {
       return new GameState(selectedWorld);
    }
-   return nullptr;
+   return nullptr; // Quit the game
 }
 
-void MenuState::loadWorlds() {
+// World selection functions
+
+void MenuState::loadWorldButtons() {
    favoriteWorlds = getAllLinesFromFile("data/favorites.txt");
    std::filesystem::create_directories("data/worlds/");
 
@@ -458,16 +420,16 @@ void MenuState::loadWorlds() {
       button.favorite = isWorldFavorite(button.text);
       worldButtons.push_back(button);
    }
-   sortWorldsByFavorites();
+   sortWorldButtonsByFavorites();
 }
 
-std::string MenuState::getRandomWorldName() {
-   std::string adjective = getRandomLineFromFile("assets/adjectives.txt");
-   std::string noun = getRandomLineFromFile("assets/nouns.txt");
+std::string MenuState::generateRandomWorldName() const {
+   const std::string adjective = getRandomLineFromFile("assets/adjectives.txt");
+   const std::string noun      = getRandomLineFromFile("assets/nouns.txt");
    return adjective + " " + noun;
 }
 
-bool MenuState::isWorldFavorite(const std::string &name) {
+bool MenuState::isWorldFavorite(const std::string &name) const {
    for (const std::string &world: favoriteWorlds) {
       if (world == name) {
          return true;
@@ -476,7 +438,7 @@ bool MenuState::isWorldFavorite(const std::string &name) {
    return false;
 }
 
-void MenuState::sortWorldsByFavorites() {
+void MenuState::sortWorldButtonsByFavorites() {
    std::sort(worldButtons.begin(), worldButtons.end(), [](Button &a, Button &b) -> bool {
       if (a.favorite != b.favorite) {
          return a.favorite && !b.favorite;
@@ -493,4 +455,40 @@ void MenuState::sortWorldsByFavorites() {
       worldFrame.scrollHeight = std::max(worldFrame.rectangle.height, button.rectangle.y + button.rectangle.height / 2.f);
       index += 1;
    }
+}
+
+// Helper functions
+
+bool MenuState::isKeyRepeating(int key, float &repeatTimer, float &delayTimer) {
+   const bool pressed = IsKeyPressed(key);
+   const bool down    = IsKeyDown(key);
+
+   if (!down) {
+      repeatTimer = 0.0f;
+      delayTimer = 0.0f;
+      return false; // For a key to be pressed, it must be down first
+   }
+
+   if (delayTimer < worldSelectionKeyStartDelay) {
+      delayTimer += GetFrameTime();
+      return pressed;
+   }
+
+   repeatTimer += GetFrameTime();
+   if (repeatTimer >= worldSelectionKeyDelay) {
+      repeatTimer = 0.0f;
+      return true;
+   }
+   return pressed;
+}
+
+size_t MenuState::getSelectedButtonIndex() const {
+   size_t index = 0;
+   for (const Button &button: worldButtons) {
+      if (selectedButton == &button) {
+         break;
+      }
+      index += 1;
+   }
+   return index;
 }

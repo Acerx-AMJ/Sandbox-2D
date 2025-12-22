@@ -27,7 +27,7 @@ void DroppedItem::update(const Rectangle &cameraBounds) {
    inBounds = (tileX >= cameraBounds.x && tileX <= cameraBounds.width && tileY >= cameraBounds.y && tileY <= cameraBounds.height);
 }
 
-void DroppedItem::render() {
+void DroppedItem::render() const {
    if (!inBounds) {
       return;
    }
@@ -56,6 +56,6 @@ void DroppedItem::render() {
    }
 }
 
-Rectangle DroppedItem::getBounds() {
+Rectangle DroppedItem::getBounds() const {
    return {(float)tileX, (float)tileY, 1.0f, 1.0f};
 }

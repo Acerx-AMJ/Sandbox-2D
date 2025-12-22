@@ -51,7 +51,7 @@ void Input::update() {
 
 // Render function
 
-void Input::render() {
+void Input::render() const {
    unsigned char value = (typing ? std::sin(counter * inputTextFadeSpeed) * inputTextFadeValue + inputTextFadeMin : 255);
    std::string wrapped = text;
    wrapText(wrapped, rectangle.width - inputTextWrapPadding, 35, 1);

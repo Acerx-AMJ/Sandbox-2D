@@ -26,7 +26,7 @@ inline void setBlock(FurniturePiece &piece, int tx, int ty) {
    piece.ty = ty;
 }
 
-inline bool isBlockSoil(Map &map, int x, int y) {
+inline bool isBlockSoil(const Map &map, int x, int y) {
    return map.is(x, y, Block::grass) || map.isu(x, y, Block::dirt) || map.isu(x, y, Block::sand) || map.isu(x, y, Block::snow);
 }
 
@@ -106,7 +106,7 @@ void Furniture::update(Map &map) {
 
 // Get functions
 
-Furniture Furniture::get(int x, int y, Map &map, Type type, bool debug) {
+Furniture Furniture::get(int x, int y, const Map &map, Type type, bool debug) {
    switch (type) {
 
    case Type::tree: {
@@ -314,10 +314,10 @@ void Furniture::generate(int x, int y, Map &map, Type type) {
 
 // Render furniture
 
-void Furniture::preview(Map &map) {
+void Furniture::preview(const Map &map) const {
    for (int y = posY; y - posY < sizeY; ++y) {
       for (int x = posX; x - posX < sizeX; ++x) {
-         FurniturePiece &piece = pieces[y - posY][x - posX];
+         const FurniturePiece &piece = pieces[y - posY][x - posX];
          if (piece.nil) {
             continue;
          }
@@ -327,10 +327,10 @@ void Furniture::preview(Map &map) {
    }
 }
 
-void Furniture::render(const Rectangle &cameraBounds) {
+void Furniture::render(const Rectangle &cameraBounds) const {
    for (int y = posY; y <= cameraBounds.height && y - posY < sizeY; ++y) {
       for (int x = posX; x <= cameraBounds.width && x - posX < sizeX; ++x) {
-         FurniturePiece &piece = pieces[y - posY][x - posX];
+         const FurniturePiece &piece = pieces[y - posY][x - posX];
          if (y < cameraBounds.y || x < cameraBounds.x || piece.nil) {
             continue;
          }

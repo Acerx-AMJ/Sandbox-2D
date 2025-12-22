@@ -1,0 +1,7 @@
+/.cache
+/.vscode
+/build
+/.clangd
+/*.zip
+/*.tar.gz
+/data

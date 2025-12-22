@@ -11,6 +11,10 @@
 // Menu state
 
 struct MenuState: public State {
+   enum class Phase {title, levelSelection, levelCreation, levelRenaming, generatingLevel};
+
+   // Constructors
+
    MenuState();
    ~MenuState() = default;
 
@@ -25,45 +29,58 @@ struct MenuState: public State {
 
    // Render
 
-   void render() override;
-   void renderTitle();
-   void renderLevelSelection();
-   void renderLevelCreation();
-   void renderLevelRenaming();
-   void renderGeneratingLevel();
+   void render() const override;
+   void renderTitle() const;
+   void renderLevelSelection() const;
+   void renderLevelCreation() const;
+   void renderLevelRenaming() const;
+   void renderGeneratingLevel() const;
 
-   // Other functions
+   // Change states
 
    State* change() override;
 
-   void loadWorlds();
-   std::string getRandomWorldName();
+   // World selection functions
 
-   bool isWorldFavorite(const std::string &name);
-   void sortWorldsByFavorites();
+   void loadWorldButtons();
+   void sortWorldButtonsByFavorites();
 
-private:
-   enum class Phase { title, levelSelection, levelCreation, levelRenaming, generatingLevel };
+   std::string generateRandomWorldName() const;
+   bool isWorldFavorite(const std::string &name) const;
+
+   // Helper functions
+
+   bool isKeyRepeating(int key, float &repeatTimer, float &delayTimer);
+   size_t getSelectedButtonIndex() const;
+
+   // Members
+
+   const Texture &backgroundTexture, &foregroundTexture;
 
    Button playButton, optionsButton, quitButton;
    Button backButton, renameButton, deleteButton, favoriteButton, playWorldButton, newButton;
-   Button backButtonCreation, createButton;
+   Button backButtonCreation, createButtonCreation;
    Button backButtonRenaming, renameButtonRenaming;
-
-   std::vector<std::string> favoriteWorlds;
-   std::vector<Button> worldButtons;
-   bool anySelected = false, deleteClicked = false, wasFavoriteBeforeRenaming = false;
-   float upKeyTimer = 0.0f, downKeyTimer = 0.0f;
    Button *selectedButton = nullptr; 
 
    Scrollframe worldFrame;
    Input worldName, renameInput;
    CheckBox shouldWorldBeFlat;
 
-   Texture &backgroundTexture, &foregroundTexture;
+   std::vector<std::string> favoriteWorlds;
+   std::vector<Button> worldButtons;
    std::string selectedWorld;
    Phase phase = Phase::title;
+
+   bool anySelected = false;
+   bool deleteClicked = false;
+   bool wasFavoriteBeforeRenaming = false;
    bool playing = false;
+
+   float upKeyTimer = 0.0f;
+   float downKeyTimer = 0.0f;
+   float upKeyDelayTimer = 0.0f;
+   float downKeyDelayTimer = 0.0f;
 };
 
 #endif

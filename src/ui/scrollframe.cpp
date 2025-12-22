@@ -31,18 +31,18 @@ void Scrollframe::update() {
 
 // Render function
 
-void Scrollframe::render() {
+void Scrollframe::render() const {
    drawTextureNoOrigin(getTexture("scrollframe"), {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height});
    drawTextureNoOrigin(getTexture("scrollbar"), {rectangle.x + rectangle.width - scrollBarWidth, scrollbarY}, {scrollBarWidth, scrollbarHeight});
 }
 
 // Other functions
 
-bool Scrollframe::inFrame(const Rectangle &rect) {
+bool Scrollframe::inFrame(const Rectangle &rect) const {
    float top = rectangle.y + getOffsetY();
    return rectangle.x <= rect.x && rectangle.x + rectangle.width >= rect.x + rect.width && top <= rect.y && top + rectangle.height >= rect.y + rect.height;
 }
 
-float Scrollframe::getOffsetY() {
+float Scrollframe::getOffsetY() const {
    return (scrollHeight - rectangle.height) * progress;
 }

@@ -10,10 +10,10 @@ struct Scrollframe {
    bool moving = false;
 
    void update();
-   void render();
+   void render() const;
 
-   bool inFrame(const Rectangle &rect);
-   float getOffsetY();
+   bool inFrame(const Rectangle &rect) const;
+   float getOffsetY() const;
 };
 
 #endif

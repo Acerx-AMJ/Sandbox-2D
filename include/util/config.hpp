@@ -179,7 +179,9 @@ constexpr int minWorldNameSize         = 3;
 constexpr Vector2 worldFramePosition   = {280.0f, 200.0f};
 constexpr Vector2 worldFrameSizeOffset = {600.0f, 360.0f};
 constexpr float worldButtonOffsetX     = 120.0f;
-constexpr float worldSelectionKeyDelay = 0.125f;
+
+constexpr float worldSelectionKeyDelay      = 0.125f;
+constexpr float worldSelectionKeyStartDelay = 0.333f;
 
 constexpr Vector2 itemframeSize           = {60.0f, 60.0f};
 constexpr Vector2 itemframePadding        = {itemframeSize.x + 5.0f, itemframeSize.y + 5.0f};

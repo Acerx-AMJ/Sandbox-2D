@@ -38,12 +38,12 @@ struct Inventory {
 
    // Frame functions
 
-   Vector2 getFramePosition(float x, float y, bool isSelected);
-   Vector2 getFrameSize(bool isSelected);
+   Vector2 getFramePosition(float x, float y, bool isSelected) const;
+   Vector2 getFrameSize(bool isSelected) const;
    bool mouseOnFrame(const Vector2 &position, const Vector2 &size);
 
-   Texture& getFrameTexture(bool isSelected, bool isFavorite);
-   Texture& getTrashTexture(bool trashOccupied);
+   const Texture& getFrameTexture(bool isSelected, bool isFavorite) const;
+   const Texture& getTrashTexture(bool trashOccupied) const;
 
    // Item functions
    
@@ -54,8 +54,8 @@ struct Inventory {
 
    // Render functions
    
-   void render();
-   void renderItem(Item &item, const Vector2 &position, bool isSelected);
+   void render() const;
+   void renderItem(const Item &item, const Vector2 &position, bool isSelected) const;
 };
 
 #endif

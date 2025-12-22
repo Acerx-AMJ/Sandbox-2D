@@ -62,7 +62,7 @@ void LoadingState::update() {
 
 // Other functions
 
-void LoadingState::render() {
+void LoadingState::render() const {
    Texture2D &tex = getTexture("loading");
    std::string ltext = "Loading Done!";
    if (load != Load::count) {

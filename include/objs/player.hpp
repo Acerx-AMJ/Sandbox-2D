@@ -33,7 +33,7 @@ struct Player {
 
    // Render function
 
-   void render();
+   void render() const;
 
    // Getter functions
 

@@ -36,13 +36,13 @@ void Button::update(float offsetY) {
    }
 }
 
-void Button::render(float offsetY) {
+void Button::render(float offsetY) const {
    if (texture) {
       drawTexture(*texture, {rectangle.x, rectangle.y - offsetY}, Vector2Scale({rectangle.width, rectangle.height}, scale), 0, (disabled ? buttonDisabledColor : WHITE));
    }
    drawText({rectangle.x, rectangle.y - offsetY}, text.c_str(), 35 * scale, (disabled ? buttonDisabledColor : WHITE));
 }
 
-Rectangle Button::normalizeRect() {
+Rectangle Button::normalizeRect() const {
    return {rectangle.x - rectangle.width / 2.f, rectangle.y - rectangle.height / 2.f, rectangle.width, rectangle.height};
 }

@@ -36,9 +36,9 @@ struct DroppedItem {
    DroppedItem(Item &item, int tileX, int tileY);
 
    void update(const Rectangle &cameraBounds);
-   void render();
+   void render() const;
 
-   Rectangle getBounds();
+   Rectangle getBounds() const;
 };
 
 #endif

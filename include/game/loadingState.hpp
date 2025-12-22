@@ -16,7 +16,7 @@ struct LoadingState: public State {
 
    // Other functions
 
-   void render() override;
+   void render() const override;
    State* change() override;
 
 private:
