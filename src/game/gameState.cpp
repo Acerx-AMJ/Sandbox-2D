@@ -17,7 +17,6 @@
 constexpr float cameraFollowSpeed = 0.416f;
 constexpr float minCameraZoom     = 12.5f;
 constexpr float maxCameraZoom     = 200.0f;
-constexpr float gameSunSpeed      = 3.0f;
 
 constexpr float physicsUpdateTime = 0.1f;
 constexpr int lavaUpdateSpeed     = 6;
@@ -325,7 +324,7 @@ void GameState::updateDirtPhysics(int x, int y) {
 
 void GameState::render() const {
    const float delta = (paused ? 0 : player.delta.x / GetFrameTime() / 60.0f); // To avoid delta time clash
-   drawBackground(foregroundTexture, backgroundTexture, delta, delta, (paused ? 0 : gameSunSpeed));
+   drawBackground(foregroundTexture, backgroundTexture, delta, delta, (paused ? 0.0f : 3.0f));
 
    BeginMode2D(camera);
    renderGame();
@@ -337,6 +336,9 @@ void GameState::render() const {
 
 void GameState::renderGame() const {
    map.render(cameraBounds);
+   for (const DroppedItem &droppedItem : droppedItems) {
+      droppedItem.render();
+   }
 
    /************************************/
    // Scary method of rendering furniture and block preview correctly
@@ -359,10 +361,6 @@ void GameState::renderGame() const {
       }
    }
    /************************************/
-
-   for (const DroppedItem &droppedItem : droppedItems) {
-      droppedItem.render();
-   }
 
    player.render();
 }

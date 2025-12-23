@@ -1,6 +1,6 @@
 ### Player
 - new jump sound effects
-- fix jumping in water
+- fix jumping in 3 block wide spaces
 - make player spawn somewhere normal
 
 ### UI

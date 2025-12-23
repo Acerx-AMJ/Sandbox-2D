@@ -13,17 +13,9 @@
 
 // Constants
 
-constexpr float menuSunSpeed = 15.0f;
-
-constexpr float titleOffsetX  = -200.0f;
-constexpr float titleOffsetX2 = -400.0f;
-
-constexpr float worldStarSize          = 50.0f;
 constexpr Vector2 worldNameSize        = {420.0f, 140.0f};
 constexpr int maxWorldNameSize         = 48;
 constexpr int minWorldNameSize         = 3;
-constexpr Vector2 worldFramePosition   = {280.0f, 200.0f};
-constexpr Vector2 worldFrameSizeOffset = {600.0f, 360.0f};
 
 constexpr float worldSelectionKeyDelay      = 0.125f;
 constexpr float worldSelectionKeyStartDelay = 0.333f;
@@ -48,7 +40,7 @@ MenuState::MenuState()
    playButton.texture = optionsButton.texture = quitButton.texture = &getTexture("button");
 
    // Init world selection screen
-   worldFrame.rectangle = {worldFramePosition.x, worldFramePosition.y, GetScreenWidth() - worldFrameSizeOffset.x, GetScreenHeight() - worldFrameSizeOffset.y};
+   worldFrame.rectangle = {280.0f, 200.0f, GetScreenWidth() - 600.0f, GetScreenHeight() - 360.0f};
    worldFrame.scrollHeight = worldFrame.rectangle.height;
 
    deleteButton.rectangle = {center.x - 120.0f, worldFrame.rectangle.y + worldFrame.rectangle.height + buttonPaddingY, buttonWidth, buttonHeight};
@@ -338,7 +330,7 @@ void MenuState::updateGeneratingLevel() {
 // Render
 
 void MenuState::render() const {
-   drawBackground(foregroundTexture, backgroundTexture, 1.0f, 1.0f, menuSunSpeed);
+   drawBackground(foregroundTexture, backgroundTexture, 1.0f, 1.0f, 15.0f);
 
    switch (phase) {
    case Phase::title:           renderTitle();           break;
@@ -352,7 +344,7 @@ void MenuState::render() const {
 // Render title
 
 void MenuState::renderTitle() const {
-   drawText(getScreenCenter({0.f, titleOffsetX}), "SANDBOX 2D", 180);
+   drawText(getScreenCenter({0.f, -200.0f}), "SANDBOX 2D", 180);
    playButton.render();
    optionsButton.render();
    quitButton.render();
@@ -361,7 +353,7 @@ void MenuState::renderTitle() const {
 // Render level selection screen
 
 void MenuState::renderLevelSelection() const {
-   drawText(getScreenCenter({0.f, titleOffsetX2}), "SELECT WORLD", 180);
+   drawText(getScreenCenter({0.f, -400.0f}), "SELECT WORLD", 180);
    backButton.render();
    renameButton.render();
    deleteButton.render();
@@ -382,14 +374,14 @@ void MenuState::renderLevelSelection() const {
       }
 
       Vector2 position = {button.rectangle.x + (button.rectangle.width * button.scale) / 2.f - (button.rectangle.height * button.scale) / 2.f, button.rectangle.y - offsetY};
-      drawTexture(getTexture("star"), position, {worldStarSize * button.scale, worldStarSize * button.scale});
+      drawTexture(getTexture("star"), position, {50.0f * button.scale, 50.0f * button.scale});
    }
 }
 
 // Render level creation screen
 
 void MenuState::renderLevelCreation() const {
-   drawText(getScreenCenter({0.f, titleOffsetX2}), "CREATE WORLD", 180);
+   drawText(getScreenCenter({0.f, -400.0f}), "CREATE WORLD", 180);
    backButtonCreation.render();
    createButtonCreation.render();
    worldName.render();
@@ -401,7 +393,7 @@ void MenuState::renderLevelCreation() const {
 // Render level renaming screen
 
 void MenuState::renderLevelRenaming() const {
-   drawText(getScreenCenter({0.0f, titleOffsetX2}), "RENAME WORLD", 180);
+   drawText(getScreenCenter({0.0f, -400.0f}), "RENAME WORLD", 180);
    backButtonRenaming.render();
    renameButtonRenaming.render();
    renameInput.render();

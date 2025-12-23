@@ -3,35 +3,19 @@
 
 #include "objs/map.hpp"
 
-// Player
-
 struct Player {
-   Vector2 position, velocity, previousPosition, delta;
-   bool feetCollision = false, torsoCollision = false;
-   int feetCollisionY = 0;
-
-   bool onGround = false;
-   float coyoteTimer = 0.f, foxTimer = 0.f;
-
-   float waterMultiplier = 1.f, iceMultiplier = 1.f;
-   float updateTimer = 0.f, fallTimer = 0.f, walkTimer = 0.f;
-   int walkFrame = 6;
-   bool flipX = false;
-   int frameX = 0;
-
    // Constructors
 
    void init();
 
-   // Update functions
+   // Update
 
    void updatePlayer(Map &map);
    void updateMovement();
-   void updateDebugMovement();
    void updateCollisions(Map &map);
    void updateAnimation();
 
-   // Render function
+   // Render
 
    void render() const;
 
@@ -39,6 +23,27 @@ struct Player {
 
    Vector2 getCenter();
    Rectangle getBounds();
+
+   // Members
+
+   Vector2 position, velocity, previousPosition, delta;
+   bool feetCollision = false;
+   bool torsoCollision = false;
+   int feetCollisionY = 0;
+
+   bool onGround = false;
+   float coyoteTimer = 0.f;
+   float foxTimer = 0.f;
+
+   float waterMultiplier = 1.f;
+   float iceMultiplier = 1.f;
+
+   float updateTimer = 0.f;
+   float fallTimer = 0.f;
+   float walkTimer = 0.f;
+   int walkFrame = 6;
+   bool flipX = false;
+   int frameX = 0;
 };
 
 #endif

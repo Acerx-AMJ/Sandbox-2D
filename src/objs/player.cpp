@@ -12,8 +12,6 @@ constexpr float playerFrameSize = 16;
 constexpr float playerUpdateSpeed = 1.f / 60.f;
 constexpr float playerSpeed       = 2.182f;
 constexpr float airMultiplier     = 0.6f;
-constexpr float debugFlySpeed     = playerSpeed * 2.f;
-constexpr float debugFastFlySpeed = playerSpeed * 5.f;
 constexpr float jumpSpeed         = -6.5f;
 constexpr float gravity           = 0.267f;
 constexpr float maxGravity        = 7.333f;
@@ -31,7 +29,7 @@ void Player::init() {
    previousPosition = position;
 }
 
-// Update functions
+// Update
 
 void Player::updatePlayer(Map &map) {
    updateTimer += GetFrameTime();
@@ -47,14 +45,12 @@ void Player::updatePlayer(Map &map) {
    previousPosition = position;
 }
 
-// Movement functions
-
 void Player::updateMovement() {
-   // Hanlde gravity
+   // Handle gravity
    if (!onGround) {
-      velocity.y = min(maxGravity, velocity.y + gravity);
+      velocity.y = min(maxGravity * waterMultiplier, velocity.y + gravity * waterMultiplier);
    } else {
-      velocity.y = min(maxGravity, gravity);
+      velocity.y = min(maxGravity * waterMultiplier, gravity * waterMultiplier);
    }
 
    // Handle movement
@@ -88,25 +84,8 @@ void Player::updateMovement() {
 
    // Do everything else
    velocity.x *= waterMultiplier;
-   velocity.y *= waterMultiplier;
 
    if (directionX != 0 ) {
-      flipX = (directionX == 1);
-   }
-}
-
-[[maybe_unused]] void Player::updateDebugMovement() {
-   float directionX = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
-   float directionY = IsKeyDown(KEY_S) - (IsKeyDown(KEY_A) || IsKeyDown(KEY_SPACE));
-   Vector2 normalized = Vector2Normalize({directionX, directionY});
-
-   float speed = (IsKeyDown(KEY_LEFT_SHIFT) ? debugFastFlySpeed : debugFlySpeed);
-
-   // Ice multiplier doesn't work as intended here
-   velocity.x = lerp(velocity.x, normalized.x * speed, acceleration) * waterMultiplier;
-   velocity.y = lerp(velocity.y, normalized.y * speed, acceleration) * waterMultiplier;
-
-   if (directionX != 0) {
       flipX = (directionX == 1);
    }
 }

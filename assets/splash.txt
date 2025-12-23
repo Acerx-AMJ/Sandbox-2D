@@ -2,6 +2,10 @@ Made by Acerxamj!
 Made with C++ and Raylib!
 Using the power of text files to show you this message!
 Edit assets/splash.txt for your own messages!
-Thanks to Jhyde for making Windows builds!
+Thanks to Jhyde927 for making Windows builds!
 Splash.
 In development.
+Undefined behavior included!
+Now with more memory leaks!
+segmentation fault (core dumped)
+Thanks for playing!

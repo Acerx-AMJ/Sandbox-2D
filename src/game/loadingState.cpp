@@ -8,25 +8,17 @@
 #include "util/position.hpp"
 #include "util/render.hpp"
 
-// Constants
-
-constexpr float splashWrapOffset         = 50.0f;
-constexpr float loadingIconRotationSpeed = 360.0f;
-constexpr Vector2 loadingIconSize        = {70.0f, 70.0f};
-constexpr Vector2 loadingTextOffset      = {0.0f, -175.0f};
-constexpr Vector2 splashTextOffset       = {0.0f, 100.0f};
-
 // Constructors
 
 LoadingState::LoadingState() {
    loadFont("andy", "assets/fonts/andy.ttf");
    loadTexture("loading", "assets/sprites/ui/loading.png");
    splashText = getRandomLineFromFile("assets/splash.txt");
-   wrapText(splashText, GetScreenWidth() - splashWrapOffset, 40, 1.f);
+   wrapText(splashText, GetScreenWidth() - 50.0f, 40, 1.f);
 }
 
 void LoadingState::update() {
-   iconRotation += GetFrameTime() * loadingIconRotationSpeed;
+   iconRotation += GetFrameTime() * 360.0f;
 
    // Sometimes brute-forcing is better than over-engineering an automatic way to do everything
    if (loadPhase == Load::fonts) {
@@ -60,9 +52,9 @@ void LoadingState::render() const {
       finalLoadingText = format("{}{}/{}", loadingText, (int)loadPhase, (int)Load::count);
    }
 
-   drawText(getScreenCenter(loadingTextOffset), finalLoadingText.c_str(), 80);
-   drawText(getScreenCenter(splashTextOffset), splashText.c_str(), 40);
-   drawTexture(getTexture("loading"), getScreenCenter(), loadingIconSize, iconRotation);
+   drawText(getScreenCenter({0.0f, -175.0f}), finalLoadingText.c_str(), 80);
+   drawText(getScreenCenter({0.0f, 100.0f}), splashText.c_str(), 40);
+   drawTexture(getTexture("loading"), getScreenCenter(), {70.0f, 70.0f}, iconRotation);
 }
 
 State* LoadingState::change() {
