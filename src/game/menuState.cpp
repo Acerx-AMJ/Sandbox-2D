@@ -189,7 +189,7 @@ void MenuState::updateLevelSelection() {
          return;
       }
 
-      insertPopup("Confirmation Request", format("Are you sure that you want to delete world '{}'? You won't be able to recover the world!.", selectedButton->text), true);
+      insertPopup("Confirmation Request", format("Are you sure that you want to delete world '{}'? You won't be able to recover it!", selectedButton->text), true);
       deleteClicked = true;
       return;
    }

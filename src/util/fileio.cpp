@@ -113,19 +113,20 @@ void saveWorldData(const std::string &name, float playerX, float playerY, float 
       file << '\n';
    }
 
-   if (droppedItems) {
-      file << droppedItems->size() << '\n';
-      for (const DroppedItem &item: *droppedItems) {
-         file << (int)item.type << ' ';
-         file << (int)item.id << ' ';
-         file << item.isFurniture << ' ';
-         file << item.count << ' ';
-         file << item.tileX << ' ';
-         file << item.tileY << ' ';
-         file << item.lifetime << '\n';
-      }
-   } else {
+   if (!droppedItems) {
       file << 0 << '\n';
+      return;
+   }
+
+   file << droppedItems->size() << '\n';
+   for (const DroppedItem &item: *droppedItems) {
+      file << (int)item.type << ' ';
+      file << (int)item.id << ' ';
+      file << item.isFurniture << ' ';
+      file << item.count << ' ';
+      file << item.tileX << ' ';
+      file << item.tileY << ' ';
+      file << item.lifetime << '\n';
    }
 }
 

@@ -5,7 +5,6 @@
 
 ### UI
 - add world searching
-- make wrapping handle spaces in new lines
 
 ### Generation
 - fix tree tops generating in solid blocks
@@ -24,10 +23,3 @@
 - - popup
 - - scrollframe
 - - config (all of the constants!)
-- - fileio
-- - format
-- - input
-- - parallax
-- - position
-- - random
-- - render
