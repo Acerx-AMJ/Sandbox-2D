@@ -1,19 +1,38 @@
 #include "objs/furniture.hpp"
 #include "mngr/resource.hpp"
 #include "objs/map.hpp"
+#include "ui/uiconstants.hpp"
 #include "util/random.hpp"
 #include <array>
 #include <unordered_map>
 
 // Constants
 
+constexpr int cactusGrowSpeedMin  = 350;
+constexpr int cactusGrowSpeedMax  = 1750;
+constexpr int saplingGrowSpeedMin = 200;
+constexpr int saplingGrowSpeedMax = 1500;
+
+constexpr int cactusSizeMin = 4;
+constexpr int cactusSizeMax = 9;
+constexpr int palmSizeMin   = 8;
+constexpr int palmSizeMax   = 22;
+constexpr int treeSizeMin   = 5;
+constexpr int treeSizeMax   = 18;
+
+constexpr int treeRootChance     = 25;
+constexpr int treeBranchChance   = 15;
+constexpr int cactusBranchChance = 50;
+constexpr int cactusFlowerChance = 10;
+
 constexpr int furnitureCount = 10;
-static inline std::unordered_map<std::string, int> furnitureTextureIds {
+
+static inline const std::unordered_map<std::string, int> furnitureTextureIds {
    {"tree", 0}, {"sapling", 1}, {"palm", 2}, {"palm_sapling", 3}, {"pine", 4},
    {"pine_sapling", 5}, {"jungle_tree", 6}, {"jungle_sapling", 7}, {"cactus", 8}, {"cactus_seed", 9}
 };
 
-static inline std::array<const char*, furnitureCount> furnitureTextureNames {
+static inline const std::array<const char*, furnitureCount> furnitureTextureNames {
    "tree", "sapling", "palm", "palm_sapling", "pine",
    "pine_sapling", "jungle_tree", "jungle_sapling", "cactus", "cactus_seed"
 };
@@ -32,13 +51,13 @@ inline bool isBlockSoil(const Map &map, int x, int y) {
 
 // Furniture functions
 
-Furniture::Furniture(Type type, objid_t texId, int value, int value2, int posX, int posY, int sizeX, int sizeY)
+Furniture::Furniture(Type type, unsigned char texId, int value, int value2, int posX, int posY, int sizeX, int sizeY)
    : type(type), texId(texId), value(value), value2(value2), posX(posX), posY(posY), sizeX(sizeX), sizeY(sizeY) {
    pieces = std::vector<std::vector<FurniturePiece>>(sizeY, std::vector<FurniturePiece>(sizeX, FurniturePiece{}));   
 }
 
 Furniture::Furniture(const std::string &texture, int posX, int posY, int sizeX, int sizeY, Type type)
-   : type(type), texId(furnitureTextureIds[texture]), posX(posX), posY(posY), sizeX(sizeX), sizeY(sizeY) {
+   : type(type), texId(furnitureTextureIds.at(texture)), posX(posX), posY(posY), sizeX(sizeX), sizeY(sizeY) {
    pieces = std::vector<std::vector<FurniturePiece>>(sizeY, std::vector<FurniturePiece>(sizeX, FurniturePiece{}));
 }
 
@@ -66,7 +85,7 @@ void Furniture::update(Map &map) {
       }
 
       if (value == 0) {
-         value2 = random(saplingGrowTimeMin, saplingGrowTimeMax);
+         value2 = random(saplingGrowSpeedMin, saplingGrowSpeedMax);
       }
 
       value += 1;
@@ -126,7 +145,7 @@ Furniture Furniture::get(int x, int y, const Map &map, Type type, bool debug) {
       if (!debug && (height < (palm ? palmSizeMin : treeSizeMin))) {
          return {};
       }
-      static std::unordered_map<blockid_t, std::string> textureMap {
+      static std::unordered_map<unsigned char, std::string> textureMap {
          {Block::getId("grass"), "tree"}, {Block::getId("dirt"), "tree"}, {Block::getId("sand"), "palm"},
          {Block::getId("snow"), "pine"}, {Block::getId("mud"), "jungle_tree"}, {Block::getId("jungle_grass"), "jungle_tree"}
       };
@@ -197,11 +216,11 @@ Furniture Furniture::get(int x, int y, const Map &map, Type type, bool debug) {
          return {};
       }
 
-      static std::unordered_map<blockid_t, std::string> textureMap {
+      static std::unordered_map<unsigned char, std::string> textureMap {
          {Block::getId("grass"), "sapling"}, {Block::getId("dirt"), "sapling"}, {Block::getId("sand"), "palm_sapling"},
          {Block::getId("snow"), "pine_sapling"}, {Block::getId("mud"), "jungle_sapling"}, {Block::getId("jungle_grass"), "jungle_sapling"}
       };
-      objid_t btype = map.blocks[y + 2][x].id;
+      unsigned char btype = map.blocks[y + 2][x].id;
       Furniture sapling ((!textureMap.count(btype) ? "sapling" : textureMap[btype]), x, y, 1, 2, Furniture::sapling);
 
       int value = random(0, 100);
@@ -341,15 +360,15 @@ void Furniture::render(const Rectangle &cameraBounds) const {
 
 // Id functions
 
-objid_t Furniture::getId(const std::string &name) {
-   return furnitureTextureIds[name];
+unsigned char Furniture::getId(const std::string &name) {
+   return furnitureTextureIds.at(name);
 }
 
-std::string Furniture::getName(objid_t id) {
-   return furnitureTextureNames[id];
+std::string Furniture::getName(unsigned char id) {
+   return furnitureTextureNames.at(id);
 }
 
-FurnitureTexture Furniture::getFurnitureIcon(objid_t id) {
+FurnitureTexture Furniture::getFurnitureIcon(unsigned char id) {
    constexpr std::array<Vector2, furnitureCount> textureSizes {{
       {}, {textureSize, textureSize * 2}, {}, {}, {},
       {}, {}, {}, {}, {textureSize, textureSize},

@@ -1,13 +1,21 @@
 #include "mngr/resource.hpp"
 #include "mngr/sound.hpp"
 #include "ui/input.hpp"
-#include "util/config.hpp"
 #include "util/format.hpp"
 #include "util/input.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
 #include <raymath.h>
 #include <cmath>
+
+// Constants
+
+constexpr float inputTextWrapPadding = 10.f;
+constexpr float inputTextFadeSpeed   = 0.3f;
+constexpr int inputTextFadeMin       = 190;
+constexpr int inputTextFadeValue     = 255 - inputTextFadeMin;
+
+// Update
 
 void Input::update() {
    bool wasTyping = typing;

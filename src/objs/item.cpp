@@ -5,6 +5,13 @@
 #include <raylib.h>
 #include <raymath.h>
 
+// Constants
+
+constexpr int droppedItemLifetime      = 60.0f * 15.0f;
+constexpr float droppedItemFloatSpeed  = 1.5f;
+constexpr float droppedItemFloatHeight = 0.25f;
+constexpr Vector2 droppedItemSize      = {0.8f, 0.8f};
+
 // Selected item functions
 
 void SelectedItem::reset()  {
@@ -25,6 +32,10 @@ DroppedItem::DroppedItem(Item &item, int tileX, int tileY)
 void DroppedItem::update(const Rectangle &cameraBounds) {
    lifetime += GetFrameTime();
    inBounds = (tileX >= cameraBounds.x && tileX <= cameraBounds.width && tileY >= cameraBounds.y && tileY <= cameraBounds.height);
+
+   if (lifetime >= droppedItemLifetime) {
+      flagForDeletion = true;
+   }
 }
 
 void DroppedItem::render() const {

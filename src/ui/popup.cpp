@@ -2,11 +2,15 @@
 #include "mngr/resource.hpp"
 #include "mngr/sound.hpp"
 #include "ui/button.hpp"
-#include "util/config.hpp"
+#include "ui/uiconstants.hpp"
 #include "util/format.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
 #include <vector>
+
+// Constants
+
+constexpr Vector2 popupSize = {500.0f, 375.0f};
 
 // Globals
 
@@ -23,9 +27,9 @@ static Button okayButton;
 // Init functions
 
 void initPopups() {
-   confirmationButton.rectangle = {getScreenCenter().x + worldButtonOffsetX, getScreenCenter().y + 110.0f, buttonWidth, buttonHeight};
+   confirmationButton.rectangle = {getScreenCenter().x + buttonOffsetX, getScreenCenter().y + 110.0f, buttonWidth, buttonHeight};
    confirmationButton.text = "YES";
-   denialButton.rectangle = {getScreenCenter().x - worldButtonOffsetX, getScreenCenter().y + 110.0f, buttonWidth, buttonHeight};
+   denialButton.rectangle = {getScreenCenter().x - buttonOffsetX, getScreenCenter().y + 110.0f, buttonWidth, buttonHeight};
    denialButton.text = "NO";
    
    okayButton.rectangle = {getScreenCenter().x, getScreenCenter().y + 110.0f, buttonWidth, buttonHeight};

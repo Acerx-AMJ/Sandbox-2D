@@ -3,8 +3,14 @@
 
 #include "objs/item.hpp"
 #include "objs/player.hpp"
-#include "util/config.hpp"
 #include <vector>
+
+// Constants
+
+constexpr inline int inventoryWidth  = 10;
+constexpr inline int inventoryHeight = 4;
+
+// Inventory
 
 struct Inventory {
    Map &map;

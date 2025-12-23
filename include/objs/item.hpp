@@ -30,7 +30,7 @@ struct DroppedItem {
 
    int tileX = 0, tileY = 0;
    float lifetime = 0.f;
-   bool inBounds = false;
+   bool inBounds = false, flagForDeletion = false;
 
    DroppedItem(Item::Type type, unsigned char id, bool isFurniture, int count, int tileX, int tileY, float lifetime);
    DroppedItem(Item &item, int tileX, int tileY);

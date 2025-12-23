@@ -3,6 +3,7 @@
 #include "mngr/resource.hpp"
 #include "objs/generation.hpp"
 #include "ui/popup.hpp"
+#include "ui/uiconstants.hpp"
 #include "util/fileio.hpp"
 #include "util/format.hpp"
 #include "util/input.hpp"
@@ -10,6 +11,26 @@
 #include "util/position.hpp"
 #include "util/render.hpp"
 #include <filesystem>
+
+// Constants
+
+constexpr float menuSunSpeed = 15.0f;
+
+constexpr float titleOffsetX  = -200.0f;
+constexpr float titleOffsetX2 = -400.0f;
+
+constexpr float worldStarSize          = 50.0f;
+constexpr Vector2 worldNameSize        = {420.0f, 140.0f};
+constexpr int maxWorldNameSize         = 48;
+constexpr int minWorldNameSize         = 3;
+constexpr Vector2 worldFramePosition   = {280.0f, 200.0f};
+constexpr Vector2 worldFrameSizeOffset = {600.0f, 360.0f};
+
+constexpr float worldSelectionKeyDelay      = 0.125f;
+constexpr float worldSelectionKeyStartDelay = 0.333f;
+
+constexpr int defaultMapSizeX = 2000;
+constexpr int defaultMapSizeY = 750;
 
 // Constructors
 
@@ -31,7 +52,7 @@ MenuState::MenuState()
    worldFrame.rectangle = {worldFramePosition.x, worldFramePosition.y, GetScreenWidth() - worldFrameSizeOffset.x, GetScreenHeight() - worldFrameSizeOffset.y};
    worldFrame.scrollHeight = worldFrame.rectangle.height;
 
-   deleteButton.rectangle = {center.x - worldButtonOffsetX, worldFrame.rectangle.y + worldFrame.rectangle.height + buttonPaddingY, buttonWidth, buttonHeight};
+   deleteButton.rectangle = {center.x - buttonOffsetX, worldFrame.rectangle.y + worldFrame.rectangle.height + buttonPaddingY, buttonWidth, buttonHeight};
    deleteButton.text = "Delete World";
    deleteButton.disabled = true;
    renameButton.rectangle = {deleteButton.rectangle.x - buttonPaddingX, deleteButton.rectangle.y, buttonWidth, buttonHeight};
@@ -40,7 +61,7 @@ MenuState::MenuState()
    backButton.rectangle = {renameButton.rectangle.x - buttonPaddingX, renameButton.rectangle.y, buttonWidth, buttonHeight};
    backButton.text = "Back";
 
-   favoriteButton.rectangle = {center.x + worldButtonOffsetX, worldFrame.rectangle.y + worldFrame.rectangle.height + buttonPaddingY, buttonWidth, buttonHeight};
+   favoriteButton.rectangle = {center.x + buttonOffsetX, worldFrame.rectangle.y + worldFrame.rectangle.height + buttonPaddingY, buttonWidth, buttonHeight};
    favoriteButton.text = "Favorite";
    favoriteButton.disabled = true;
    playWorldButton.rectangle = {favoriteButton.rectangle.x + buttonPaddingX, favoriteButton.rectangle.y, buttonWidth, buttonHeight};

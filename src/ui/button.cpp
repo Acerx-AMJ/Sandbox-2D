@@ -1,9 +1,16 @@
 #include "mngr/sound.hpp"
 #include "ui/button.hpp"
-#include "util/config.hpp"
 #include "util/input.hpp"
 #include "util/render.hpp"
 #include <raymath.h>
+
+// Constants
+
+constexpr float buttonScaleMin      = 0.98f;
+constexpr float buttonScaleMax      = 1.02f;
+constexpr Color buttonDisabledColor = {170, 170, 150, 255};
+
+// Update
 
 void Button::update(float offsetY) {
    bool was_hovering = hovering;
@@ -36,12 +43,16 @@ void Button::update(float offsetY) {
    }
 }
 
+// Render
+
 void Button::render(float offsetY) const {
    if (texture) {
       drawTexture(*texture, {rectangle.x, rectangle.y - offsetY}, Vector2Scale({rectangle.width, rectangle.height}, scale), 0, (disabled ? buttonDisabledColor : WHITE));
    }
    drawText({rectangle.x, rectangle.y - offsetY}, text.c_str(), 35 * scale, (disabled ? buttonDisabledColor : WHITE));
 }
+
+// Get real bounds
 
 Rectangle Button::normalizeRect() const {
    return {rectangle.x - rectangle.width / 2.f, rectangle.y - rectangle.height / 2.f, rectangle.width, rectangle.height};

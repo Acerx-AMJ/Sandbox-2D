@@ -2,7 +2,14 @@
 #include "util/fileio.hpp"
 #include "util/random.hpp"
 
-// Biome constants
+// Constants
+
+constexpr float startY        = 0.5f;
+constexpr float seaLevel      = 0.4f;
+constexpr int rockOffsetStart = 12;
+constexpr int rockOffsetMin   = 5;
+constexpr int rockOffsetMax   = 25;
+constexpr int maxWaterLength  = 100;
 
 struct BiomeData {
    int hmin[5];
@@ -16,14 +23,15 @@ struct BiomeData {
 };
 
 constexpr int biomeCount = 7;
-static inline std::array<BiomeData, biomeCount> biomeData {{
-   {{-2, -1, 0, 0, 0},   {0, 0, 0, 1, 2}, 20, .3f,  .45f, 2,  "grass",        "dirt",  MapGenerator::BiomeWarmth::warm},
-   {{-3, -2, -1, 0, 0},  {0, 0, 1, 2, 3}, 80, .2f,  .5f,  90, "grass",        "dirt",  MapGenerator::BiomeWarmth::warm},
-   {{-7, -5, -3, -2, 0}, {0, 2, 3, 5, 7}, 80, .05f, .45f, 1,  "stone",        "stone", MapGenerator::BiomeWarmth::cold},
-   {{-1, -1, 0, 0, 0},   {0, 0, 1, 1, 1}, 15, .3f,  .45f, 50, "sand",         "sand",  MapGenerator::BiomeWarmth::hot},
-   {{-1, -1, 0, 0, 0},    {0, 0, 1, 1, 1}, 5, .3f,  .45f, 2,  "sand",         "sand",  MapGenerator::BiomeWarmth::hot},
-   {{-3, -2, -1, 0, 0},  {0, 0, 1, 2, 3}, 80, .2f,  .5f,  60, "snow",         "snow",  MapGenerator::BiomeWarmth::cold},
-   {{-3, -2, -1, 0, 0},  {0, 0, 1, 2, 3}, 80, .2f,  .5f,  95, "jungle_grass", "mud",   MapGenerator::BiomeWarmth::hot},
+
+static inline const std::array<BiomeData, biomeCount> biomeData {{
+   {{-2, -1, 0, 0, 0},   {0, 0, 0, 1, 2}, 20, .3f,  .45f, 2,  "grass",        "dirt",  MapGenerator::BiomeWarmth::warm}, // Plains
+   {{-3, -2, -1, 0, 0},  {0, 0, 1, 2, 3}, 80, .2f,  .5f,  90, "grass",        "dirt",  MapGenerator::BiomeWarmth::warm}, // Forest
+   {{-7, -5, -3, -2, 0}, {0, 2, 3, 5, 7}, 80, .05f, .45f, 1,  "stone",        "stone", MapGenerator::BiomeWarmth::cold}, // Mountains
+   {{-1, -1, 0, 0, 0},   {0, 0, 1, 1, 1}, 15, .3f,  .45f, 50, "sand",         "sand",  MapGenerator::BiomeWarmth::hot},  // Desert oasis
+   {{-1, -1, 0, 0, 0},    {0, 0, 1, 1, 1}, 5, .3f,  .45f, 2,  "sand",         "sand",  MapGenerator::BiomeWarmth::hot},  // Desert
+   {{-3, -2, -1, 0, 0},  {0, 0, 1, 2, 3}, 80, .2f,  .5f,  60, "snow",         "snow",  MapGenerator::BiomeWarmth::cold}, // Tundra
+   {{-3, -2, -1, 0, 0},  {0, 0, 1, 2, 3}, 80, .2f,  .5f,  95, "jungle_grass", "mud",   MapGenerator::BiomeWarmth::hot},  // Jungle
 }};
 
 // Constructors
@@ -70,8 +78,8 @@ void MapGenerator::generateTerrain() {
       // Get different height increase/decrease based on the noise and the biome,
       // normal 2D perlin noise is better for top-down generation.
 
-      BiomeData &data = biomeData[(int)current];
-      BiomeData &lastData = biomeData[(int)last];
+      const BiomeData &data = biomeData.at((int)current);
+      const BiomeData &lastData = biomeData.at((int)last);
 
       int height = std::floor(value * 5.f);
       y += random(data.hmin[height], data.hmax[height]);
@@ -103,7 +111,7 @@ void MapGenerator::generateTerrain() {
       map.setBlock(x, y, (last != current and chance(50) ? lastData.top : data.top));
       for (int yy = y + 1; yy < map.sizeY; ++yy) {
          if (yy - y < rockOffset) {
-            std::string &block = (last != current and chance(50) ? lastData.bottom : data.bottom);
+            const std::string &block = (last != current and chance(50) ? lastData.bottom : data.bottom);
             map.setBlock(x, yy, block);
 
             if (std::string(block) != "sand") {

@@ -4,6 +4,26 @@
 #include "util/math.hpp"
 #include <raymath.h>
 
+// Constants
+
+constexpr Vector2 playerSize    = {1.8f, 2.7f};
+constexpr float playerFrameSize = 16;
+
+constexpr float playerUpdateSpeed = 1.f / 60.f;
+constexpr float playerSpeed       = 2.182f;
+constexpr float airMultiplier     = 0.6f;
+constexpr float debugFlySpeed     = playerSpeed * 2.f;
+constexpr float debugFastFlySpeed = playerSpeed * 5.f;
+constexpr float jumpSpeed         = -6.5f;
+constexpr float gravity           = 0.267f;
+constexpr float maxGravity        = 7.333f;
+constexpr float acceleration      = 0.083f;
+constexpr float deceleration      = 0.167f;
+constexpr float playerSmoothing   = 0.166f;
+
+constexpr float coyoteTime = 0.1f;
+constexpr float foxTime    = 0.1f;
+
 // Constructors
 
 void Player::init() {
@@ -38,7 +58,7 @@ void Player::updateMovement() {
    }
 
    // Handle movement
-   int directionX = IsKeyDown(moveRightKey) - IsKeyDown(moveLeftKey);
+   int directionX = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
 
    if (directionX != 0) {
       float speedX = (onGround ? playerSpeed : playerSpeed * airMultiplier);
@@ -48,7 +68,7 @@ void Player::updateMovement() {
    }
 
    // Handle jumping
-   if (!onGround && IsKeyDown(jumpKey)) {
+   if (!onGround && IsKeyDown(KEY_SPACE)) {
       foxTimer = foxTime;
    } else {
       foxTimer -= playerUpdateSpeed;
@@ -60,7 +80,7 @@ void Player::updateMovement() {
       coyoteTimer -= playerUpdateSpeed;
    }
 
-   if ((IsKeyDown(jumpKey) && coyoteTimer > 0) || (onGround && foxTimer > 0)) {
+   if ((IsKeyDown(KEY_SPACE) && coyoteTimer > 0) || (onGround && foxTimer > 0)) {
       playSound("jump");
       velocity.y = jumpSpeed;
       coyoteTimer = 0.f;
@@ -76,11 +96,11 @@ void Player::updateMovement() {
 }
 
 [[maybe_unused]] void Player::updateDebugMovement() {
-   float directionX = IsKeyDown(moveRightKey) - IsKeyDown(moveLeftKey);
-   float directionY = IsKeyDown(moveDownKey) - (IsKeyDown(moveUpKey) || IsKeyDown(jumpKey));
+   float directionX = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
+   float directionY = IsKeyDown(KEY_S) - (IsKeyDown(KEY_A) || IsKeyDown(KEY_SPACE));
    Vector2 normalized = Vector2Normalize({directionX, directionY});
 
-   float speed = (IsKeyDown(moveFastDebugKey) ? debugFastFlySpeed : debugFlySpeed);
+   float speed = (IsKeyDown(KEY_LEFT_SHIFT) ? debugFastFlySpeed : debugFlySpeed);
 
    // Ice multiplier doesn't work as intended here
    velocity.x = lerp(velocity.x, normalized.x * speed, acceleration) * waterMultiplier;
@@ -113,7 +133,7 @@ void Player::updateCollisions(Map &map) {
 
    for (int y = max(0, (int)position.y); y < maxY; ++y) {
       for (int x = max(0, (int)position.x); x < maxX; ++x) {
-         if (map.isu(x, y, Block::air) || map.isu(x, y, Block::water) || map.isu(x, y, Block::lava) || (IsKeyDown(moveDownKey) && map.isu(x, y, Block::platform))) {
+         if (map.isu(x, y, Block::air) || map.isu(x, y, Block::water) || map.isu(x, y, Block::lava) || (IsKeyDown(KEY_S) && map.isu(x, y, Block::platform))) {
             // Only check water and lava tile count in the first iteration
             waterTileCount += map.isu(x, y, Block::water);
             lavaTileCount += map.isu(x, y, Block::lava);
@@ -140,7 +160,7 @@ void Player::updateCollisions(Map &map) {
       }
    }
 
-   if (!torsoCollision && feetCollision && !IsKeyDown(moveDownKey)) {
+   if (!torsoCollision && feetCollision && !IsKeyDown(KEY_S)) {
       position.y = feetCollisionY - playerSize.y;
    }
 
@@ -157,7 +177,7 @@ void Player::updateCollisions(Map &map) {
 
    for (int y = max(0, (int)position.y - 1); y < maxY; ++y) {
       for (int x = max(0, (int)position.x); x < maxX; ++x) {
-         if (map.isu(x, y, Block::air) || map.isu(x, y, Block::water) || map.isu(x, y, Block::lava) || (map.isu(x, y, Block::platform) && !IsKeyDown(moveUpKey))) {
+         if (map.isu(x, y, Block::air) || map.isu(x, y, Block::water) || map.isu(x, y, Block::lava) || (map.isu(x, y, Block::platform) && !IsKeyDown(KEY_A))) {
             continue;
          }
 

@@ -1,27 +1,28 @@
 #include "mngr/resource.hpp"
 #include "objs/map.hpp"
+#include "ui/uiconstants.hpp"
 #include "util/render.hpp"
 #include <array>
 #include <unordered_map>
 
 // Constants
 
-constexpr blockid_t blockCount = 20;
-static inline std::unordered_map<std::string, blockid_t> blockIds {
+constexpr unsigned char blockCount = 20;
+static inline const std::unordered_map<std::string, unsigned char> blockIds {
    {"air", 0}, {"grass", 1}, {"dirt", 2}, {"clay", 3}, {"stone", 4},
    {"sand", 5}, {"sandstone", 6}, {"water", 7}, {"bricks", 8}, {"glass", 9},
    {"planks", 10}, {"stone_bricks", 11}, {"tiles", 12}, {"obsidian", 13}, {"lava", 14},
    {"platform", 15}, {"snow", 16}, {"ice", 17}, {"mud", 18}, {"jungle_grass", 19}
 };
 
-static inline std::array<const char*, blockCount> blockNames {
+static inline const std::array<const char*, blockCount> blockNames {
    "air", "grass", "dirt", "clay", "stone",
    "sand", "sandstone", "water", "bricks", "glass",
    "planks", "stone_bricks", "tiles", "obsidian", "lava",
    "platform", "snow", "ice", "mud", "jungle_grass"
 };
 
-static inline std::array<Block::Type, blockCount> blockTypes {{
+static inline const std::array<Block::Type, blockCount> blockTypes {{
    Block::air, Block::grass, Block::dirt, Block::solid, Block::solid,
    Block::sand, Block::solid, Block::water, Block::solid, Block::transparent,
    Block::solid, Block::solid, Block::solid, Block::solid, Block::lava,
@@ -30,12 +31,12 @@ static inline std::array<Block::Type, blockCount> blockTypes {{
 
 // Block functions
 
-blockid_t Block::getId(const std::string &name) {
-   return blockIds[name];
+unsigned char Block::getId(const std::string &name) {
+   return blockIds.at(name);
 }
 
-std::string Block::getName(blockid_t id) {
-   return blockNames[id];
+std::string Block::getName(unsigned char id) {
+   return blockNames.at(id);
 }
 
 // Set block functions
@@ -48,7 +49,7 @@ void Map::init() {
 void Map::setBlock(int x, int y, const std::string &name, bool isWall) {
    Block &block = (isWall ? walls : blocks)[y][x];
    
-   block.id = blockIds[name];
+   block.id = blockIds.at(name);
    block.value = block.value2 = 0;
    block.type = blockTypes[block.id];
 
@@ -57,7 +58,7 @@ void Map::setBlock(int x, int y, const std::string &name, bool isWall) {
    }
 }
 
-void Map::setBlock(int x, int y, blockid_t id, bool isWall) {
+void Map::setBlock(int x, int y, unsigned char id, bool isWall) {
    setBlock(x, y, blockNames[id], isWall);
 }
 

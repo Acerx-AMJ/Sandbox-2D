@@ -3,11 +3,18 @@
 #include "mngr/resource.hpp"
 #include "mngr/sound.hpp"
 #include "ui/popup.hpp"
-#include "util/config.hpp"
 #include "util/fileio.hpp"
 #include "util/format.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
+
+// Constants
+
+constexpr float splashWrapOffset         = 50.0f;
+constexpr float loadingIconRotationSpeed = 360.0f;
+constexpr Vector2 loadingIconSize        = {70.0f, 70.0f};
+constexpr Vector2 loadingTextOffset      = {0.0f, -175.0f};
+constexpr Vector2 splashTextOffset       = {0.0f, 100.0f};
 
 // Constructors
 

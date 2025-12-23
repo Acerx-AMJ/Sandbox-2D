@@ -7,6 +7,21 @@
 #include "util/render.hpp"
 #include <raymath.h>
 
+// Constants
+
+constexpr Vector2 itemframeSize           = {60.0f, 60.0f};
+constexpr Vector2 itemframePadding        = {itemframeSize.x + 5.0f, itemframeSize.y + 5.0f};
+constexpr Vector2 itemframeTopLeft        = {15.0f, 15.0f};
+constexpr Vector2 itemframeIndexOffset    = {15.0f, 15.0f};
+constexpr Vector2 itemframeItemSize       = {30.0f, 30.0f};
+constexpr Vector2 itemframeItemOffset     = {(itemframeSize.x - itemframeItemSize.x) / 2.0f, (itemframeSize.y - itemframeItemSize.y) / 2.0f};
+constexpr Vector2 selectedItemFrameSize   = {65.0f, 65.0f};
+constexpr Vector2 selectedItemFrameOffset = {(selectedItemFrameSize.x - itemframeSize.x) / 2.0f, (selectedItemFrameSize.y - itemframeSize.y) / 2.0f};
+
+constexpr int itemStackSize      = 9999;
+constexpr int equipmentStackSize = 1;
+constexpr int potionStackSize    = 99;
+
 // Constructors
 
 Inventory::Inventory(Map &map, Player &player, std::vector<DroppedItem> &droppedItems)
@@ -227,7 +242,7 @@ void Inventory::update() {
 // Helper functions
 
 void Inventory::toggleInventoryOpen() {
-   if (IsKeyReleased(toggleInventoryKey)) {
+   if (IsKeyReleased(KEY_E)) {
       playSound("click");
       open = !open;
    }

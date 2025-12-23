@@ -1,9 +1,13 @@
 #include "mngr/sound.hpp"
-#include "util/config.hpp"
 #include "util/format.hpp" // IWYU pragma: export
 #include "util/random.hpp"
 #include <filesystem>
 #include <unordered_map>
+
+// Constants
+
+constexpr float soundPitchMin = 0.95f;
+constexpr float soundPitchMax = 1.05f;
 
 // Globals
 

@@ -1,6 +1,6 @@
 #include "util/parallax.hpp"
 #include "mngr/resource.hpp"
-#include "util/config.hpp"
+#include "ui/uiconstants.hpp"
 #include "util/position.hpp"
 #include "util/random.hpp"
 #include "util/render.hpp"
@@ -10,11 +10,26 @@
 
 // Constants
 
-static inline std::vector<std::string> backgroundTextures {
+constexpr int starCountMin    = 10;
+constexpr int starCountMax    = 50;
+constexpr int moonPhaseCount  = 8;
+constexpr Vector2 sunSize     = {90.0f, 90.0f};
+constexpr Vector2 moonSize    = {60.0f, 60.0f};
+constexpr Vector2 starSizeMin = {20.0f, 20.0f};
+constexpr Vector2 starSizeMax = {50.0f, 50.0f};
+
+constexpr Color skyColorNight       = {30, 30, 30, 255};
+constexpr Color skyColorDay         = {255, 255, 255, 255};
+constexpr Color backgroundTintNight = {35, 35, 35, 255};
+constexpr Color backgroundTintDay   = {190, 190, 170, 255};
+constexpr Color foregroundTintNight = {40, 40, 40, 255};
+constexpr Color foregroundTintDay   = {210, 210, 190, 255};
+
+static inline const std::vector<std::string> backgroundTextures {
    "mountains1", "mountains2", "mountains3", "mountains4"
 };
 
-static inline std::vector<std::string> foregroundTextures {
+static inline const std::vector<std::string> foregroundTextures {
    "bg_trees1", "bg_trees2", "bg_trees3", "bg_trees4"
 };
 

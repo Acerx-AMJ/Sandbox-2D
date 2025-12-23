@@ -2,7 +2,6 @@
 #define OBJS_MAP_HPP
 
 #include "objs/furniture.hpp"
-#include "util/config.hpp"
 #include <string>
 
 // Block
@@ -15,14 +14,14 @@ struct Block {
 
    // Unsigned chars can only hold 256 unique IDs. Currently trying to save
    // block space, so it's a problem for later
-   blockid_t id = 0;
+   unsigned char id = 0;
    bool furniture = false;
 
    // Values used by physics updates, specific to the block type
    unsigned char value = 0, value2 = 0;
 
-   static blockid_t getId(const std::string &name);
-   static std::string getName(blockid_t id);
+   static unsigned char getId(const std::string &name);
+   static std::string getName(unsigned char id);
 };
 
 // Map
@@ -36,7 +35,7 @@ struct Map {
 
    void init();
    void setBlock(int x, int y, const std::string &name, bool isWall = false);
-   void setBlock(int x, int y, blockid_t id, bool isWall = false);
+   void setBlock(int x, int y, unsigned char id, bool isWall = false);
    void deleteBlock(int x, int y, bool isWall = false);
    void moveBlock(int oldX, int oldY, int newX, int newY);
 

@@ -2,6 +2,7 @@
 #include "game/menuState.hpp"
 #include "mngr/resource.hpp"
 #include "mngr/sound.hpp"
+#include "ui/uiconstants.hpp"
 #include "util/fileio.hpp"
 #include "util/input.hpp"
 #include "util/math.hpp"
@@ -11,6 +12,18 @@
 #include "util/render.hpp"
 #include <raymath.h>
 #include <algorithm>
+
+// Constants
+
+constexpr float cameraFollowSpeed = 0.416f;
+constexpr float minCameraZoom     = 12.5f;
+constexpr float maxCameraZoom     = 200.0f;
+constexpr float gameSunSpeed      = 3.0f;
+
+constexpr float physicsUpdateTime = 0.1f;
+constexpr int lavaUpdateSpeed     = 6;
+constexpr int grassGrowSpeedMin   = 100;
+constexpr int grassGrowSpeedMax   = 255;
 
 // Constructors
 
@@ -55,7 +68,7 @@ void GameState::update() {
 
 void GameState::updatePauseScreen() {
    pauseButton.update();
-   if (pauseButton.clicked || handleKeyPressWithSound(pauseKey)) {
+   if (pauseButton.clicked || handleKeyPressWithSound(KEY_ESCAPE)) {
       paused = !paused;
    }
 
@@ -79,7 +92,7 @@ void GameState::updatePauseScreen() {
 
 void GameState::updateControls() {
    if (!paused) {
-      const float zoomFactor = IsKeyReleased(zoomInKey) - IsKeyReleased(zoomOutKey);
+      const float zoomFactor = IsKeyReleased(KEY_EQUAL) - IsKeyReleased(KEY_MINUS);
       if (zoomFactor != 0.f) {
          camera.zoom = clamp(std::exp(std::log(camera.zoom) + zoomFactor * 0.2f), minCameraZoom, maxCameraZoom);
       }
@@ -119,15 +132,15 @@ void GameState::updatePhysics() {
    // Move this to a different function later on!
    Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
 
-   if (IsKeyPressed(tempSwitchForward)) {
+   if (IsKeyPressed(KEY_Y)) {
       index = (index + 1) % size;
    }
 
-   if (IsKeyPressed(tempSwitchBackward)) {
+   if (IsKeyPressed(KEY_T)) {
       index = (index == 0 ? size - 1 : index - 1);
    }
 
-   if (IsKeyPressed(tempSwitchWall)) {
+   if (IsKeyPressed(KEY_R)) {
       drawWall =! drawWall;
    }
 
@@ -160,16 +173,16 @@ void GameState::updatePhysics() {
             continue;
          }
          Item item {droppedItem.type, droppedItem.id, droppedItem.isFurniture, false, droppedItem.count};
-         const int count = item.count;
+         const int count = droppedItem.count;
 
          droppedItem.count = (inventory.placeItem(item) ? 0 : item.count);
-         if (count != item.count) {
+         if (count != droppedItem.count) {
             playSound("pickup");
          }
       }
 
       droppedItems.erase(std::remove_if(droppedItems.begin(), droppedItems.end(), [](DroppedItem &i) -> bool {
-         return i.lifetime >= droppedItemLifetime || i.count <= 0;
+         return i.flagForDeletion || i.count <= 0;
       }), droppedItems.end());
    }
 
