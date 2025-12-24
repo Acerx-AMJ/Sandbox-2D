@@ -1,7 +1,7 @@
 # Sandbox-2D
-Sandbox-2D is a 2D sidescrolling sandbox where you can build, destroy and play with physics. It has procedurally generated worlds featuring different biomes.
+Sandbox-2D is a 2D sidescrolling sandbox game where you can build, destroy and play with physics. It has procedurally generated worlds featuring different biomes.
 
-![Main Menu Screenshot](assets/screenshots/2025-12-04_20-10.png)
+![Main Menu Screenshot](assets/screenshots/2025-12-24_09-53.png)
 
 ## Table of Contents
 - [Features](#features)
@@ -17,22 +17,27 @@ Sandbox-2D is a 2D sidescrolling sandbox where you can build, destroy and play w
 - Player controller.
 - World generation with multiple biomes.
 
-![Game Screenshot](assets/screenshots/2025-12-04_11-00.png)
+![Game Screenshot](assets/screenshots/2025-12-24_09-54.png)
 
 ## Controls
 
-- ESC - save & quit to menu
 - A, D - move left/right
 - SPACE - jump
-- Q, E - switch blocks
-- R - toggle building in foreground/background
-- LEFT CLICK - destroy a block
-- RIGHT CLICK - place a block
+
+- LEFT CLICK - place blocks
+- RIGHT CLICK - destroy blocks
 - MIDDLE CLICK - select a block
-- MINUS - zoom out
-- EQUAL - zoom in
+
+- T, Y - switch blocks
+- R - toggle building in foreground/background
+
+- MINUS - zoom in
+- EQUAL - zoom out
+- ESC - Toggle pause screen
+- E - Toggle inventory
 
 ## Installation
+This project only depends on Raylib 5.5 and it uses C++ standard 17.
 
 #### Prerequisites
 You must have git, cmake, a C++ compiler and raylib installed.
@@ -59,7 +64,7 @@ Simply run the executable after [building](#installation). Assets folder must be
 
 ## Contributing
 
-Feel free to fork, create PRs or issues.
+Feel free to fork and create PRs or issues. Please read [contribution guidelines](CONTRIBUTING.md) before doing so.
 1. Fork the repository.
 2. Create a new branch (don't use the braces):
 ```bash
