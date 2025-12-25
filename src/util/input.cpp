@@ -44,3 +44,11 @@ bool handleKeyPressWithSound(int key) {
    }
    return isPressed;
 }
+
+bool handleKeyReleaseWithSound(int key) {
+   bool isReleased = IsKeyReleased(key);
+   if (isReleased) {
+      playSound("click");
+   }
+   return isReleased;
+}

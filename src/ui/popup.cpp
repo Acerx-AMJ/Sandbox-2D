@@ -41,7 +41,7 @@ void fadeOut() {
 }
 
 void fadeIn() {
-   if (!fadedIn) {
+   if (fadedIn) {
       return;
    }
    fadedOut = false;
@@ -102,19 +102,19 @@ void updatePopups() {
       confirmationButton.update();
       denialButton.update();
    
-      if (confirmationButton.clicked || handleKeyPressWithSound(KEY_ENTER)) {
+      if (confirmationButton.clicked || handleKeyReleaseWithSound(KEY_ENTER)) {
          wasLastPopupConfirmed = true;
          popups.pop_back();
       }
 
-      if (denialButton.clicked || handleKeyPressWithSound(KEY_ESCAPE)) {
+      if (denialButton.clicked || handleKeyReleaseWithSound(KEY_ESCAPE)) {
          wasLastPopupConfirmed = false;
          popups.pop_back();
       }
    } else {
       okayButton.update();
 
-      if (okayButton.clicked || handleKeyPressWithSound(KEY_ENTER) || handleKeyPressWithSound(KEY_ESCAPE)) {
+      if (okayButton.clicked || handleKeyReleaseWithSound(KEY_ENTER) || handleKeyReleaseWithSound(KEY_ESCAPE)) {
          popups.pop_back();
       }
    }
