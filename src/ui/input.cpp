@@ -2,58 +2,68 @@
 #include "ui/input.hpp"
 #include "util/format.hpp"
 #include "util/input.hpp"
-#include "util/position.hpp"
 #include "util/render.hpp"
 #include <raymath.h>
 #include <cmath>
 
 // Constants
 
-constexpr float inputTextWrapPadding = 10.f;
-constexpr float inputTextFadeSpeed   = 0.3f;
-constexpr int inputTextFadeMin       = 200;
-constexpr int inputTextFadeValue     = 255 - inputTextFadeMin;
+constexpr float textWrapPadding = 10.f;
+constexpr float fadeSpeed       = 0.3f;
+constexpr int   fadeMin         = 200;
+constexpr int   fadeRange       = 255 - fadeMin;
+
+// Helper functions
+
+static bool consumeBackspace(std::string &text) {
+   if (text.empty()) {
+      return false;
+   }
+
+   text.pop_back();
+   if (IsKeyDown(KEY_LEFT_CONTROL)) {
+      while (!text.empty() && !std::isspace(text.back())) {
+         text.pop_back();
+      }
+   }
+   return true;
+}
+
+static bool isKeyRepeated(int key) {
+   return IsKeyPressed(key) || IsKeyPressedRepeat(key);
+}
 
 // Update
 
 void Input::update() {
-   bool wasTyping = typing;
-   hovering = CheckCollisionPointRec(GetMousePosition(), rectangle);
-   changed = false;   
+   changed = false;
+
+   const bool wasTyping = typing;
+   hovering = CheckCollisionPointRec(GetMousePosition(), normalizeRect());
 
    if (hovering) {
       setMouseOnUI(true);
    }
 
-   if (hovering && !typing && isMousePressedUI(MOUSE_BUTTON_LEFT)) {
-      typing = true;
-   } else if (typing && (hovering ? isMousePressedUI(MOUSE_BUTTON_LEFT) : IsMouseButtonPressed(MOUSE_BUTTON_LEFT))) {
-      typing = false;
-   }
-
-   if ((IsKeyReleased(KEY_ENTER))) {
+   if (hovering && isMousePressedUI(MOUSE_BUTTON_LEFT)) {
+      typing = !typing;
+   } else if (typing && (IsKeyReleased(KEY_ENTER) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT))) {
       typing = false;
    }
 
    if (typing) {
-      std::size_t previous = text.size();
-      if ((IsKeyPressed(KEY_BACKSPACE) || IsKeyPressedRepeat(KEY_BACKSPACE) || IsKeyPressed(KEY_DELETE) || IsKeyPressedRepeat(KEY_DELETE)) && !text.empty()) {
-         text.pop_back();
+      const std::size_t previousTextSize = text.size();
 
-         while (IsKeyDown(KEY_LEFT_CONTROL) && !text.empty() && !std::isspace(text.back())) {
-            text.pop_back();
-         }
+      if (isKeyRepeated(KEY_BACKSPACE) || isKeyRepeated(KEY_DELETE)) {
+         changed = consumeBackspace(text);
+      }
+
+      for (char c = GetCharPressed(); c != 0 && (int)text.size() < maxChars; c = GetCharPressed()) {
+         text += c;
          changed = true;
       }
 
-      char pressed = GetCharPressed();
-      while (pressed != 0 && text.size() < (std::size_t)maxChars) {
-         text += pressed;
-         pressed = GetCharPressed();
-         changed = true;
-      }
-
-      if (text.size() != previous) {
+      if (text.size() != previousTextSize) {
          playSound("hover");
       }
    }
@@ -72,12 +82,26 @@ void Input::update() {
 // Render function
 
 void Input::render() const {
-   unsigned char value = (typing ? std::sin(counter * inputTextFadeSpeed) * inputTextFadeValue + inputTextFadeMin : 255) - (text.empty() ? inputTextFadeValue : 0);
-   std::string wrapped = text;
-   wrapText(wrapped, rectangle.width - inputTextWrapPadding, 35, 1);
+   unsigned char value = 255;
+   if (typing) {
+      value = std::sin(counter * fadeSpeed) * fadeRange + fadeMin;
+   }
+
+   if (text.empty()) {
+      value -= fadeRange;
+   }
+
+   std::string wrapped = text.empty() ? fallback : text;
+   wrapText(wrapped, rectangle.width - textWrapPadding, 35, 1);
 
    if (texture) {
-      drawTextureNoOrigin(*texture, {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height});
+      drawTexture(*texture, {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height});
    }
-   drawText(Vector2Add({rectangle.x, rectangle.y}, getOrigin({rectangle.width, rectangle.height})), (text.empty() ? fallback : wrapped).c_str(), 35, Color{value, value, value, 255});
+   drawText({rectangle.x, rectangle.y}, wrapped.c_str(), 35, Color{value, value, value, 255});
+}
+
+// Normalize rect
+
+Rectangle Input::normalizeRect() const {
+   return {rectangle.x - rectangle.width / 2.0f, rectangle.y - rectangle.height / 2.0f, rectangle.width, rectangle.height};
 }

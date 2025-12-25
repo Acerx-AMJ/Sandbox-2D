@@ -8,13 +8,11 @@
 // Update
 
 void Scrollframe::update() {
+   const float scrollFactor = GetMouseWheelMove();
    scrollbarHeight = rectangle.height * (rectangle.height / scrollHeight);
-
-   float scrollFactor = GetMouseWheelMove();
 
    if (CheckCollisionPointRec(GetMousePosition(), rectangle) && scrollFactor != 0.f) {
       progress = clamp(progress + scrollFactor * 15.0f * GetFrameTime() * (rectangle.height / scrollHeight), 0.f, 1.f);
-      scrollbarY = rectangle.y + (rectangle.height - scrollbarHeight) * progress;
    } else if (CheckCollisionPointRec(GetMousePosition(), {rectangle.x + rectangle.width - scrollBarWidth, rectangle.y, scrollBarWidth, rectangle.height})) {
       setMouseOnUI(true);
       moving = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
@@ -24,9 +22,11 @@ void Scrollframe::update() {
       moving = false;
    }
    
-   if (moving) {
+   if (moving && scrollbarHeight < rectangle.height) {
       scrollbarY = clamp<float>(GetMouseY(), rectangle.y, rectangle.y + rectangle.height - scrollbarHeight);
       progress = (scrollbarY - rectangle.y) / (rectangle.height - scrollbarHeight);
+   } else {
+      scrollbarY = rectangle.y + (rectangle.height - scrollbarHeight) * progress;
    }
 }
 
@@ -37,17 +37,19 @@ void Scrollframe::render() const {
    drawTextureNoOrigin(getTexture("scrollbar"), {rectangle.x + rectangle.width - scrollBarWidth, scrollbarY}, {scrollBarWidth, scrollbarHeight});
 }
 
-// Other functions
+// Helper functions
+
+void Scrollframe::setProgressBasedOnPosition(float positionY) {
+   const float maxScroll = max(0.0f, scrollHeight - rectangle.height);
+   progress = (maxScroll > 0.0f ? clamp(positionY - rectangle.y, 0.0f, maxScroll) / maxScroll : 0.0f);
+   scrollbarY = rectangle.y + (rectangle.height - scrollbarHeight) * progress;
+}
 
 bool Scrollframe::inFrame(const Rectangle &rect) const {
-   float top = rectangle.y + getOffsetY();
+   const float top = rectangle.y + getOffsetY();
    return rectangle.x <= rect.x && rectangle.x + rectangle.width >= rect.x + rect.width && top <= rect.y && top + rectangle.height >= rect.y + rect.height;
 }
 
 float Scrollframe::getOffsetY() const {
    return (scrollHeight - rectangle.height) * progress;
-}
-
-float Scrollframe::getProgress(float positionY) const {
-   return clamp((positionY - rectangle.y) / scrollHeight, 0.0f, 1.0f);
 }

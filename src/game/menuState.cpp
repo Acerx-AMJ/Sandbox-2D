@@ -13,7 +13,6 @@
 
 // Constants
 
-constexpr Vector2 worldNameSize = {420.0f, 140.0f};
 constexpr int maxWorldNameSize  = 48;
 constexpr int minWorldNameSize  = 3;
 
@@ -44,7 +43,7 @@ MenuState::MenuState()
    worldFrame.scrollHeight = worldFrame.rectangle.height;
    worldFrame.scrollbarY = worldFrame.rectangle.y;
 
-   worldSearchBar.rectangle = {worldFrame.rectangle.x, worldFrame.rectangle.y - 80.0f, worldFrame.rectangle.width, 73.333f};
+   worldSearchBar.rectangle = {worldFrame.rectangle.x + worldFrame.rectangle.width / 2.0f, worldFrame.rectangle.y - 45.0f, worldFrame.rectangle.width, 73.333f};
    worldSearchBar.maxChars = maxWorldNameSize;
    worldSearchBar.fallback = "Search for a World...";
    worldSearchBar.texture = &getTexture("search_bar");
@@ -76,10 +75,10 @@ MenuState::MenuState()
    createButtonCreation.rectangle = favoriteButton.rectangle;
    createButtonCreation.text = "Create";
 
-   worldName.rectangle = {center.x - worldNameSize.x / 2.f, center.y - worldNameSize.y / 2.f, worldNameSize.x, worldNameSize.y};
+   worldName.rectangle = {center.x, center.y, 420.0f, 140.0f};
    worldName.maxChars = maxWorldNameSize;
    worldName.fallback = "Name Your New World...";
-   shouldWorldBeFlat.rectangle = {center.x - 35.f, worldName.rectangle.y + 200.f, 70.f, 70.f};
+   shouldWorldBeFlat.rectangle = {center.x - 35.f, worldName.rectangle.y + 100.f, 70.f, 70.f};
 
    backButtonCreation.texture = createButtonCreation.texture = worldName.texture = &getTexture("button");
 
@@ -196,7 +195,7 @@ void MenuState::updateLevelSelection() {
          selectedButton = &worldButtons.at(currentIndex);
       }
       selectedButton->texture = &getTexture("button_long_selected");
-      worldFrame.progress = worldFrame.getProgress(selectedButton->rectangle.y - selectedButton->rectangle.height / 2.0f);
+      worldFrame.setProgressBasedOnPosition(selectedButton->rectangle.y - selectedButton->rectangle.height / 2.0f);
    }
 
    // Update world-specific buttons
@@ -419,8 +418,8 @@ void MenuState::renderLevelCreation() const {
    createButtonCreation.render();
    worldName.render();
    shouldWorldBeFlat.render();
-   drawText({worldName.rectangle.x - 125.f, worldName.rectangle.y + worldName.rectangle.height / 2.f}, "World Name:", 50);
-   drawText({worldName.rectangle.x - 125.f, shouldWorldBeFlat.rectangle.y + shouldWorldBeFlat.rectangle.height / 2.f}, "Flat World:", 50);
+   drawText({worldName.rectangle.x - worldName.rectangle.width / 2.0f - 125.0f, worldName.rectangle.y}, "World Name:", 50);
+   drawText({worldName.rectangle.x - worldName.rectangle.width / 2.0f - 125.0f, shouldWorldBeFlat.rectangle.y + shouldWorldBeFlat.rectangle.height / 2.f}, "Flat World:", 50);
 }
 
 // Render level renaming screen
@@ -431,9 +430,9 @@ void MenuState::renderLevelRenaming() const {
    renameButtonRenaming.render();
    renameInput.render();
 
-   drawText({renameInput.rectangle.x - 175.0f, renameInput.rectangle.y + renameInput.rectangle.height / 2.0f}, "New World Name:", 50);
-   drawText({renameInput.rectangle.x - 175.0f, renameInput.rectangle.y + 235.0f}, "Old World Name:", 50);
-   drawText({renameInput.rectangle.x + renameInput.rectangle.width / 2.0f, renameInput.rectangle.y + 235.0f}, selectedWorld.c_str(), 50);
+   drawText({renameInput.rectangle.x - renameInput.rectangle.width / 2.0f - 175.0f, renameInput.rectangle.y}, "New World Name:", 50);
+   drawText({renameInput.rectangle.x - renameInput.rectangle.width / 2.0f - 175.0f, renameInput.rectangle.y + 150.0f}, "Old World Name:", 50);
+   drawText({renameInput.rectangle.x, renameInput.rectangle.y + 150.0f}, selectedWorld.c_str(), 50);
 }
 
 // Render level generation screen
@@ -511,7 +510,7 @@ void MenuState::sortWorldButtonsByFavorites() {
 
    size_t index = 0;
    for (Button &button: worldButtons) {
-      button.rectangle = {360.f - Scrollframe::scrollBarWidth / 2.f, 262.f + 110.f * index, worldFrame.rectangle.width - 120.f - Scrollframe::scrollBarWidth / 2.f, 100.f};
+      button.rectangle = {360.f - scrollBarWidth / 2.f, 262.f + 110.f * index, worldFrame.rectangle.width - 120.f - scrollBarWidth / 2.f, 100.f};
       button.rectangle.x += button.rectangle.width / 2.f;
       button.rectangle.y += button.rectangle.height / 2.f;
 

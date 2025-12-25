@@ -16,5 +16,6 @@ void CheckBox::update() {
 }
 
 void CheckBox::render() const {
-   drawTextureNoOrigin((checked ? getTexture("checkbox_checked") : getTexture("checkbox_unchecked")), {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height});
+   Texture &texture = getTexture(checked ? "checkbox_checked" : "checkbox_unchecked");
+   drawTextureNoOrigin(texture, {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height});
 }

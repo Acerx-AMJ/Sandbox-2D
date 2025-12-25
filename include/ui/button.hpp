@@ -14,16 +14,24 @@ constexpr inline float buttonPaddingY = buttonHeight + 20.0f;
 // Button
 
 struct Button {
+   void update(float offsetY = 0.0f);
+   void render(float offsetY = 0.0f) const;
+
+   Rectangle normalizeRect() const;
+
+   // Members
+
    Texture2D *texture = nullptr;
    Rectangle rectangle;
    std::string text;
-   bool hovering = false, down = false, clicked = false;
-   bool favorite = false, disabled = false;
-   float scale = 1;
 
-   void update(float offsetY = 0.f);
-   void render(float offsetY = 0.f) const;
-   Rectangle normalizeRect() const;
+   bool hovering = false;
+   bool down     = false;
+   bool clicked  = false;
+   bool favorite = false;
+   bool disabled = false;
+
+   float scale = 1.0f;
 };
 
 #endif

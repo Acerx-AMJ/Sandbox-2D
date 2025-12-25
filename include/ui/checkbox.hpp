@@ -4,11 +4,11 @@
 #include <raylib.h>
 
 struct CheckBox {
-   Rectangle rectangle;
-   bool checked = false;
-
    void update();
    void render() const;
+
+   Rectangle rectangle;
+   bool checked = false;
 };
 
 #endif
