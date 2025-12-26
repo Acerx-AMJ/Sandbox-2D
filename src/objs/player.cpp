@@ -9,15 +9,13 @@
 constexpr Vector2 playerSize    = {1.8f, 2.7f};
 constexpr float playerFrameSize = 16;
 
-constexpr float playerUpdateSpeed = 1.f / 60.f;
-constexpr float playerSpeed       = 2.182f;
-constexpr float airMultiplier     = 0.6f;
-constexpr float jumpSpeed         = -6.5f;
-constexpr float gravity           = 0.267f;
-constexpr float maxGravity        = 7.333f;
-constexpr float acceleration      = 0.083f;
-constexpr float deceleration      = 0.167f;
-constexpr float playerSmoothing   = 0.166f;
+constexpr float playerSpeed   = 21.84f;
+constexpr float airMultiplier =  0.60f;
+constexpr float jumpSpeed     = 57.00f;
+constexpr float gravity       = 99.00f;
+constexpr float maxGravity    = 80.00f;
+constexpr float acceleration  =  5.00f;
+constexpr float deceleration  = 10.00f;
 
 constexpr float coyoteTime = 0.1f;
 constexpr float foxTime    = 0.1f;
@@ -33,25 +31,25 @@ void Player::init() {
 // Update
 
 void Player::updatePlayer(Map &map) {
-   updateTimer += GetFrameTime();
-   while (updateTimer >= playerUpdateSpeed) {
-      updateTimer -= playerUpdateSpeed;
-
-      updateMovement();
-      updateCollisions(map);
-   }
-
+   updateMovement();
+   updateCollisions(map);
    updateAnimation();
+
    delta = {position.x - previousPosition.x, position.y - previousPosition.y};
    previousPosition = position;
 }
 
 void Player::updateMovement() {
+   const float dt = GetFrameTime();
+   
    // Handle gravity
    if (!onGround) {
-      velocity.y = min(maxGravity * waterMultiplier, velocity.y + gravity * waterMultiplier);
+      velocity.y += gravity * waterMultiplier * dt;
+      if (velocity.y >= maxGravity) {
+         velocity.y = maxGravity * waterMultiplier;
+      }
    } else {
-      velocity.y = min(maxGravity * waterMultiplier, gravity * waterMultiplier);
+      velocity.y = 0.001f; // Needed
    }
 
    // Handle movement
@@ -59,28 +57,28 @@ void Player::updateMovement() {
 
    if (directionX != 0) {
       float speedX = (onGround ? playerSpeed : playerSpeed * airMultiplier);
-      velocity.x = lerp(velocity.x, directionX * speedX, acceleration * iceMultiplier);
+      velocity.x = lerp(velocity.x, directionX * speedX, acceleration * iceMultiplier * dt);
    } else {
-      velocity.x = lerp(velocity.x, 0.f, deceleration * iceMultiplier);
+      velocity.x = lerp(velocity.x, 0.f, deceleration * iceMultiplier * dt);
    }
 
    // Handle jumping
    if (!onGround && IsKeyDown(KEY_SPACE)) {
       foxTimer = foxTime;
    } else {
-      foxTimer -= playerUpdateSpeed;
+      foxTimer -= dt;
    }
 
    if (onGround) {
       coyoteTimer = coyoteTime;
    } else {
-      coyoteTimer -= playerUpdateSpeed;
+      coyoteTimer -= dt;
    }
 
-   jumpTimer -= playerUpdateSpeed;
+   jumpTimer -= dt;
    if (((IsKeyDown(KEY_SPACE) && coyoteTimer > 0) || (onGround && foxTimer > 0)) && jumpTimer <= 0) {
       playSound("jump");
-      velocity.y = jumpSpeed;
+      velocity.y = -jumpSpeed;
       coyoteTimer = 0.f;
       jumpTimer = jumpTime;
    }
@@ -96,7 +94,8 @@ void Player::updateMovement() {
 // Update collisions
 
 void Player::updateCollisions(Map &map) {
-   position.y = lerp(position.y, position.y + velocity.y, playerSmoothing);
+   position.y += velocity.y * GetFrameTime();
+
    bool collisionY = false, canGoUpSlopes = true;
    int waterTileCount = 0, lavaTileCount = 0, iceTileCount = 0;
 
@@ -146,7 +145,7 @@ void Player::updateCollisions(Map &map) {
       position.y = feetCollisionY - playerSize.y;
    }
 
-   position.x = lerp(position.x, position.x + velocity.x, playerSmoothing);
+   position.x += velocity.x * GetFrameTime();
 
    Rectangle torso {position.x, position.y - 1.f, playerSize.x, playerSize.y};
    Rectangle feet {position.x, position.y + (playerSize.y - 1.f), playerSize.x, 1.f};
@@ -196,7 +195,7 @@ void Player::updateCollisions(Map &map) {
    if (lavaTileCount > 0) {
       waterMultiplier = .6f;
    } else if (waterTileCount > 0) {
-      waterMultiplier = .9f;
+      waterMultiplier = .85f;
    } else {
       waterMultiplier = 1.f;
    }
@@ -219,24 +218,25 @@ void Player::updateAnimation() {
    }
 
    fallTimer = 0.f;
-   if (previousPosition.x != position.x) {
-      walkTimer += GetFrameTime() * clamp(abs(velocity.x) / playerSpeed, .1f, 1.5f);
-      if (walkTimer >= .04f) {
-         int lastFrameX = frameX;
-         frameX = (frameX + 1) % 13;
-
-         if (frameX < 2) {
-            frameX = 2;
-         }
-
-         if (frameX != lastFrameX && (frameX == 4 || frameX == 11)) {
-            playSound("footstep", 0.7f);
-         }
-
-         walkTimer -= .04f;
-      }
-   } else {
+   if (position.x == previousPosition.x) {
       frameX = 0;
+      return;
+   }
+
+   walkTimer += GetFrameTime() * clamp(abs(velocity.x) / playerSpeed, 0.1f, 1.5f);
+   if (walkTimer >= .04f) {
+      int lastFrameX = frameX;
+      frameX = (frameX + 1) % 13;
+
+      if (frameX < 2) {
+         frameX = 2;
+      }
+
+      if (frameX != lastFrameX && (frameX == 4 || frameX == 11)) {
+         playSound("footstep", 0.7f);
+      }
+
+      walkTimer -= .04f;
    }
 }
 

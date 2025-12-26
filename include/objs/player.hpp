@@ -38,7 +38,6 @@ struct Player {
    float waterMultiplier = 1.f;
    float iceMultiplier = 1.f;
 
-   float updateTimer = 0.f;
    float fallTimer = 0.f;
    float walkTimer = 0.f;
    float jumpTimer = 0.f;
