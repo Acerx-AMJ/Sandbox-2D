@@ -56,7 +56,7 @@ GameState::~GameState() {
 
 // Update
 
-void GameState::update(float) {
+void GameState::update() {
    updatePauseScreen();
    updateControls();
    updatePhysics();
@@ -105,7 +105,7 @@ void GameState::fixedUpdate() {
 // Update pause screen
 
 void GameState::updatePauseScreen() {
-   pauseButton.update();
+   pauseButton.update(dt);
    if (pauseButton.clicked || handleKeyPressWithSound(KEY_ESCAPE)) {
       paused = !paused;
    }
@@ -114,8 +114,8 @@ void GameState::updatePauseScreen() {
       return;
    }
 
-   continueButton.update();
-   menuButton.update();
+   continueButton.update(dt);
+   menuButton.update(dt);
 
    if (continueButton.clicked) {
       paused = false;
@@ -201,7 +201,7 @@ void GameState::updatePhysics() {
       const Rectangle playerBounds = player.getBounds();
       
       for (auto &droppedItem: droppedItems) {
-         droppedItem.update(cameraBounds);
+         droppedItem.update(cameraBounds, dt);
 
          if (!droppedItem.inBounds || !CheckCollisionRecs(playerBounds, droppedItem.getBounds())) {
             continue;
@@ -326,8 +326,8 @@ void GameState::updateDirtPhysics(int x, int y) {
 // Render
 
 void GameState::render() const {
-   const float delta = (paused ? 0 : player.delta.x / GetFrameTime() / 60.0f); // To avoid delta time clash
-   drawBackground(foregroundTexture, backgroundTexture, delta, delta, (paused ? 0.0f : 3.0f));
+   const float delta = (paused ? 0 : player.delta.x * dt);
+   drawBackground(foregroundTexture, backgroundTexture, delta, delta, (paused ? 0.0f : 1.0f) * dt);
 
    BeginMode2D(camera);
    renderGame();

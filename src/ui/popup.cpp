@@ -26,12 +26,12 @@ static Button okayButton;
 
 // Helper functions
 
-void fadeOut() {
+void fadeOut(float dt) {
    if (fadedOut) {
       return;
    }
    fadedIn = false;
-   fadeTimer += GetFrameTime();
+   fadeTimer += dt;
    alpha = (1.0f - fadeTimer / fadeTime) / 2.0f;
 
    if (fadeTimer >= fadeTime) {
@@ -40,12 +40,12 @@ void fadeOut() {
    }
 }
 
-void fadeIn() {
+void fadeIn(float dt) {
    if (fadedIn) {
       return;
    }
    fadedOut = false;
-   fadeTimer += GetFrameTime();
+   fadeTimer += dt;
    alpha = (fadeTimer / fadeTime) / 2.0f;
 
    if (fadeTimer >= fadeTime) {
@@ -89,18 +89,18 @@ bool anyPopups() {
 
 // Update function
 
-void updatePopups() {
+void updatePopups(float dt) {
    if (popups.empty()) {
-      fadeOut();
+      fadeOut(dt);
       return;
    }
 
-   fadeIn();
+   fadeIn(dt);
    Popup &popup = popups.back();
 
    if (popup.confirmation) {
-      confirmationButton.update();
-      denialButton.update();
+      confirmationButton.update(dt);
+      denialButton.update(dt);
    
       if (confirmationButton.clicked || handleKeyPressWithSound(KEY_ENTER)) {
          wasLastPopupConfirmed = true;
@@ -112,7 +112,7 @@ void updatePopups() {
          popups.pop_back();
       }
    } else {
-      okayButton.update();
+      okayButton.update(dt);
 
       if (okayButton.clicked || handleKeyPressWithSound(KEY_ENTER) || handleKeyPressWithSound(KEY_ESCAPE)) {
          popups.pop_back();

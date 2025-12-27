@@ -13,7 +13,7 @@ struct State {
 
    // Virtual functions
 
-   virtual void update(float dt) = 0;
+   virtual void update() = 0;
    virtual void fixedUpdate() = 0;
    virtual void render() const = 0;
    virtual State* change() = 0;
@@ -33,6 +33,8 @@ struct State {
    float fadeTimer = 0.0f;
    float alpha = 0.0f;
    float accumulator = 0.0f;
+   float realDt = 0.0f; // Real DT should be used for timers, whereas DT for everything else
+   float dt = 0.0f;
 };
 
 #endif

@@ -17,7 +17,7 @@ struct GameState: public State {
 
    // Update
 
-   void update(float dt) override;
+   void update() override;
    void fixedUpdate() override;
 
    void updatePauseScreen();
@@ -61,7 +61,6 @@ struct GameState: public State {
    std::vector<DroppedItem> droppedItems;
    std::string worldName;
 
-   float updateTimer = 0.0f;
    int physicsCounter = 0;
    bool paused = false;
 };

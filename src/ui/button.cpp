@@ -13,7 +13,7 @@ constexpr Color buttonDisabledColor = {170, 170, 150, 255};
 
 // Update
 
-void Button::update(float offsetY) {
+void Button::update(float dt, float offsetY) {
    const bool wasHovering = hovering;
    const Vector2 mousePosition = {GetMousePosition().x, GetMousePosition().y + offsetY};
 
@@ -30,16 +30,14 @@ void Button::update(float offsetY) {
       clicked = hovering && isMousePressedUI(MOUSE_BUTTON_LEFT);
    }
 
-   const float delta = GetFrameTime();
-
    if (down) {
-      scale = max(scale - delta, buttonScaleMin);
+      scale = max(scale - dt, buttonScaleMin);
    } else if (hovering) {
-      scale = min(scale + delta, buttonScaleMax);
+      scale = min(scale + dt, buttonScaleMax);
    } else if (scale < 1.0f) {
-      scale = min(scale + delta, 1.0f);
+      scale = min(scale + dt, 1.0f);
    } else if (scale > 1.0f) {
-      scale = max(scale - delta, 1.0f);
+      scale = max(scale - dt, 1.0f);
    }
 
    if (!wasHovering && hovering) {

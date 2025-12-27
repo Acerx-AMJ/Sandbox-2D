@@ -90,8 +90,8 @@ void drawBackground(const Texture &fgTexture, const Texture &bgTexture, float bg
    int prevMoonPhase = moonPhase;
 
    // Update parallax backgrounds
-   bgProgress -= bgSpeed * GetFrameTime() * parallaxBgSpeed;
-   fgProgress -= fgSpeed * GetFrameTime() * parallaxFgSpeed;
+   bgProgress -= bgSpeed * parallaxBgSpeed;
+   fgProgress -= fgSpeed * parallaxFgSpeed;
    
    if (bgProgress <= -screenSize.x) {
       bgProgress = 0.f;
@@ -108,7 +108,7 @@ void drawBackground(const Texture &fgTexture, const Texture &bgTexture, float bg
    }
 
    // Update night
-   currentTime = std::fmod(currentTime + daySpeed * GetFrameTime(), 360.0f);
+   currentTime = std::fmod(currentTime + daySpeed, 360.0f);
    lastTime = currentTime;
    isNight = (currentTime >= 180.0f);
 

@@ -15,7 +15,7 @@ void insertPopup(const std::string &header, const std::string &body, bool confir
 bool isPopupConfirmed();
 bool anyPopups();
 
-void updatePopups();
+void updatePopups(float dt);
 void renderPopups();
 
 #endif

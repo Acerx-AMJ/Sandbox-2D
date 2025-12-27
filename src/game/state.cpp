@@ -9,6 +9,13 @@ constexpr float fadeTime = 0.4f;
 // Update functions
 
 void State::updateStateLogic() {
+   realDt = GetFrameTime();
+
+   dt = realDt;
+   if (dt > maxDT) {
+      dt = maxDT;
+   }
+
    if (fadingIn) {
       updateFadingIn();
       return;
@@ -17,22 +24,16 @@ void State::updateStateLogic() {
       return;
    }
 
-   float frameTime = GetFrameTime();
-   if (frameTime > maxDT) {
-      frameTime = maxDT;
-   }
-
-   accumulator += frameTime;
+   accumulator += dt;
    while (accumulator >= fixedUpdateDT) {
       fixedUpdate();
       accumulator -= fixedUpdateDT;
    }
-
-   update(frameTime);
+   update();
 }
 
 void State::updateFadingIn() {
-   fadeTimer += GetFrameTime();
+   fadeTimer += realDt;
    alpha = 1.f - fadeTimer / fadeTime;
 
    if (fadeTimer >= fadeTime) {
@@ -43,7 +44,7 @@ void State::updateFadingIn() {
 }
 
 void State::updateFadingOut() {
-   fadeTimer += GetFrameTime();
+   fadeTimer += realDt;
    alpha = fadeTimer / fadeTime;
 
    if (fadeTimer >= fadeTime) {

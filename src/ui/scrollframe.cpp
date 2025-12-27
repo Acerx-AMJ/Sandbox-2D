@@ -7,12 +7,12 @@
 
 // Update
 
-void Scrollframe::update() {
+void Scrollframe::update(float dt) {
    const float scrollFactor = GetMouseWheelMove();
    scrollbarHeight = rectangle.height * (rectangle.height / scrollHeight);
 
    if (CheckCollisionPointRec(GetMousePosition(), rectangle) && scrollFactor != 0.f) {
-      progress = clamp(progress + scrollFactor * 15.0f * GetFrameTime() * (rectangle.height / scrollHeight), 0.f, 1.f);
+      progress = clamp(progress + scrollFactor * 15.0f * dt * (rectangle.height / scrollHeight), 0.f, 1.f);
    } else if (CheckCollisionPointRec(GetMousePosition(), {rectangle.x + rectangle.width - scrollBarWidth, rectangle.y, scrollBarWidth, rectangle.height})) {
       setMouseOnUI(true);
       moving = isMouseDownUI(MOUSE_BUTTON_LEFT);

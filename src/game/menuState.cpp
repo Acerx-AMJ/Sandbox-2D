@@ -93,13 +93,13 @@ MenuState::MenuState()
 
 // Update
 
-void MenuState::update(float dt) {
+void MenuState::update() {
    switch (phase) {
-   case Phase::title:           updateTitle(dt);           break;
-   case Phase::levelSelection:  updateLevelSelection(dt);  break;
-   case Phase::levelCreation:   updateLevelCreation(dt);   break;
-   case Phase::levelRenaming:   updateLevelRenaming(dt);   break;
-   case Phase::generatingLevel: updateGeneratingLevel(dt); break;
+   case Phase::title:           updateTitle();           break;
+   case Phase::levelSelection:  updateLevelSelection();  break;
+   case Phase::levelCreation:   updateLevelCreation();   break;
+   case Phase::levelRenaming:   updateLevelRenaming();   break;
+   case Phase::generatingLevel: updateGeneratingLevel(); break;
    }
 }
 
@@ -109,10 +109,10 @@ void MenuState::fixedUpdate() {
 
 // Update title
 
-void MenuState::updateTitle(float) {
-   playButton.update();
-   optionsButton.update();
-   quitButton.update();
+void MenuState::updateTitle() {
+   playButton.update(dt);
+   optionsButton.update(dt);
+   quitButton.update(dt);
 
    if (playButton.clicked || handleKeyPressWithSound(KEY_ENTER)) {
       phase = Phase::levelSelection;
@@ -129,10 +129,10 @@ void MenuState::updateTitle(float) {
 
 // Update level selection screen
 
-void MenuState::updateLevelSelection(float dt) {
-   backButton.update();
-   newButton.update();
-   worldFrame.update();
+void MenuState::updateLevelSelection() {
+   backButton.update(dt);
+   newButton.update(dt);
+   worldFrame.update(dt);
    worldSearchBar.update();
 
    if (backButton.clicked || (!worldSearchBar.typing && handleKeyPressWithSound(KEY_ESCAPE))) {
@@ -169,7 +169,7 @@ void MenuState::updateLevelSelection(float dt) {
          continue;
       }
 
-      button.update(offsetY);
+      button.update(dt, offsetY);
       if (!button.clicked) {
          continue;
       }
@@ -191,8 +191,8 @@ void MenuState::updateLevelSelection(float dt) {
 
    // Quick world navigation
 
-   const bool shouldGoDown = isKeyRepeating(KEY_DOWN, downKeyTimer, downKeyDelayTimer, dt);
-   const bool shouldGoUp   = isKeyRepeating(KEY_UP, upKeyTimer, upKeyDelayTimer, dt);
+   const bool shouldGoDown = isKeyRepeating(KEY_DOWN, downKeyTimer, downKeyDelayTimer);
+   const bool shouldGoUp   = isKeyRepeating(KEY_UP, upKeyTimer, upKeyDelayTimer);
 
    if (!worldButtons.empty() && (shouldGoUp || shouldGoDown)) {
       if (!anySelected) {
@@ -219,10 +219,10 @@ void MenuState::updateLevelSelection(float dt) {
    favoriteButton.disabled = !anySelected;
    playWorldButton.disabled = !anySelected;
 
-   deleteButton.update();
-   renameButton.update();
-   favoriteButton.update();
-   playWorldButton.update();
+   deleteButton.update(dt);
+   renameButton.update(dt);
+   favoriteButton.update(dt);
+   playWorldButton.update(dt);
 
    if (deleteButton.clicked) {
       if (selectedButton->favorite) {
@@ -292,9 +292,9 @@ void MenuState::updateLevelSelection(float dt) {
 
 // Update level creation screen
 
-void MenuState::updateLevelCreation(float) {
-   backButtonCreation.update();
-   createButtonCreation.update();
+void MenuState::updateLevelCreation() {
+   backButtonCreation.update(dt);
+   createButtonCreation.update(dt);
    worldName.update();
    shouldWorldBeFlat.update();
 
@@ -323,9 +323,9 @@ void MenuState::updateLevelCreation(float) {
 
 // Update level renaming screen
 
-void MenuState::updateLevelRenaming(float) {
-   backButtonRenaming.update();
-   renameButtonRenaming.update();
+void MenuState::updateLevelRenaming() {
+   backButtonRenaming.update(dt);
+   renameButtonRenaming.update(dt);
    renameInput.update();
 
    if (backButtonRenaming.clicked || (!renameInput.typing && handleKeyPressWithSound(KEY_ESCAPE))) {
@@ -369,7 +369,7 @@ void MenuState::updateLevelRenaming(float) {
 
 // Update level generation screen
 
-void MenuState::updateGeneratingLevel(float) {
+void MenuState::updateGeneratingLevel() {
    MapGenerator generator (worldName.text, defaultMapSizeX, defaultMapSizeY, shouldWorldBeFlat.checked);
    generator.generate();
 
@@ -380,7 +380,7 @@ void MenuState::updateGeneratingLevel(float) {
 // Render
 
 void MenuState::render() const {
-   drawBackground(foregroundTexture, backgroundTexture, 1.0f, 1.0f, 15.0f);
+   drawBackground(foregroundTexture, backgroundTexture, 1.0f * dt, 1.0f * dt, 15.0f * dt);
 
    switch (phase) {
    case Phase::title:           renderTitle();           break;
@@ -411,7 +411,7 @@ void MenuState::renderLevelSelection() const {
    playWorldButton.render();
    newButton.render();
    worldFrame.render();
-   worldSearchBar.render();
+   worldSearchBar.render(dt);
 
    const float offsetY = worldFrame.getOffsetY();
    for (const Button &button: worldButtons) {
@@ -435,7 +435,7 @@ void MenuState::renderLevelCreation() const {
    drawText(getScreenCenter({0.f, -400.0f}), "CREATE WORLD", 180);
    backButtonCreation.render();
    createButtonCreation.render();
-   worldName.render();
+   worldName.render(dt);
    shouldWorldBeFlat.render();
    drawText({worldName.rectangle.x - worldName.rectangle.width / 2.0f - 125.0f, worldName.rectangle.y}, "World Name:", 50);
    drawText({worldName.rectangle.x - worldName.rectangle.width / 2.0f - 125.0f, shouldWorldBeFlat.rectangle.y + shouldWorldBeFlat.rectangle.height / 2.f}, "Flat World:", 50);
@@ -447,7 +447,7 @@ void MenuState::renderLevelRenaming() const {
    drawText(getScreenCenter({0.0f, -400.0f}), "RENAME WORLD", 180);
    backButtonRenaming.render();
    renameButtonRenaming.render();
-   renameInput.render();
+   renameInput.render(dt);
 
    drawText({renameInput.rectangle.x - renameInput.rectangle.width / 2.0f - 175.0f, renameInput.rectangle.y}, "New World Name:", 50);
    drawText({renameInput.rectangle.x - renameInput.rectangle.width / 2.0f - 175.0f, renameInput.rectangle.y + 150.0f}, "Old World Name:", 50);
@@ -540,7 +540,7 @@ void MenuState::sortWorldButtonsByFavorites() {
 
 // Helper functions
 
-bool MenuState::isKeyRepeating(int key, float &repeatTimer, float &delayTimer, float dt) {
+bool MenuState::isKeyRepeating(int key, float &repeatTimer, float &delayTimer) {
    const bool pressed = isKeyPressed(key);
    const bool down    = isKeyDown(key);
 
@@ -551,11 +551,11 @@ bool MenuState::isKeyRepeating(int key, float &repeatTimer, float &delayTimer, f
    }
 
    if (delayTimer < worldSelectionKeyStartDelay) {
-      delayTimer += dt;
+      delayTimer += realDt;
       return pressed;
    }
 
-   repeatTimer += dt;
+   repeatTimer += realDt;
    if (repeatTimer >= worldSelectionKeyDelay) {
       repeatTimer = 0.0f;
       return true;

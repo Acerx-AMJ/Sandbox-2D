@@ -6,7 +6,7 @@
 
 struct Input {
    void update();
-   void render() const;
+   void render(float dt) const;
    Rectangle normalizeRect() const;
 
    // Members

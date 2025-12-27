@@ -10,7 +10,7 @@ constexpr inline float scrollBarWidth = 56.667f;
 // Scrollframe
 
 struct Scrollframe {
-   void update();
+   void update(float dt);
    void render() const;
 
    // Helper functions

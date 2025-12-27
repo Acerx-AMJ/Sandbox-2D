@@ -14,7 +14,7 @@ constexpr inline float buttonPaddingY = buttonHeight + 20.0f;
 // Button
 
 struct Button {
-   void update(float offsetY = 0.0f);
+   void update(float dt, float offsetY = 0.0f);
    void render(float offsetY = 0.0f) const;
 
    Rectangle normalizeRect() const;

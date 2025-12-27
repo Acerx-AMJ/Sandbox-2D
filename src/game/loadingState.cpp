@@ -17,7 +17,7 @@ LoadingState::LoadingState() {
    wrapText(splashText, GetScreenWidth() - 50.0f, 40, 1.f);
 }
 
-void LoadingState::update(float dt) {
+void LoadingState::update() {
    iconRotation += dt * 360.0f;
 
    // Sometimes brute-forcing is better than over-engineering an automatic way to do everything
@@ -41,7 +41,7 @@ void LoadingState::update(float dt) {
       playSound("load");
       loadPhase = Load::count;
    } else if (loadPhase == Load::count) {
-      finalWaitTimer += GetFrameTime();
+      finalWaitTimer += realDt;
       fadingOut = (finalWaitTimer >= 1.f);
    }
 }

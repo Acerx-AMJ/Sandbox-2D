@@ -35,7 +35,7 @@ struct DroppedItem {
    DroppedItem(Item::Type type, unsigned char id, bool isFurniture, int count, int tileX, int tileY, float lifetime);
    DroppedItem(Item &item, int tileX, int tileY);
 
-   void update(const Rectangle &cameraBounds);
+   void update(const Rectangle &cameraBounds, float dt);
    void render() const;
 
    Rectangle getBounds() const;

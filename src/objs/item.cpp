@@ -29,8 +29,8 @@ DroppedItem::DroppedItem(Item::Type type, unsigned char id, bool isFurniture, in
 DroppedItem::DroppedItem(Item &item, int tileX, int tileY)
    : type(item.type), id(item.id), isFurniture(item.isFurniture), count(item.count), tileX(tileX), tileY(tileY), lifetime(0.0f) {}
 
-void DroppedItem::update(const Rectangle &cameraBounds) {
-   lifetime += GetFrameTime();
+void DroppedItem::update(const Rectangle &cameraBounds, float dt) {
+   lifetime += dt;
    inBounds = (tileX >= cameraBounds.x && tileX <= cameraBounds.width && tileY >= cameraBounds.y && tileY <= cameraBounds.height);
 
    if (lifetime >= droppedItemLifetime) {

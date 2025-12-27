@@ -35,7 +35,7 @@ int main() {
 
       updateInput();
       updateMusic();
-      updatePopups();
+      updatePopups(current->realDt);
 
       if (!anyPopups()) {
          current->updateStateLogic();
