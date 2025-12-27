@@ -257,10 +257,6 @@ void MenuState::updateLevelSelection() {
       phase = Phase::levelRenaming;
       wasFavoriteBeforeRenaming = selectedButton->favorite;
       selectedWorld = selectedButton->text;
-
-      anySelected = false;
-      selectedButton->texture = &getTexture("button_long");
-      selectedButton = nullptr;
    }
 
    if (favoriteButton.clicked || (!favoriteButton.disabled && handleKeyPressWithSound(KEY_F))) {
@@ -325,6 +321,9 @@ void MenuState::updateLevelCreation() {
          insertPopup("Invalid World Name", format("World name must contain from {} to {} characters, but it has {} instead.", minWorldNameSize, maxWorldNameSize, worldName.text.size()), false);
          return;
       }
+
+      generationSplash = getRandomLineFromFile("assets/splash.txt");
+      wrapText(generationSplash, GetScreenWidth() - 50.0f, 40.0f, 1.0f);
 
       worldName.typing = false;
       phase = Phase::generatingLevel;
@@ -468,6 +467,7 @@ void MenuState::renderLevelRenaming() const {
 
 void MenuState::renderGeneratingLevel() const {
    drawText(getScreenCenter(), (std::string("Generating World '") + worldName.text + "'...").c_str(), 50);
+   drawText(getScreenCenter({0.0f, 100.0f}), generationSplash.c_str(), 40.0f);
 }
 
 // Change states
@@ -486,6 +486,11 @@ void MenuState::loadWorldButtons() {
    std::filesystem::create_directories("data/worlds/");
 
    worldButtons.clear();
+   if (anySelected) {
+      anySelected = false;
+      selectedButton = nullptr;
+   }
+
    for (const auto &file: std::filesystem::directory_iterator("data/worlds")) {
       Button button;
       button.text = file.path().stem().string();

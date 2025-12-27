@@ -71,7 +71,7 @@ struct MenuState: public State {
 
    std::vector<std::string> favoriteWorlds;
    std::vector<Button> worldButtons;
-   std::string selectedWorld;
+   std::string selectedWorld, generationSplash;
    Phase phase = Phase::title;
 
    bool anySelected = false;

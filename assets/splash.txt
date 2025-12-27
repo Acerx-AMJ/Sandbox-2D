@@ -9,3 +9,11 @@ Undefined behavior included!
 Now with more memory leaks!
 segmentation fault (core dumped)
 Thanks for playing!
+There are keybinds on certain buttons.
+You can press TAB to toggle selection for an input field!
+You can press ESC and ENTER to navigate through menus!
+You can navigate in the world selection screen using DOWN and UP keys!
+Favorite items in the inventory by holding down ALT and clicking!
+Trash items in the inventory by holding down CTRL and clicking!
+Generating World 'Dizzy Canyons'... Wait... what?
+TODO: fix this.

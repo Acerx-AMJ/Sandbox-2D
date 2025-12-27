@@ -20,6 +20,7 @@
 - Add quick-stacking to nearby chests
 - Add inventory sorting.
 - Display item's name and description on hover.
+- Add ammo slots.
 
 ### Crafting
 - Add crafting.
@@ -45,5 +46,8 @@
 - Add misc. settings
 - Maybe add localization settings?
 
-### UI
-- Redraw UI sprites
+### World Generation Screen
+World generation is unfixable, so I'll only be fixing the generation screen.
+
+- Use threads somehow.
+- Make it look like Terraria.
