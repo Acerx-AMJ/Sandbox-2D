@@ -6,6 +6,9 @@
 #include "util/position.hpp"
 #include <raymath.h>
 
+// Player's keybinds shouldn't overlap with any other keybinds in GameState. It
+// should be non-blocking, so our input manager is not used here.
+
 // Constants
 
 constexpr Vector2 playerSize    = {1.8f, 2.7f};

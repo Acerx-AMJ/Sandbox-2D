@@ -1,8 +1,8 @@
-#include "objs/inventory.hpp"
+#include "mngr/input.hpp"
 #include "mngr/resource.hpp"
 #include "mngr/sound.hpp"
+#include "objs/inventory.hpp"
 #include "objs/map.hpp"
-#include "util/input.hpp"
 #include "util/math.hpp"
 #include "util/render.hpp"
 #include <raymath.h>
@@ -142,7 +142,7 @@ void Inventory::update() {
          }
 
          if (shouldReset) {
-            resetMouseUIInput(MOUSE_BUTTON_LEFT);
+            resetMousePress(MOUSE_BUTTON_LEFT);
          }
 
          if (open && item.id != 0 && isMousePressedUI(MOUSE_BUTTON_RIGHT)) {
@@ -215,7 +215,7 @@ void Inventory::update() {
          return;
       }
 
-      resetMouseUIInput(MOUSE_BUTTON_LEFT);
+      resetMousePress(MOUSE_BUTTON_LEFT);
       if (trashedItem.id != 0 && isMousePressedUI(MOUSE_BUTTON_RIGHT)) {
          if (!anySelected) {
             selectedItem = {trashedItem, &trashedItem, false, false};
@@ -242,14 +242,14 @@ void Inventory::update() {
 // Helper functions
 
 void Inventory::toggleInventoryOpen() {
-   if (IsKeyReleased(KEY_E)) {
+   if (isKeyPressed(KEY_E)) {
       playSound("click");
       open = !open;
    }
 }
 
 void Inventory::switchOnKeyPress(int key, int hotbarX) {
-   if (IsKeyPressed(key)) {
+   if (isKeyPressed(key)) {
       selectedX = hotbarX;
       selectedY = 0;
    }

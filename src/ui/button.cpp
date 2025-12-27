@@ -1,6 +1,6 @@
+#include "mngr/input.hpp"
 #include "mngr/sound.hpp"
 #include "ui/button.hpp"
-#include "util/input.hpp"
 #include "util/math.hpp"
 #include "util/render.hpp"
 #include <raymath.h>
@@ -18,17 +18,16 @@ void Button::update(float offsetY) {
    const Vector2 mousePosition = {GetMousePosition().x, GetMousePosition().y + offsetY};
 
    hovering = CheckCollisionPointRec(mousePosition, normalizeRect());
+   if (hovering) {
+      setMouseOnUI(true);
+   }
 
    if (disabled) {
       down = false;
       clicked = false;
    } else {
-      down = hovering && IsMouseButtonDown(MOUSE_LEFT_BUTTON);
-      clicked = hovering && isMousePressedUI(MOUSE_LEFT_BUTTON);
-   }
-
-   if (hovering) {
-      setMouseOnUI(true);
+      down = hovering && isMouseDownUI(MOUSE_BUTTON_LEFT);
+      clicked = hovering && isMousePressedUI(MOUSE_BUTTON_LEFT);
    }
 
    const float delta = GetFrameTime();

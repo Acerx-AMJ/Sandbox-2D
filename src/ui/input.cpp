@@ -1,7 +1,7 @@
+#include "mngr/input.hpp"
 #include "mngr/sound.hpp"
 #include "ui/input.hpp"
 #include "util/format.hpp"
-#include "util/input.hpp"
 #include "util/render.hpp"
 #include <raymath.h>
 #include <cmath>
@@ -29,10 +29,6 @@ static bool consumeBackspace(std::string &text) {
    return true;
 }
 
-static bool isKeyRepeated(int key) {
-   return IsKeyPressed(key) || IsKeyPressedRepeat(key);
-}
-
 // Update
 
 void Input::update() {
@@ -47,7 +43,7 @@ void Input::update() {
 
    if (hovering && isMousePressedUI(MOUSE_BUTTON_LEFT)) {
       typing = !typing;
-   } else if (typing && (IsKeyReleased(KEY_ENTER) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT))) {
+   } else if (typing && (isKeyPressed(KEY_ENTER) || isKeyPressed(KEY_ESCAPE) || isMousePressed(MOUSE_BUTTON_LEFT))) {
       typing = false;
    }
 

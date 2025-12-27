@@ -1,6 +1,6 @@
+#include "mngr/input.hpp"
 #include "mngr/resource.hpp"
 #include "ui/scrollframe.hpp"
-#include "util/input.hpp"
 #include "util/math.hpp"
 #include "util/render.hpp"
 #include <cmath>
@@ -15,13 +15,14 @@ void Scrollframe::update() {
       progress = clamp(progress + scrollFactor * 15.0f * GetFrameTime() * (rectangle.height / scrollHeight), 0.f, 1.f);
    } else if (CheckCollisionPointRec(GetMousePosition(), {rectangle.x + rectangle.width - scrollBarWidth, rectangle.y, scrollBarWidth, rectangle.height})) {
       setMouseOnUI(true);
-      moving = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+      moving = isMouseDownUI(MOUSE_BUTTON_LEFT);
    }
-   
+
+   // We just set 'isMouseDownUI' to false in the last if statement, do not use input manager here
    if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
       moving = false;
    }
-   
+
    if (moving && scrollbarHeight < rectangle.height) {
       scrollbarY = clamp<float>(GetMouseY(), rectangle.y, rectangle.y + rectangle.height - scrollbarHeight);
       progress = (scrollbarY - rectangle.y) / (rectangle.height - scrollbarHeight);

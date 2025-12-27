@@ -1,9 +1,9 @@
 #include "game/gameState.hpp"
 #include "game/menuState.hpp"
 #include "mngr/resource.hpp"
+#include "mngr/input.hpp"
 #include "mngr/sound.hpp"
 #include "util/fileio.hpp"
-#include "util/input.hpp"
 #include "util/math.hpp"
 #include "util/parallax.hpp"
 #include "util/position.hpp"
@@ -130,7 +130,7 @@ void GameState::updatePauseScreen() {
 
 void GameState::updateControls() {
    if (!paused) {
-      const float zoomFactor = IsKeyReleased(KEY_EQUAL) - IsKeyReleased(KEY_MINUS);
+      const float zoomFactor = isKeyPressed(KEY_EQUAL) - isKeyPressed(KEY_MINUS);
       if (zoomFactor != 0.f) {
          camera.zoom = clamp(std::exp(std::log(camera.zoom) + zoomFactor * 0.2f), minCameraZoom, maxCameraZoom);
       }
@@ -166,15 +166,15 @@ void GameState::updatePhysics() {
    // Move this to a different function later on!
    Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
 
-   if (IsKeyPressed(KEY_Y)) {
+   if (isKeyPressed(KEY_Y)) {
       index = (index + 1) % size;
    }
 
-   if (IsKeyPressed(KEY_T)) {
+   if (isKeyPressed(KEY_T)) {
       index = (index == 0 ? size - 1 : index - 1);
    }
 
-   if (IsKeyPressed(KEY_R)) {
+   if (isKeyPressed(KEY_R)) {
       drawWall =! drawWall;
    }
 

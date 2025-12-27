@@ -1,8 +1,8 @@
-#include "ui/popup.hpp"
+#include "mngr/input.hpp"
 #include "mngr/resource.hpp"
 #include "ui/button.hpp"
+#include "ui/popup.hpp"
 #include "util/format.hpp"
-#include "util/input.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
 #include <vector>

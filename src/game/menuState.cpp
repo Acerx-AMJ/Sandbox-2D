@@ -1,11 +1,11 @@
 #include "game/gameState.hpp"
 #include "game/menuState.hpp"
+#include "mngr/input.hpp"
 #include "mngr/resource.hpp"
 #include "objs/generation.hpp"
 #include "ui/popup.hpp"
 #include "util/fileio.hpp"
 #include "util/format.hpp"
-#include "util/input.hpp"
 #include "util/parallax.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
@@ -146,17 +146,24 @@ void MenuState::updateLevelSelection(float dt) {
       worldName.text = generateRandomWorldName();
    }
 
-   if (handleKeyPressWithSound(KEY_TAB) || (worldSearchBar.typing && handleKeyPressWithSound(KEY_ESCAPE))) {
+   if (handleKeyPressWithSound(KEY_TAB)) {
       worldSearchBar.typing = !worldSearchBar.typing;
+      if (worldSearchBar.typing) {
+         worldSearchBar.text.clear();
+         worldSearchBar.changed = true;
+      }
    }
 
    if (worldSearchBar.changed) {
+      if (anySelected) {
+         anySelected = false;
+         selectedButton->texture = &getTexture("button_long");
+         selectedButton = nullptr;
+      }
       loadWorldButtons();
    }
 
    const float offsetY = worldFrame.getOffsetY();
-   bool anyClicked = false;
-   
    for (Button &button: worldButtons) {
       if (!worldFrame.inFrame(button.normalizeRect())) {
          continue;
@@ -180,7 +187,6 @@ void MenuState::updateLevelSelection(float dt) {
       selectedButton = &button;
       selectedButton->texture = &getTexture("button_long_selected");
       anySelected = true;
-      anyClicked = true;
    }
 
    // Quick world navigation
@@ -245,6 +251,10 @@ void MenuState::updateLevelSelection(float dt) {
       phase = Phase::levelRenaming;
       wasFavoriteBeforeRenaming = selectedButton->favorite;
       selectedWorld = selectedButton->text;
+
+      anySelected = false;
+      selectedButton->texture = &getTexture("button_long");
+      selectedButton = nullptr;
    }
 
    if (favoriteButton.clicked) {
@@ -273,8 +283,7 @@ void MenuState::updateLevelSelection(float dt) {
       return;
    }
 
-   // Ignore renameButton to make it reset after clicking. Required to avoid a graphical glitch
-   if (selectedButton && !anyClicked && !deleteButton.clicked && !favoriteButton.clicked && !playWorldButton.clicked && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+   if (selectedButton && isMousePressedOutsideUI(MOUSE_BUTTON_LEFT)) {
       selectedButton->texture = &getTexture("button_long");
       selectedButton = nullptr;
       anySelected = false;
@@ -293,8 +302,11 @@ void MenuState::updateLevelCreation(float) {
       phase = Phase::levelSelection;
    }
 
-   if (handleKeyPressWithSound(KEY_TAB) || (worldName.typing && handleKeyPressWithSound(KEY_ESCAPE))) {
+   if (handleKeyPressWithSound(KEY_TAB)) {
       worldName.typing = !worldName.typing;
+      if (worldName.typing) {
+         worldName.text.clear();
+      }
    }
 
    if (createButtonCreation.clicked || (!worldName.typing && handleKeyPressWithSound(KEY_ENTER))) {
@@ -320,8 +332,11 @@ void MenuState::updateLevelRenaming(float) {
       phase = Phase::levelSelection;
    }
 
-   if (handleKeyPressWithSound(KEY_TAB) || (renameInput.typing && handleKeyPressWithSound(KEY_ESCAPE))) {
+   if (handleKeyPressWithSound(KEY_TAB)) {
       renameInput.typing = !renameInput.typing;
+      if (renameInput.typing) {
+         renameInput.text.clear();
+      }
    }
 
    if (renameButtonRenaming.clicked || (!renameInput.typing && handleKeyPressWithSound(KEY_ENTER))) {
@@ -526,8 +541,8 @@ void MenuState::sortWorldButtonsByFavorites() {
 // Helper functions
 
 bool MenuState::isKeyRepeating(int key, float &repeatTimer, float &delayTimer, float dt) {
-   const bool pressed = IsKeyPressed(key);
-   const bool down    = IsKeyDown(key);
+   const bool pressed = isKeyPressed(key);
+   const bool down    = isKeyDown(key);
 
    if (!down) {
       repeatTimer = 0.0f;

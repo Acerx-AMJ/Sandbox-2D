@@ -40,4 +40,5 @@
 - Add zombies and such.
 
 ### Other
-- Fix all of the input issues (maybe create input manager?)
+- Add more keybinds and add them next to buttons
+- Fix sun's trajectory

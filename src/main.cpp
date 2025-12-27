@@ -1,7 +1,7 @@
 #include "game/loadingState.hpp"
+#include "mngr/input.hpp"
 #include "mngr/sound.hpp"
 #include "ui/popup.hpp"
-#include "util/input.hpp"
 #include "util/render.hpp"
 #include <raylib.h>
 #include <cstdlib>
@@ -33,10 +33,10 @@ int main() {
          break;
       }
 
-      resetInput();
+      updateInput();
       updateMusic();
-
       updatePopups();
+
       if (!anyPopups()) {
          current->updateStateLogic();
       }
@@ -52,9 +52,6 @@ int main() {
 
    // De-initialize the game
 
-   if (current) {
-      delete current;
-   }
    CloseWindow();
    CloseAudioDevice();
 }
