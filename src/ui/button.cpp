@@ -59,7 +59,7 @@ void Button::render(float offsetY) const {
       drawTexture(*texture, {rectangle.x, rectangle.y - offsetY}, {rectangle.width * scale, rectangle.height * scale}, 0, tint);
    }
    drawText({rectangle.x, rectangle.y - offsetY}, text.c_str(), 35 * scale, tint);
-   drawKeybindIndicator(keybind, {rectangle.x + rectangle.width / 2.0f * scale, rectangle.y - rectangle.height / 2.0f});
+   drawKeybindIndicator(keybind, {rectangle.x + rectangle.width / 2.0f * scale, rectangle.y - rectangle.height / 2.0f}, tint);
 }
 
 // Get real boundaries

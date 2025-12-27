@@ -4,6 +4,7 @@
 #include "objs/inventory.hpp"
 #include "objs/map.hpp"
 #include "util/math.hpp"
+#include "util/position.hpp"
 #include "util/render.hpp"
 #include <raymath.h>
 
@@ -13,8 +14,8 @@ constexpr Vector2 itemframeSize           = {60.0f, 60.0f};
 constexpr Vector2 itemframePadding        = {itemframeSize.x + 5.0f, itemframeSize.y + 5.0f};
 constexpr Vector2 itemframeTopLeft        = {15.0f, 15.0f};
 constexpr Vector2 itemframeIndexOffset    = {15.0f, 15.0f};
+constexpr Vector2 itemFrameCountOffset    = {0.0f, -itemframeSize.y / 2.0f + 10.0f};
 constexpr Vector2 itemframeItemSize       = {30.0f, 30.0f};
-constexpr Vector2 itemframeItemOffset     = {(itemframeSize.x - itemframeItemSize.x) / 2.0f, (itemframeSize.y - itemframeItemSize.y) / 2.0f};
 constexpr Vector2 selectedItemFrameSize   = {65.0f, 65.0f};
 constexpr Vector2 selectedItemFrameOffset = {(selectedItemFrameSize.x - itemframeSize.x) / 2.0f, (selectedItemFrameSize.y - itemframeSize.y) / 2.0f};
 
@@ -104,7 +105,7 @@ void Inventory::update() {
          if (mousePressed && open && anySelected) {
             playSound("click");
 
-            if (&item == selectedItem.address || (selectedItem.fromTrash && item.favorite)) {
+            if (&item == selectedItem.address) {
                discardItem();
                return;
             }
@@ -113,6 +114,9 @@ void Inventory::update() {
                if (item.id == selectedItem.item.id) {
                   addItemCount(item, *selectedItem.address);
                   item.favorite = (item.favorite || selectedItem.item.favorite);
+               } else if (selectedItem.fromTrash && item.favorite) {
+                  discardItem();
+                  return;
                } else {
                   std::swap(item, *selectedItem.address);
                }
@@ -414,7 +418,7 @@ void Inventory::render() const {
 
          drawTextureNoOrigin(getFrameTexture(isSelected, isFavorite), position, size);
          if (item.id != 0 && (!anySelected || !selectedItem.fullSelect || selectedItem.address != &item)) {
-            renderItem(item, position, false);
+            renderItem(item, Vector2Add(position, getOrigin(size)), false);
          }
 
          if (y == 0) {
@@ -432,7 +436,7 @@ void Inventory::render() const {
 
       drawTextureNoOrigin(getTrashTexture(trashOccupied), position, size);
       if (trashOccupied) {
-         renderItem(trashedItem, position, false);
+         renderItem(trashedItem, Vector2Add(position, getOrigin(size)), false);
       }
    }
 
@@ -446,7 +450,7 @@ void Inventory::renderItem(const Item &item, const Vector2 &position, bool isSel
    Color drawColor = (isSelected ? Fade(WHITE, 0.75f) : WHITE);
 
    if (!item.isFurniture) {
-      drawTextureNoOrigin(getTexture(Block::getName(item.id)), Vector2Add(position, itemframeItemOffset), itemframeItemSize, drawColor);
+      drawTexture(getTexture(Block::getName(item.id)), position, itemframeItemSize, 0.0f, drawColor);
    } else if (item.isFurniture) {
       FurnitureTexture texture = Furniture::getFurnitureIcon(item.id);
       Vector2 newPos = Vector2Add(position, Vector2Scale(itemframeSize, 0.5f));
@@ -461,7 +465,7 @@ void Inventory::renderItem(const Item &item, const Vector2 &position, bool isSel
    }
 
    if (item.count != 1) {
-      Vector2 textPosition = Vector2Subtract(Vector2Add(position, itemframeSize), itemframeIndexOffset);
+      Vector2 textPosition = Vector2Subtract(position, itemFrameCountOffset);
       drawText(textPosition, std::to_string(item.count).c_str(), 25, drawColor);
    }
 }
