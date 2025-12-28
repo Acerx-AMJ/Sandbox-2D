@@ -87,7 +87,7 @@ void MapGenerator::generateTerrain() {
       y += random(data.hmin[height], data.hmax[height]);
 
       // 2 is the middle point in our data
-      if ((height == 2 and chance(data.rng)) or height != 2) {
+      if ((height == 2 && chance(data.rng)) || height != 2) {
          y += random(-1, 1);
       }
 
@@ -101,7 +101,7 @@ void MapGenerator::generateTerrain() {
          y += data.hmax[4];
       }
 
-      if (y > map.sizeY * data.lowestPoint or waterLength >= maxWaterLength) {
+      if (y > map.sizeY * data.lowestPoint || waterLength >= maxWaterLength) {
          y += data.hmin[random(0, 2)];
       }
 
@@ -110,10 +110,10 @@ void MapGenerator::generateTerrain() {
 
       // Generate grass, dirt and stone
 
-      map.setBlock(x, y, (last != current and chance(50) ? lastData.top : data.top));
+      map.setBlock(x, y, (last != current && chance(50) ? lastData.top : data.top));
       for (int yy = y + 1; yy < map.sizeY; ++yy) {
          if (yy - y < rockOffset) {
-            const std::string &block = (last != current and chance(50) ? lastData.bottom : data.bottom);
+            const std::string &block = (last != current && chance(50) ? lastData.bottom : data.bottom);
             map.setBlock(x, yy, block);
 
             if (std::string(block) != "sand") {
@@ -166,7 +166,7 @@ void MapGenerator::generateTrees() {
       if (counter >= counterThreshold && chance(biomeData[(int)getBiome(x)].treeRate)) {
          bool sapling = chance(5);
 
-         if (map.isu(x, y + 1, Block::sand) and chance(60)) {
+         if (map.isu(x, y + 1, Block::sand) && chance(60)) {
             Furniture::generate(x, y, map, (sapling ? Furniture::cactus_seed : Furniture::cactus));
          } else {
             Furniture::generate(x, (sapling ? y - 1 : y), map, (sapling ? Furniture::sapling : Furniture::tree));

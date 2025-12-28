@@ -116,7 +116,7 @@ bool Map::isu(int x, int y, Block::Type type) const {
 }
 
 bool Map::empty(int x, int y) const {
-   return isPositionValid(x, y) and !blocks[y][x].furniture && blocks[y][x].type == Block::air;
+   return isPositionValid(x, y) && !blocks[y][x].furniture && blocks[y][x].type == Block::air;
 }
 
 bool Map::isTransparent(int x, int y) const {
@@ -162,7 +162,7 @@ void Map::render(const Rectangle &cameraBounds) const {
             }
 
             float height = (float)block.value2 / (float)maxWaterLayers;
-            drawFluidBlock(*block.texture, {(float)x, (float)y + (1 - height), 1, height});
+            drawFluidBlock(*block.texture, {(float)x, (float)y + (1 - height), 1, height}, Fade(WHITE, height));
             continue;
          }
 

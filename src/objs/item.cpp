@@ -4,6 +4,7 @@
 #include "util/render.hpp"
 #include <raylib.h>
 #include <raymath.h>
+#include <cmath>
 
 // Constants
 

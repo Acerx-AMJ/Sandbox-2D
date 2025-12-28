@@ -11,6 +11,7 @@
 #include "util/render.hpp"
 #include <raymath.h>
 #include <algorithm>
+#include <cmath>
 
 // Constants
 
@@ -132,7 +133,7 @@ void GameState::updateControls() {
    if (!paused) {
       const float zoomFactor = isKeyPressed(KEY_EQUAL) - isKeyPressed(KEY_MINUS);
       if (zoomFactor != 0.f) {
-         camera.zoom = clamp(std::exp(std::log(camera.zoom) + zoomFactor * 0.2f), minCameraZoom, maxCameraZoom);
+         camera.zoom = std::clamp<float>(std::exp(std::log(camera.zoom) + zoomFactor * 0.2f), minCameraZoom, maxCameraZoom);
       }
       inventory.update();
    }

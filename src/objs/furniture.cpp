@@ -308,7 +308,7 @@ Furniture Furniture::get(int x, int y, const Map &map, Type type, bool debug) {
    } break;
 
    case Type::cactus_seed: {
-      if (!debug && (!map.is(x, y + 1, Block::sand) or !map.empty(x, y))) {
+      if (!debug && (!map.is(x, y + 1, Block::sand) || !map.empty(x, y))) {
          return {};
       }
 

@@ -37,6 +37,8 @@
 ### Water
 - Add some shaders to the water?
 - Make a new water texture!
+- Make player be drawn behind the water.
+- Make all lava update at the same time.
 
 ### Entities
 - Add entities.
