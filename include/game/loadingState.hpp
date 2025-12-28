@@ -7,7 +7,7 @@
 // Loading state
 
 struct LoadingState: public State {
-   enum class Load { fonts, textures, sounds, music, count };
+   enum class Load { fonts, textures, shaders, sounds, music, count };
 
    // Constructors
 

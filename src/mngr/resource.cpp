@@ -7,6 +7,7 @@
 
 static std::unordered_map<std::string, Texture> textures;
 static std::unordered_map<std::string, Font> fonts;
+static std::unordered_map<std::string, Shader> shaders;
 
 // Fallback functions
 
@@ -60,6 +61,18 @@ Font& loadFont(const std::string &name, const std::string &path) {
    return fonts[name];
 }
 
+Shader& loadShader(const std::string &name, const std::string &vertexPath, const std::string &fragmentPath) {
+   if (shaders.count(name)) {
+      return shaders[name];
+   }
+
+   Shader shader = LoadShader(vertexPath.c_str(), fragmentPath.c_str());
+   assert(shader.id != 0, "Failed to load shader from files: vertex: '{}', fragment: '{}'.", vertexPath, fragmentPath);
+
+   shaders.insert({name, shader});
+   return shaders[name];
+}
+
 void loadTextures() {
    std::filesystem::create_directories("assets/sprites/");
    for (const auto &file: std::filesystem::recursive_directory_iterator("assets/sprites/")) {
@@ -74,6 +87,26 @@ void loadFonts() {
    for (const auto &file: std::filesystem::recursive_directory_iterator("assets/fonts/")) {
       if (file.is_regular_file()) {
          loadFont(file.path().stem().string(), file.path().string());
+      }
+   }
+}
+
+void loadShaders() {
+   std::filesystem::create_directories("assets/shaders/");
+   for (const auto &file: std::filesystem::recursive_directory_iterator("assets/shaders/")) {
+      std::string filename = file.path().stem().string();
+
+      if (shaders.count(filename)) {
+         continue;
+      }
+
+      // Just don't put any other files in there...
+      if (file.path().extension().string() == ".fs") {
+         std::filesystem::path vertexPath = format("assets/shaders/{}.vs", filename);
+         loadShader(filename, (std::filesystem::exists(vertexPath) ? vertexPath : ""), file.path().string());
+      } else {
+         std::filesystem::path fragmentPath = format("assets/shaders/{}.fs", filename);
+         loadShader(filename, file.path().string(), (std::filesystem::exists(fragmentPath) ? fragmentPath : ""));
       }
    }
 }
@@ -94,4 +127,9 @@ Font& getFont(const std::string &name) {
       return getFallbackFont();
    }
    return fonts[name];
+}
+
+Shader& getShader(const std::string &name) {
+   assert(fonts.count(name), "Shader '{}' does not exist.", name);
+   return shaders[name];
 }

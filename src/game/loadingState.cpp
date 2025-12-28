@@ -22,23 +22,32 @@ void LoadingState::update() {
 
    // Sometimes brute-forcing is better than over-engineering an automatic way to do everything
    if (loadPhase == Load::fonts) {
-      loadingText = "Loading Fonts... ";
       loadFonts();
+
+      loadingText = "Loading Textures... ";
       loadPhase = Load::textures;
    } else if (loadPhase == Load::textures) {
-      loadingText = "Loading Textures... ";
       loadTextures();
       initPopups();
+
+      loadingText = "Loading Shaders... ";
+      loadPhase = Load::shaders;
+   } else if (loadPhase == Load::shaders) {
+      loadShaders();
+
+      loadingText = "Loading Sounds... ";
       loadPhase = Load::sounds;
    } else if (loadPhase == Load::sounds) {
-      loadingText = "Loading Sounds... ";
       loadSounds();
       loadSavedSounds();
+
+      loadingText = "Loading Music... ";
       loadPhase = Load::music;
    } else if (loadPhase == Load::music) {
-      loadingText = "Loading Music... ";
       loadMusic();
       playSound("load");
+
+      loadingText = "Loading Done!";
       loadPhase = Load::count;
    } else if (loadPhase == Load::count) {
       finalWaitTimer += realDt;
@@ -51,7 +60,7 @@ void LoadingState::fixedUpdate() {
 }
 
 void LoadingState::render() const {
-   std::string finalLoadingText = "Loading Done!";
+   std::string finalLoadingText = loadingText;
    if (loadPhase != Load::count) {
       finalLoadingText = format("{}{}/{}", loadingText, (int)loadPhase, (int)Load::count);
    }
