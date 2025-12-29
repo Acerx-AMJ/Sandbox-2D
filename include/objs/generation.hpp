@@ -4,12 +4,15 @@
 #include "objs/map.hpp"
 #include "PerlinNoise.hpp"
 #include <atomic>
+#include <mutex>
 #include <string>
 
 struct MapGenerator {
    enum class Biome { plains, forest, mountains, desert_oasis, desert, tundra, jungle };
    enum class BiomeWarmth { cold, warm, hot };
 
+   std::mutex &infoTextMutex;
+   std::string &infoText;
    std::string name;
    Map map;
 
@@ -24,7 +27,7 @@ struct MapGenerator {
 
    // Constructors
 
-   MapGenerator(const std::string &name, int sizeX, int sizeY, bool isFlat);
+   MapGenerator(const std::string &name, int sizeX, int sizeY, bool isFlat, std::mutex &infoTextMutex, std::string &infoText);
 
    // Generation functions
 
@@ -47,6 +50,10 @@ struct MapGenerator {
    Biome getBiome(int x);
    float normalizedNoise1D(siv::PerlinNoise &noise, int x, float amplitude);
    float normalizedNoise2D(siv::PerlinNoise &noise, int x, int y, float amplitude);
+
+   // Other functions
+
+   void setInfo(const std::string &text);
 };
 
 #endif

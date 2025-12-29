@@ -36,10 +36,11 @@ static inline const std::array<BiomeData, biomeCount> biomeData {{
 
 // Constructors
 
-MapGenerator::MapGenerator(const std::string &name, int sizeX, int sizeY, bool isFlat)
-   : name(name), isFlat(isFlat) {
+MapGenerator::MapGenerator(const std::string &name, int sizeX, int sizeY, bool isFlat, std::mutex &infoTextMutex, std::string &infoText)
+   : infoTextMutex(infoTextMutex), infoText(infoText), name(name), isFlat(isFlat) {
    map.sizeX = sizeX;
    map.sizeY = sizeY;
+   setInfo("Initializing...");
 }
 
 // Generation functions
@@ -48,6 +49,7 @@ void MapGenerator::generate() {
    // Takes too long, better to put it in a thread!
    map.init();
 
+   setInfo("Seeding Noise...");
    if (!isFlat) {
       biomeTemperatureNoise.reseed(rand());
       biomeMoistureNoise.reseed(rand());
@@ -67,10 +69,14 @@ void MapGenerator::generate() {
 
    const Vector2 spawnLocation = findPlayerSpawnLocation();
    saveWorldData(name, spawnLocation.x, spawnLocation.y, 50.f, map, nullptr, nullptr);
+
+   setInfo("Generating completed!");
    isCompleted = true;
 }
 
 void MapGenerator::generateTerrain() {
+   setInfo("Generating Terrain...");
+
    Biome current = Biome::plains, last = Biome::plains;
    int y = startY * map.sizeY;
    int rockOffset = rockOffsetStart, waterLength = 0;
@@ -131,7 +137,9 @@ void MapGenerator::generateTerrain() {
 }
 
 void MapGenerator::generateWater() {
+   setInfo("Filling Water...");
    int seaY = map.sizeY * seaLevel;
+
    for (int x = 0; x < map.sizeX; ++x) {
       for (int y = seaY; y < map.sizeY && map.isu(x, y, Block::air); ++y) {
          map.setBlock(x, y, (y == seaY && biomeData[(int)getBiome(x)].wamth == BiomeWarmth::cold ? "ice" : "water"));
@@ -140,6 +148,8 @@ void MapGenerator::generateWater() {
 }
 
 void MapGenerator::generateDebri() {
+   setInfo("Generating Debris...");
+
    for (int x = 0; x < map.sizeX; ++x) {
       for (int y = 0; y < map.sizeY; ++y) {
          if (map.isu(x, y, Block::air) || map.isu(x, y, Block::grass) || map.isu(x, y, Block::sand) || map.isu(x, y, Block::snow)) {
@@ -159,6 +169,8 @@ void MapGenerator::generateDebri() {
 }
 
 void MapGenerator::generateTrees() {
+   setInfo("Growing Trees...");
+
    float y = startY * map.sizeY + 1;
    int counter = 0, counterThreshold = 0;
    
@@ -185,6 +197,7 @@ void MapGenerator::generateTrees() {
 // Generation functions for flat worlds
 
 void MapGenerator::generateFlatWorld() {
+   setInfo("Generating Flat Terrain...");
    int y = startY * map.sizeY;
    
    for (int x = 0; x < map.sizeX; ++x) {
@@ -206,6 +219,7 @@ void MapGenerator::generateFlatWorld() {
 // Find a perfect spawn location for the player
 
 Vector2 MapGenerator::findPlayerSpawnLocation() {
+   setInfo("Finding Player Spawn Location...");
    float y = startY * map.sizeY + 1;
    int offset = 0;
 
@@ -274,4 +288,11 @@ float MapGenerator::normalizedNoise1D(siv::PerlinNoise &noise, int x, float ampl
 
 float MapGenerator::normalizedNoise2D(siv::PerlinNoise &noise, int x, int y, float amplitude) {
    return (noise.octave2D(x * amplitude, y * amplitude, 4) + 1.f) / 2.f;
+}
+
+// Other functions
+
+void MapGenerator::setInfo(const std::string &text) {
+   std::lock_guard<std::mutex> lock(infoTextMutex);
+   infoText = text;
 }

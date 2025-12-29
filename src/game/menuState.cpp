@@ -381,7 +381,7 @@ void MenuState::updateLevelRenaming() {
 
 void MenuState::updateGeneratingLevel() {
    if (generatedWorld) {
-      generator = new MapGenerator(worldName.text, defaultMapSizeX, defaultMapSizeY, shouldWorldBeFlat.checked);
+      generator = new MapGenerator(worldName.text, defaultMapSizeX, defaultMapSizeY, shouldWorldBeFlat.checked, generationInfoTextMutex, generationInfoText);
       std::thread thread(&MapGenerator::generate, generator);
       thread.detach();
 
@@ -476,7 +476,7 @@ void MenuState::renderLevelRenaming() const {
 // Render level generation screen
 
 void MenuState::renderGeneratingLevel() const {
-   drawText(getScreenCenter(), (std::string("Generating World '") + worldName.text + "'...").c_str(), 50);
+   drawText(getScreenCenter(), generationInfoText.c_str(), 50);
    drawText(getScreenCenter({0.0f, 100.0f}), generationSplash.c_str(), 40.0f);
 }
 

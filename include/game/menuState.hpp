@@ -6,6 +6,7 @@
 #include "ui/checkbox.hpp"
 #include "ui/input.hpp"
 #include "ui/scrollframe.hpp"
+#include <mutex>
 #include <vector>
 
 // Menu state
@@ -71,9 +72,10 @@ struct MenuState: public State {
 
    std::vector<std::string> favoriteWorlds;
    std::vector<Button> worldButtons;
-   std::string selectedWorld, generationSplash;
+   std::string selectedWorld, generationSplash, generationInfoText;
    Phase phase = Phase::title;
 
+   std::mutex generationInfoTextMutex;
    struct MapGenerator *generator;
    bool generatedWorld = true;
 
