@@ -135,31 +135,21 @@ std::vector<Block>& Map::operator[](size_t index) {
    return blocks[index];
 }
 
-// Shader functions
-
-void Map::setupWaterShader() const {
-   Shader &waterShader = getShader("water");
-
-   int timeLocation      = GetShaderLocation(waterShader, "time");
-   int amplitudeLocation = GetShaderLocation(waterShader, "amplitude");
-   int speedLocation     = GetShaderLocation(waterShader, "speed");
-
-   float time = GetTime();
-   float amplitude = 0.15f;
-   float speed = 2.0f;
-
-   SetShaderValue(waterShader, timeLocation, &time, SHADER_UNIFORM_FLOAT);
-   SetShaderValue(waterShader, amplitudeLocation, &amplitude, SHADER_UNIFORM_FLOAT);
-   SetShaderValue(waterShader, speedLocation, &speed, SHADER_UNIFORM_FLOAT);
-}
-
 // Render functions
 
 void Map::render(const Rectangle &cameraBounds) const {
-   setupWaterShader();
    Shader &waterShader = getShader("water");
-   int isTopLocation = GetShaderLocation(waterShader, "isTop");
-   int isBottomLocation = GetShaderLocation(waterShader, "isBottom");
+
+   int timeLocation = GetShaderLocation(waterShader, "time");
+   float time = GetTime();
+   SetShaderValue(waterShader, timeLocation, &time, SHADER_UNIFORM_FLOAT);
+
+   struct Liquid {
+      const Block *pointer;
+      int x, y;
+   };
+   std::vector<Liquid> liquidTiles;
+   liquidTiles.reserve(64);
 
    for (int y = cameraBounds.y; y <= cameraBounds.height; ++y) {
       for (int x = cameraBounds.x; x <= cameraBounds.width; ++x) {
@@ -190,18 +180,7 @@ void Map::render(const Rectangle &cameraBounds) const {
             if (block.value2 <= minWaterLayers) {
                continue;
             }
-
-            float height = (float)block.value2 / (float)maxWaterLayers;
-            int isTop = (!is(x, y - 1, block.type) && !is(x, y - 1, Block::air));
-            int isBottom = (!is(x, y + 1, block.type));
-
-            SetShaderValue(waterShader, isTopLocation, &isTop, SHADER_UNIFORM_INT);
-            SetShaderValue(waterShader, isBottomLocation, &isBottom, SHADER_UNIFORM_INT);
-
-            BeginShaderMode(waterShader);
-            drawFluidBlock(*block.texture, {(float)x, (float)y + (1 - height), 1, height}, Fade(WHITE, height));
-            EndShaderMode();
-
+            liquidTiles.push_back(Liquid{&block, x, y});
             continue;
          }
 
@@ -215,6 +194,18 @@ void Map::render(const Rectangle &cameraBounds) const {
          x -= 1;
       }
    }
+
+   // Render fluids
+   BeginShaderMode(waterShader);
+   for (const Liquid &block: liquidTiles) {
+      float height = (float)block.pointer->value2 / (float)maxWaterLayers;
+      Color liquidFlags;
+      liquidFlags.r = (!is(block.x, block.y - 1, block.pointer->type) && !is(block.x, block.y - 1, Block::air) ? 255 : 0);
+      liquidFlags.g = (!is(block.x, block.y + 1, block.pointer->type) ? 255 : 0);
+
+      drawFluidBlock(*block.pointer->texture, {(float)block.x, (float)block.y + (1 - height), 1, height}, Fade(liquidFlags, height));
+   }
+   EndShaderMode();
 }
 
 void Map::renderFurniture(const Rectangle &cameraBounds) const {

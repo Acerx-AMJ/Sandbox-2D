@@ -10,7 +10,7 @@ out vec4 finalColor;
 
 void main() {
    vec2 uv = fragTexCoord;
-   uv.x += timeThing * mix(0.04, 0.02, fragTexCoord.y);
+   uv.x += timeThing * -0.25;
 
    vec4 texel = texture(texture0, uv);
    finalColor = texel * fragColor;

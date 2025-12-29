@@ -64,10 +64,6 @@ struct Map {
 
    std::vector<Block>& operator[](size_t index);
 
-   // Shader setup
-
-   void setupWaterShader() const;
-
    // Render map
 
    void render(const Rectangle &cameraBounds) const;
