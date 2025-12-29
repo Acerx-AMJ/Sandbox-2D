@@ -131,7 +131,7 @@ void renderPopups() {
 
    Popup &popup = popups.back();
    drawTexture(getTexture("popup_frame"), getScreenCenter(), popupSize);
-   drawText(getScreenCenter({0.0f, -110.0f}), popup.header.c_str(), 50.0f);
+   drawText(getScreenCenter({0.0f, -125.0f}), popup.header.c_str(), 50.0f);
 
    wrapText(popup.body, popupSize.x - 30.0f, 25.0f, 1.0f);
    drawText(getScreenCenter({0.0f, -40.0f}), popup.body.c_str(), 25.0f);

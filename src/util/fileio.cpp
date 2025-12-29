@@ -2,11 +2,15 @@
 #include "objs/map.hpp"
 #include "objs/player.hpp"
 #include "util/fileio.hpp"
-#include "util/format.hpp"
+#include "util/format.hpp" // IWYU pragma: export
 #include "util/parallax.hpp"
 #include "util/random.hpp"
 #include <fstream>
 #include <vector>
+
+// Constants
+
+constexpr int fileVersion = 1;
 
 // File functions
 
@@ -41,199 +45,173 @@ void saveLinesToFile(const std::string &path, const std::vector<std::string> &li
 // World saving functions
 // Save and load functions must follow the same data arrangement
 
+static_assert(std::is_trivially_copyable_v<Item>);
+static_assert(std::is_trivially_copyable_v<FurniturePiece>);
+static_assert(std::is_trivially_copyable_v<DroppedItem>);
+
 void saveWorldData(const std::string &name, float playerX, float playerY, float zoom, const Map &map, const Inventory *inventory, const std::vector<DroppedItem> *droppedItems) {
-   std::ofstream file (format("data/worlds/{}.txt", name));
-   assert(file.is_open(), "Failed to save world 'data/worlds/{}.txt'.", name);
+   std::ofstream file ("data/worlds/" + name + ".bin", std::ios::binary);
+   assert(file.is_open(), "Failed to save world 'data/worlds/{}.bin'.", name);
 
-   file << playerX << ' ';
-   file << playerY << ' ';
-   file << map.sizeX << ' ';
-   file << map.sizeY << ' ';
-   file << zoom << ' ';
-   file << (!inventory ? 0 : getLastTimeOfDay()) << ' ';
-   file << (!inventory ? 0 : getLastMoonPhase()) << ' ';
+   // Write basic data
+   file.write(reinterpret_cast<const char*>(&fileVersion), sizeof(fileVersion));
+   file.write(reinterpret_cast<const char*>(&playerX), sizeof(playerX));
+   file.write(reinterpret_cast<const char*>(&playerY), sizeof(playerY));
+   file.write(reinterpret_cast<const char*>(&map.sizeX), sizeof(map.sizeX));
+   file.write(reinterpret_cast<const char*>(&map.sizeY), sizeof(map.sizeY));
+   file.write(reinterpret_cast<const char*>(&zoom), sizeof(zoom));
 
+   int timeOfDay = (inventory ? getLastTimeOfDay() : 0);
+   int moonPhase = (inventory ? getLastMoonPhase() : 0);
+   int selectedX = (inventory ? inventory->selectedX : 0);
+   int selectedY = (inventory ? inventory->selectedY : 0);
+
+   file.write(reinterpret_cast<const char*>(&timeOfDay), sizeof(timeOfDay));
+   file.write(reinterpret_cast<const char*>(&moonPhase), sizeof(moonPhase));
+   file.write(reinterpret_cast<const char*>(&selectedX), sizeof(selectedX));
+   file.write(reinterpret_cast<const char*>(&selectedY), sizeof(selectedY));
+
+   // Write inventory
    if (inventory) {
-      file << inventory->selectedX << ' ';
-      file << inventory->selectedY << '\n';
+      file.write(reinterpret_cast<const char*>(inventory->items[0]), inventoryHeight * inventoryWidth * sizeof(Item));
    } else {
-      file << 0 << ' ' << 0 << '\n';
-   }
-
-   for (int y = 0; y < inventoryHeight; ++y) {
-      for (int x = 0; x < inventoryWidth; ++x) {
-         Item item;
-         if (inventory) {
-            item = inventory->items[y][x];
-         } else {
-            item = Item{};
-         }
-
-         file << (int)item.type << ' ';
-         file << (int)item.id << ' ';
-         file << item.isFurniture << ' ';
-         file << item.favorite << ' ';
-         file << item.count << ' ';
+      Item item;
+      for (int i = 0; i < inventoryHeight * inventoryWidth; ++i) {
+         file.write(reinterpret_cast<const char*>(&item), sizeof(Item));
       }
-      file << '\n';
    }
 
+   // Write the map
    for (const std::vector<Block> &row: map.blocks) {
       for (const Block &tile: row) {
-         file << (int)tile.id << ' ';
-         file << (int)tile.value << ' ';
-         file << (int)tile.value2 << ' ';
+         file.write(reinterpret_cast<const char*>(&tile.id), sizeof(tile.id));
+         file.write(reinterpret_cast<const char*>(&tile.value2), sizeof(tile.value2));
       }
-      file << '\n';
    }
 
    for (const std::vector<Block> &row: map.walls) {
       for (const Block &tile: row) {
-         file << (int)tile.id << ' ';
+         file.write(reinterpret_cast<const char*>(&tile.id), sizeof(tile.id));
       }
-      file << '\n';
    }
 
-   file << map.furniture.size() << '\n';
+   // Write the furniture
+   size_t furnitureCount = map.furniture.size();
+   file.write(reinterpret_cast<const char*>(&furnitureCount), sizeof(furnitureCount));
+
    for (const Furniture &obj: map.furniture) {
-      file << obj.posX << ' ';
-      file << obj.posY << ' ';
-      file << obj.sizeX << ' ';
-      file << obj.sizeY << ' ';
-      file << obj.type << ' ';
-      file << (int)obj.value << ' ';
-      file << (int)obj.value2 << ' ';
-      file << (int)obj.texId << ' ';
+      file.write(reinterpret_cast<const char*>(&obj.posX), sizeof(obj.posX));
+      file.write(reinterpret_cast<const char*>(&obj.posY), sizeof(obj.posY));
+      file.write(reinterpret_cast<const char*>(&obj.sizeX), sizeof(obj.sizeX));
+      file.write(reinterpret_cast<const char*>(&obj.sizeY), sizeof(obj.sizeY));
+      file.write(reinterpret_cast<const char*>(&obj.type), sizeof(obj.type));
+      file.write(reinterpret_cast<const char*>(&obj.value), sizeof(obj.value));
+      file.write(reinterpret_cast<const char*>(&obj.value2), sizeof(obj.value2));
+      file.write(reinterpret_cast<const char*>(&obj.texId), sizeof(obj.texId));
 
       for (const std::vector<FurniturePiece> &row: obj.pieces) {
-         for (const FurniturePiece &piece: row) {
-            file << piece.nil << ' ';
-            file << (int)piece.tx << ' ';
-            file << (int)piece.ty << ' ';
-         }
+         file.write(reinterpret_cast<const char*>(row.data()), row.size() * sizeof(FurniturePiece));
       }
-      file << '\n';
    }
 
-   if (!droppedItems) {
-      file << 0 << '\n';
-      return;
-   }
-
-   file << droppedItems->size() << '\n';
-   for (const DroppedItem &item: *droppedItems) {
-      file << (int)item.type << ' ';
-      file << (int)item.id << ' ';
-      file << item.isFurniture << ' ';
-      file << item.count << ' ';
-      file << item.tileX << ' ';
-      file << item.tileY << ' ';
-      file << item.lifetime << '\n';
+   // Write dropped items
+   size_t droppedItemCount = (droppedItems ? droppedItems->size() : 0);
+   file.write(reinterpret_cast<const char*>(&droppedItemCount), sizeof(droppedItemCount));
+   if (droppedItems) {
+      file.write(reinterpret_cast<const char*>(droppedItems->data()), droppedItems->size() * sizeof(DroppedItem));
    }
 }
 
 // World loading functions
 
 void loadWorldData(const std::string &name, Player &player, float &zoom, Map &map, Inventory &inventory, std::vector<DroppedItem> &droppedItems) {
-   std::ifstream file (format("data/worlds/{}.txt", name));
-   assert(file.is_open(), "Failed to load world 'data/worlds/{}.txt'.", name);
+   std::ifstream file ("data/worlds/" + name + ".bin", std::ios::binary);
+   assert(file.is_open(), "Failed to load world 'data/worlds/{}.bin'.", name);
 
-   file >> player.position.x;
-   file >> player.position.y;
-   file >> map.sizeX;
-   file >> map.sizeY;
-   file >> zoom;
-   file >> getTimeOfDay();
-   file >> getMoonPhase();
-   file >> inventory.selectedX;
-   file >> inventory.selectedY;
+   // Read basic data
+   int versionOfFile = 0;
+   file.read(reinterpret_cast<char*>(&versionOfFile), sizeof(versionOfFile));
+   file.read(reinterpret_cast<char*>(&player.position.x), sizeof(player.position.x));
+   file.read(reinterpret_cast<char*>(&player.position.y), sizeof(player.position.y));
+   file.read(reinterpret_cast<char*>(&map.sizeX), sizeof(map.sizeX));
+   file.read(reinterpret_cast<char*>(&map.sizeY), sizeof(map.sizeY));
+   file.read(reinterpret_cast<char*>(&zoom), sizeof(zoom));
+
+   int timeofDay = 0;
+   int moonPhase = 0;
+   file.read(reinterpret_cast<char*>(&timeofDay), sizeof(timeofDay));
+   file.read(reinterpret_cast<char*>(&moonPhase), sizeof(moonPhase));
+   getTimeOfDay() = timeofDay;
+   getMoonPhase() = moonPhase;
+
+   file.read(reinterpret_cast<char*>(&inventory.selectedX), sizeof(inventory.selectedX));
+   file.read(reinterpret_cast<char*>(&inventory.selectedY), sizeof(inventory.selectedY));
    map.init();
 
-   for (int y = 0; y < inventoryHeight; ++y) {
-      for (int x = 0; x < inventoryWidth; ++x) {
-         Item &item = inventory.items[y][x];
+   // Read inventory
+   file.read(reinterpret_cast<char*>(&inventory.items[0]), inventoryHeight * inventoryWidth * sizeof(Item));
 
-         int type = 0;
-         file >> type;
-         item.type = (Item::Type)type;
-
-         int newId = 0;
-         file >> newId;
-         item.id = newId;
-
-         file >> item.isFurniture;
-         file >> item.favorite;
-         file >> item.count;
-      }
-   }
-
+   // Read map
    for (int y = 0; y < map.sizeY; ++y) {
       for (int x = 0; x < map.sizeX; ++x) {
-         int id = 0, value = 0, value2 = 0;
-         file >> id;
-         file >> value;
-         file >> value2;
-
+         unsigned char id = 0;
+         unsigned char value2 = 0;
+         file.read(reinterpret_cast<char*>(&id), sizeof(id));
+         file.read(reinterpret_cast<char*>(&value2), sizeof(value2));
          map.setBlock(x, y, (unsigned char)id);
-         map[y][x].value = value;
          map[y][x].value2 = value2;
       }
    }
 
    for (int y = 0; y < map.sizeY; ++y) {
       for (int x = 0; x < map.sizeX; ++x) {
-         int id = 0;
-         file >> id;
+         unsigned char id = 0;
+         file.read(reinterpret_cast<char*>(&id), sizeof(id));
          map.setBlock(x, y, (unsigned char)id, true);
       }
    }
 
-   // The beast behind loading furniture
-   int furnitureCount = 0;
-   file >> furnitureCount;
+   // Read furniture
+   size_t furnitureCount = 0;
+   file.read(reinterpret_cast<char*>(&furnitureCount), sizeof(furnitureCount));
 
-   for (int i = 0; i < furnitureCount; ++i) {
-      int posX = 0, posY = 0, sizeX = 0, sizeY = 0, type = 0, value = 0, value2 = 0, texId = 0;
-      file >> posX;
-      file >> posY;
-      file >> sizeX;
-      file >> sizeY;
-      file >> type;
-      file >> value;
-      file >> value2;
-      file >> texId;
+   for (size_t i = 0; i < furnitureCount; ++i) {
+      Furniture obj;
+      file.read(reinterpret_cast<char*>(&obj.posX), sizeof(obj.posX));
+      file.read(reinterpret_cast<char*>(&obj.posY), sizeof(obj.posY));
+      file.read(reinterpret_cast<char*>(&obj.sizeX), sizeof(obj.sizeX));
+      file.read(reinterpret_cast<char*>(&obj.sizeY), sizeof(obj.sizeY));
+      file.read(reinterpret_cast<char*>(&obj.type), sizeof(obj.type));
+      file.read(reinterpret_cast<char*>(&obj.value), sizeof(obj.value));
+      file.read(reinterpret_cast<char*>(&obj.value2), sizeof(obj.value2));
+      file.read(reinterpret_cast<char*>(&obj.texId), sizeof(obj.texId));
 
-      Furniture furniture ((Furniture::Type)type, texId, value, value2, posX, posY, sizeX, sizeY);
-      for (int y = 0; y < sizeY; ++y) {
-         for (int x = 0; x < sizeX; ++x) {
-            FurniturePiece &piece = furniture.pieces[y][x];
-
-            int nil = 0, tx = 0, ty = 0;
-            file >> nil;
-            file >> tx;
-            file >> ty;
-            piece = {(unsigned char)tx, (unsigned char)ty, (bool)nil};
-         }
+      obj.pieces.resize(obj.sizeY, std::vector<FurniturePiece>(obj.sizeX));
+      for (std::vector<FurniturePiece> &row: obj.pieces) {
+         file.read(reinterpret_cast<char*>(row.data()), row.size() * sizeof(FurniturePiece));
       }
-      map.addFurniture(furniture);
+      map.addFurniture(obj);
    }
 
-   int droppedItemCount = 0;
-   file >> droppedItemCount;
+   size_t droppedItemCount = 0;
+   file.read(reinterpret_cast<char*>(&droppedItemCount), sizeof(droppedItemCount));
+   droppedItems.resize(droppedItemCount);
 
-   for (int i = 0; i < droppedItemCount; ++i) {
-      int type = 0, id = 0, isFurniture = 0, count = 0, tileX = 0, tileY = 0;
-      float lifetime = 0.0f;
-      file >> type;
-      file >> id;
-      file >> isFurniture;
-      file >> count;
-      file >> tileX;
-      file >> tileY;
-      file >> lifetime;
-
-      DroppedItem item {(Item::Type)type, (unsigned char)id, (bool)isFurniture, count, tileX, tileY, lifetime};
-      droppedItems.push_back(item);
+   if (droppedItemCount > 0) {
+      file.read(reinterpret_cast<char*>(droppedItems.data()), droppedItemCount * sizeof(DroppedItem));
    }
    player.init();
+}
+
+int getFileVersion(const std::string &name) {
+   std::ifstream file ("data/worlds/" + name + ".bin", std::ios::binary);
+   assert(file.is_open(), "Failed to load world 'data/worlds/{}.bin'.", name);
+
+   int versionOfFile = 0;
+   file.read(reinterpret_cast<char*>(&versionOfFile), sizeof(versionOfFile));
+   return versionOfFile;
+}
+
+int getLatestVersion() {
+   return fileVersion;
 }

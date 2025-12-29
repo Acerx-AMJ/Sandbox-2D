@@ -18,4 +18,7 @@ void saveLinesToFile(const std::string &path, const std::vector<std::string> &li
 void saveWorldData(const std::string &name, float playerX, float playerY, float zoom, const Map &map, const Inventory *inventory, const std::vector<DroppedItem> *droppedItems);
 void loadWorldData(const std::string &name, Player &player, float &zoom, Map &map, Inventory &inventory, std::vector<DroppedItem> &droppedItems);
 
+int getFileVersion(const std::string &name);
+int getLatestVersion();
+
 #endif

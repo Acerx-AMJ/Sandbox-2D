@@ -178,6 +178,8 @@ void MenuState::updateLevelSelection() {
    }
 
    const float offsetY = worldFrame.getOffsetY();
+   bool wantsToPlay = false;
+
    for (Button &button: worldButtons) {
       if (!worldFrame.inFrame(button.normalizeRect())) {
          continue;
@@ -193,9 +195,8 @@ void MenuState::updateLevelSelection() {
       }
 
       if (selectedButton == &button) {
-         selectedWorld = button.text;
-         fadingOut = playing = true;
-         return;
+         wantsToPlay = true;
+         break;
       }
 
       selectedButton = &button;
@@ -250,7 +251,7 @@ void MenuState::updateLevelSelection() {
    }
 
    if (deleteClicked && isPopupConfirmed()) {
-      std::string fileName = format("data/worlds/{}.txt", selectedButton->text);
+      std::string fileName = format("data/worlds/{}.bin", selectedButton->text);
 
       if (!std::filesystem::remove_all(fileName)) {
          insertPopup("Notice", format("World '{}' could not be deleted. File '{}' was{}found. If file was not found, check the 'data/worlds/' folder, if it was, check your permissions.", selectedButton->text, fileName, (std::filesystem::exists(selectedButton->text) ? " " : " not ")), false);
@@ -287,11 +288,28 @@ void MenuState::updateLevelSelection() {
       }
    }
 
-   if (playWorldButton.clicked || (anySelected && handleKeyPressWithSound(KEY_ENTER))) {
+   if (wantsToPlay || playWorldButton.clicked || (anySelected && handleKeyPressWithSound(KEY_ENTER))) {
       selectedWorld = selectedButton->text;
+
+      if (getLatestVersion() != getFileVersion(selectedWorld)) {
+         invalidVersionClicked = true;
+         anySelected = false;
+         selectedButton->texture = &getTexture("button_long");
+         selectedButton = nullptr;
+
+         insertPopup("Confirmation Request", format("World '{}' uses an outdated file version. The latest version is {}, whereas its version is {}. Are you sure that you want to continue? Your world might get corrupted and become unrecoverable!", selectedWorld, getLatestVersion(), getFileVersion(selectedWorld)), true);
+         return;
+      }
+
       fadingOut = playing = true;
       return;
    }
+
+   if (invalidVersionClicked && isPopupConfirmed()) {
+      fadingOut = playing = true; // User confirmed to corrupt their world
+      return;
+   }
+   invalidVersionClicked = false;
 
    if (selectedButton && isMousePressedOutsideUI(MOUSE_BUTTON_LEFT)) {
       selectedButton->texture = &getTexture("button_long");
@@ -363,13 +381,13 @@ void MenuState::updateLevelRenaming() {
          return;
       }
 
-      std::string newName = format("data/worlds/{}.txt", renameInput.text);
+      std::string newName = format("data/worlds/{}.bin", renameInput.text);
       if (std::filesystem::exists(newName) && std::filesystem::is_regular_file(newName)) {
          insertPopup("Invalid World Name", format("World with the name '{}' already exists.", renameInput.text), false);
          return;
       }
 
-      std::filesystem::rename(format("data/worlds/{}.txt", selectedWorld), newName);
+      std::filesystem::rename(format("data/worlds/{}.bin", selectedWorld), newName);
 
       if (wasFavoriteBeforeRenaming) {
          favoriteWorlds.erase(std::remove(favoriteWorlds.begin(), favoriteWorlds.end(), renameInput.text), favoriteWorlds.end());

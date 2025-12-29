@@ -83,6 +83,7 @@ struct MenuState: public State {
 
    bool anySelected = false;
    bool deleteClicked = false;
+   bool invalidVersionClicked = false;
    bool wasFavoriteBeforeRenaming = false;
    bool playing = false;
 

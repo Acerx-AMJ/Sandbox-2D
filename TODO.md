@@ -48,8 +48,4 @@
 
 ### Other
 - Make physics update in a bigger area than the camera bounds
-
-### World Generation Screen
-World generation is unfixable, so I'll only be fixing the generation screen.
-
-- Make it look like Terraria with a cool bar and info text.
+- World generation.
