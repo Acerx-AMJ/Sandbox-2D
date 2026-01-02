@@ -6,32 +6,37 @@
 #include "util/parallax.hpp"
 #include "util/render.hpp"
 #include <array>
+#include <cmath>
 #include <unordered_map>
 
 // Constants
 
-constexpr unsigned char blockCount = 20;
+constexpr unsigned char blockCount = 21;
 constexpr Color orangeLightColor = {255, 125, 0, 255};
+constexpr Color yellowLightColor = {255, 255, 0, 255};
 
 static inline const std::unordered_map<std::string, unsigned char> blockIds {
    {"air", 0}, {"grass", 1}, {"dirt", 2}, {"clay", 3}, {"stone", 4},
    {"sand", 5}, {"sandstone", 6}, {"water", 7}, {"bricks", 8}, {"glass", 9},
    {"planks", 10}, {"stone_bricks", 11}, {"tiles", 12}, {"obsidian", 13}, {"lava", 14},
-   {"platform", 15}, {"snow", 16}, {"ice", 17}, {"mud", 18}, {"jungle_grass", 19}
+   {"platform", 15}, {"snow", 16}, {"ice", 17}, {"mud", 18}, {"jungle_grass", 19},
+   {"lamp", 20},
 };
 
 static inline const std::array<const char*, blockCount> blockNames {
    "air", "grass", "dirt", "clay", "stone",
    "sand", "sandstone", "water", "bricks", "glass",
    "planks", "stone_bricks", "tiles", "obsidian", "lava",
-   "platform", "snow", "ice", "mud", "jungle_grass"
+   "platform", "snow", "ice", "mud", "jungle_grass",
+   "lamp",
 };
 
 static inline const std::array<Block::Type, blockCount> blockTypes {{
    Block::air, Block::grass, Block::dirt, Block::solid, Block::solid,
    Block::sand, Block::solid, Block::water, Block::solid, Block::transparent,
    Block::solid, Block::solid, Block::solid, Block::solid, Block::lava,
-   Block::platform, Block::snow, Block::ice, Block::dirt, Block::grass
+   Block::platform, Block::snow, Block::ice, Block::dirt, Block::grass,
+   Block::lamp,
 }};
 
 // Block functions
@@ -178,6 +183,10 @@ std::vector<Block>& Map::operator[](size_t index) {
 
 // Render functions
 
+void Map::renderLight(const Camera2D &camera, Texture2D &texture, int x, int y, const Vector2 &size, const Color &color) const {
+   drawTexture(texture, GetWorldToScreen2D({x + 0.5f, y + 0.5f}, camera), size, 0, color);
+}
+
 void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &player, float accumulator, const Rectangle &cameraBounds, const Camera2D &camera) const {
    // Render background walls
    for (int y = cameraBounds.y; y <= cameraBounds.height; ++y) {
@@ -274,21 +283,41 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
 
    Color airLightColor   = getLightBasedOnTime();
    Color waterLightColor = Fade(airLightColor, 0.1f);
-   Vector2 lightSize = {7.0f * camera.zoom, 7.0f * camera.zoom};
+
+   // const function hack
+   static float counter = 0.0f;
+   counter += GetFrameTime();
+
+   float sizeOffset       = std::sin(counter * 1.5f) * camera.zoom;
+   Vector2 lightLargeSize = {14.0f * camera.zoom, 14.0f * camera.zoom};
+   Vector2 lightSize      = {7.0f * camera.zoom, 7.0f * camera.zoom};
+   Vector2 liquidSize     = {lightSize.x + sizeOffset, lightSize.y + sizeOffset};
+
+   Texture2D &lightLargeTexture = getTexture("lightsource_4x");
+   Texture2D &lightTexture      = getTexture("lightsource_2x");
 
    for (int y = lightBoundsMinY; y <= lightBoundsMaxY; ++y) {
       for (int x = lightBoundsMinX; x <= lightBoundsMaxX; ++x) {
-         Color color = {0, 0, 0, 0};
-         if (blocks[y][x].type == Block::lava) {
-            color = orangeLightColor;
-         }
-
-         if (isTransparent(x, y) && (walls[y][x].type == Block::transparent || walls[y][x].type == Block::air)) {
-            color = (blocks[y][x].type == Block::water ? waterLightColor : airLightColor);
-         }
-
-         if (color.a != 0) {
-            drawTexture(getTexture("lightsource"), GetWorldToScreen2D({x + 0.5f, y + 0.5f}, camera), lightSize, 0, color);
+         switch (blocks[y][x].type) {
+         case Block::lava:
+            renderLight(camera, lightTexture, x, y, liquidSize, orangeLightColor);
+            break;
+         case Block::lamp:
+            renderLight(camera, lightLargeTexture, x, y, lightLargeSize, yellowLightColor);
+            break;
+         case Block::water:
+            if (walls[y][x].type == Block::transparent || walls[y][x].type == Block::air) {
+               renderLight(camera, lightTexture, x, y, lightSize, waterLightColor);
+            }
+            break;
+         case Block::air:
+         case Block::transparent:
+         case Block::platform:
+            if (walls[y][x].type == Block::transparent || walls[y][x].type == Block::air) {
+               renderLight(camera, lightTexture, x, y, lightSize, airLightColor);
+            }
+            break;
+         default: break;
          }
       }
    }

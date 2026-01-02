@@ -102,10 +102,10 @@ void loadShaders() {
 
       if (file.path().extension().string() == ".fs") {
          std::filesystem::path vertexPath = format("assets/shaders/{}.vs", filename);
-         loadShader(filename, (std::filesystem::exists(vertexPath) ? vertexPath : ""), file.path().string());
+         loadShader(filename, (std::filesystem::exists(vertexPath) ? vertexPath.string() : std::string()), file.path().string());
       } else if (file.path().extension().string() == ".vs") {
          std::filesystem::path fragmentPath = format("assets/shaders/{}.fs", filename);
-         loadShader(filename, file.path().string(), (std::filesystem::exists(fragmentPath) ? fragmentPath : ""));
+         loadShader(filename, file.path().string(), (std::filesystem::exists(fragmentPath) ? fragmentPath.string() : std::string()));
       }
    }
 }
