@@ -16,7 +16,7 @@ constexpr inline unsigned char playerThreshold    = maxWaterLayers / 2;
 // Block
 
 struct Block {
-   enum Type: char { air, grass, dirt, solid, platform, transparent, sand, snow, ice, water, lava, lamp };
+   enum Type: char { air, grass, dirt, solid, platform, transparent, sand, snow, ice, water, lava, lamp, torch };
 
    Texture *texture = nullptr;
    Type type = Type::air;
@@ -76,7 +76,7 @@ struct Map {
 
    // Render map
 
-   void renderLight(const Camera2D &camera, Texture2D &texture, int x, int y, const Vector2 &size, const Color &color) const;
+   void renderLight(const Camera2D &camera, Texture2D &texture, float x, float y, const Vector2 &size, const Color &color) const;
    void render(const std::vector<struct DroppedItem> &droppedItems, const struct Player &player, float accumulator, const Rectangle &cameraBounds, const Camera2D &camera) const;
 };
 

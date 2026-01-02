@@ -29,10 +29,6 @@
 - Implement built-in guide in the crafting screen.
 - Make crafting use nearby chests.
 
-### Lighting
-- Add solid light blocks.
-- Add torches.
-
 ### Entities
 - Add entities.
 - Add different entity behaviour.

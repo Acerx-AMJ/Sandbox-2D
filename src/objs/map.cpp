@@ -11,16 +11,14 @@
 
 // Constants
 
-constexpr unsigned char blockCount = 21;
-constexpr Color orangeLightColor = {255, 125, 0, 255};
-constexpr Color yellowLightColor = {255, 255, 0, 255};
+constexpr unsigned char blockCount = 22;
 
 static inline const std::unordered_map<std::string, unsigned char> blockIds {
    {"air", 0}, {"grass", 1}, {"dirt", 2}, {"clay", 3}, {"stone", 4},
    {"sand", 5}, {"sandstone", 6}, {"water", 7}, {"bricks", 8}, {"glass", 9},
    {"planks", 10}, {"stone_bricks", 11}, {"tiles", 12}, {"obsidian", 13}, {"lava", 14},
    {"platform", 15}, {"snow", 16}, {"ice", 17}, {"mud", 18}, {"jungle_grass", 19},
-   {"lamp", 20},
+   {"lamp", 20}, {"torch", 21}
 };
 
 static inline const std::array<const char*, blockCount> blockNames {
@@ -28,7 +26,7 @@ static inline const std::array<const char*, blockCount> blockNames {
    "sand", "sandstone", "water", "bricks", "glass",
    "planks", "stone_bricks", "tiles", "obsidian", "lava",
    "platform", "snow", "ice", "mud", "jungle_grass",
-   "lamp",
+   "lamp", "torch"
 };
 
 static inline const std::array<Block::Type, blockCount> blockTypes {{
@@ -36,7 +34,7 @@ static inline const std::array<Block::Type, blockCount> blockTypes {{
    Block::sand, Block::solid, Block::water, Block::solid, Block::transparent,
    Block::solid, Block::solid, Block::solid, Block::solid, Block::lava,
    Block::platform, Block::snow, Block::ice, Block::dirt, Block::grass,
-   Block::lamp,
+   Block::lamp, Block::torch
 }};
 
 // Block functions
@@ -174,7 +172,7 @@ bool Map::empty(int x, int y) const {
 
 bool Map::isTransparent(int x, int y) const {
    Block::Type type = blocks[y][x].type;
-   return type == Block::air || type == Block::water || type == Block::transparent || type == Block::platform;
+   return type == Block::air || type == Block::water || type == Block::transparent || type == Block::platform || type == Block::torch;
 }
 
 std::vector<Block>& Map::operator[](size_t index) {
@@ -183,7 +181,7 @@ std::vector<Block>& Map::operator[](size_t index) {
 
 // Render functions
 
-void Map::renderLight(const Camera2D &camera, Texture2D &texture, int x, int y, const Vector2 &size, const Color &color) const {
+void Map::renderLight(const Camera2D &camera, Texture2D &texture, float x, float y, const Vector2 &size, const Color &color) const {
    drawTexture(texture, GetWorldToScreen2D({x + 0.5f, y + 0.5f}, camera), size, 0, color);
 }
 
@@ -211,6 +209,22 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
       obj.render(cameraBounds);
    }
 
+   // Render furniture-like blocks before the player
+   for (int y = cameraBounds.y; y <= cameraBounds.height; ++y) {
+      for (int x = cameraBounds.x; x <= cameraBounds.width; ++x) {
+         const Block &block = blocks[y][x];
+         if (block.type == Block::platform) {
+            DrawTexturePro(*block.texture, {0, 0, (float)block.texture->width, (float)block.texture->height}, {(float)x, (float)y, 1, 1}, {0, 0}, 0, WHITE);
+         } else if (block.type == Block::torch) {
+            constexpr static float torchLightOffsetsY[] = {-1.0f, -1.0f * (5.0f / 8.0f), -0.75f, -0.75f, -1.0f * (5.0f / 8.0f)};
+
+            float textureSize = block.texture->height / 2.0f;
+            DrawTexturePro(*block.texture, {textureSize * block.value2, 0, textureSize, textureSize}, {(float)x, (float)y, 1, 1}, {0, 0}, 0, WHITE);
+            DrawTexturePro(*block.texture, {textureSize * block.value, textureSize, textureSize, textureSize}, {(float)x, (float)y + torchLightOffsetsY[block.value2], 1, 1}, {0, 0}, 0, WHITE);
+         }
+      }
+   }
+
    // Render the player
    player.render(accumulator);
 
@@ -235,7 +249,7 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
    for (int y = cameraBounds.y; y <= cameraBounds.height; ++y) {
       for (int x = cameraBounds.x; x <= cameraBounds.width; ++x) {
          const Block &block = blocks[y][x];
-         if (block.type == Block::air) {
+         if (block.type == Block::air || block.type == Block::platform || block.type == Block::torch) {
             continue;
          }
 
@@ -288,22 +302,38 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
    static float counter = 0.0f;
    counter += GetFrameTime();
 
-   float sizeOffset       = std::sin(counter * 1.5f) * camera.zoom;
-   Vector2 lightLargeSize = {14.0f * camera.zoom, 14.0f * camera.zoom};
+   float sizeOffset     = std::sin(counter * 1.5f) * camera.zoom * 0.8f;
+   float positionOffset = std::cos(counter * 0.8f) * camera.zoom * 0.015f;
+
    Vector2 lightSize      = {7.0f * camera.zoom, 7.0f * camera.zoom};
+   Vector2 lightLargeSize = {lightSize.x + lightSize.x, lightSize.y + lightSize.y};
+   Vector2 lightHugeSize  = {lightLargeSize.x + lightSize.x, lightLargeSize.y + lightSize.y};
    Vector2 liquidSize     = {lightSize.x + sizeOffset, lightSize.y + sizeOffset};
 
+   Texture2D &lightHugeTexture  = getTexture("lightsource_6x");
    Texture2D &lightLargeTexture = getTexture("lightsource_4x");
    Texture2D &lightTexture      = getTexture("lightsource_2x");
 
    for (int y = lightBoundsMinY; y <= lightBoundsMaxY; ++y) {
       for (int x = lightBoundsMinX; x <= lightBoundsMaxX; ++x) {
+         if (isTransparent(x, y)) {
+            switch (walls[y][x].type) {
+            case Block::lamp:
+               renderLight(camera, lightLargeTexture, x, y, lightLargeSize, {255, 255, 0, 255});
+               break;
+            default: break;
+            }
+         }
+
          switch (blocks[y][x].type) {
          case Block::lava:
-            renderLight(camera, lightTexture, x, y, liquidSize, orangeLightColor);
+            renderLight(camera, lightTexture, x + positionOffset, y + positionOffset, liquidSize, {255, 125, 0, 255});
             break;
          case Block::lamp:
-            renderLight(camera, lightLargeTexture, x, y, lightLargeSize, yellowLightColor);
+            renderLight(camera, lightLargeTexture, x, y, lightLargeSize, {255, 255, 0, 255});
+            break;
+         case Block::torch:
+            renderLight(camera, lightHugeTexture, x + positionOffset, y + positionOffset, lightHugeSize, {255, 200, 160, 255}); // Light orange
             break;
          case Block::water:
             if (walls[y][x].type == Block::transparent || walls[y][x].type == Block::air) {

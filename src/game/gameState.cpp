@@ -8,7 +8,6 @@
 #include "util/parallax.hpp"
 #include "util/position.hpp"
 #include "util/random.hpp"
-#include "util/render.hpp"
 #include <raymath.h>
 #include <algorithm>
 #include <cmath>
@@ -102,6 +101,7 @@ void GameState::fixedUpdate() {
          case Block::sand:  updateSandPhysics(x, y);  break;
          case Block::grass: updateGrassPhysics(x, y); break;
          case Block::dirt:  updateDirtPhysics(x, y);  break;
+         case Block::torch: updateTorchPhysics(x, y); break;
          default: break;
          }
       }
@@ -160,16 +160,16 @@ void GameState::updateControls() {
 // Temporary way to switch, delete and place blocks. blockMap blocks must be in the same order as
 // the blockIds map in objs/block.cpp. Everything between these multi-comments is temporary.
 static int index = 0;
-static int size = 22;
+static int size = 23;
 static const char *blockMap[] {
    "grass", "dirt", "clay", "stone", "sand", "sandstone", "water", "bricks", "glass", "planks", "stone_bricks", "tiles", "obsidian",
-   "lava", "platform", "snow", "ice", "mud", "jungle_grass", "lamp",
+   "lava", "platform", "snow", "ice", "mud", "jungle_grass", "lamp", "torch",
    "sapling", "cactus_seed"
 };
 static bool drawWall = false;
 static bool canDraw = false;
 static Furniture obj;
-inline Furniture::Type getFurnitureType() { return (index == 20 ? Furniture::sapling : (index == 21 ? Furniture::cactus_seed : Furniture::none)); }
+inline Furniture::Type getFurnitureType() { return (index == 21 ? Furniture::sapling : (index == 22 ? Furniture::cactus_seed : Furniture::none)); }
 /************************************/
 
 void GameState::updatePhysics() {
@@ -265,6 +265,10 @@ void GameState::updateFluid(int x, int y) {
    }
 
    // Handle water going down
+   if (map.is(x, y + 1, Block::torch)) {
+      map.deleteBlock(x, y + 1);
+   }
+
    if (map.is(x, y + 1, Block::air)) {
       map.moveBlock(x, y, x, y + 1);
    } else if (map.is(x, y + 1, block.type)) {
@@ -272,6 +276,10 @@ void GameState::updateFluid(int x, int y) {
    }
 
    // Handle water going left. If first if is true, then it will automatically go over the second.
+   if (map.is(x - 1, y, Block::torch)) {
+      map.deleteBlock(x - 1, y);
+   }
+
    if (map.is(x - 1, y, Block::air)) {
       map.setBlock(x - 1, y, block.id);
       map[y][x - 1].value2 = 0;
@@ -282,6 +290,10 @@ void GameState::updateFluid(int x, int y) {
    }
 
    // Handle water going right, same as with the left side
+   if (map.is(x + 1, y, Block::torch)) {
+      map.deleteBlock(x + 1, y);
+   }
+   
    if (map.is(x + 1, y, Block::air)) {
       map.setBlock(x + 1, y, block.id);
       map[y][x + 1].value2 = 0;
@@ -348,7 +360,7 @@ void GameState::updateSandPhysics(int x, int y) {
 }
 
 void GameState::updateGrassPhysics(int x, int y) {
-   if (map.is(x, y - 1, Block::air) || map.is(x, y - 1, Block::water) || map.is(x, y - 1, Block::platform)) {
+   if (map.is(x, y - 1, Block::air) || map.is(x, y - 1, Block::water) || map.is(x, y - 1, Block::platform) || map.is(x, y - 1, Block::torch)) {
       return;
    }
 
@@ -366,7 +378,7 @@ void GameState::updateGrassPhysics(int x, int y) {
 }
 
 void GameState::updateDirtPhysics(int x, int y) {
-   if (!map.is(x, y - 1, Block::air) && !map.is(x, y - 1, Block::water) && !map.is(x, y - 1, Block::platform)) {
+   if (!map.is(x, y - 1, Block::air) && !map.is(x, y - 1, Block::water) && !map.is(x, y - 1, Block::platform) && !map.is(x, y - 1, Block::torch)) {
       return;
    }
 
@@ -380,6 +392,32 @@ void GameState::updateDirtPhysics(int x, int y) {
       block.value = 0;
       block.value2 = 0;
       map.setBlock(x, y, (block.id == Block::getId("dirt") ? "grass" : "jungle_grass"));
+   }
+}
+
+void GameState::updateTorchPhysics(int x, int y) {
+   Block &block = map[y][x];
+   block.value = (block.value + 1) % 5;
+
+   auto isEmpty = [this](int x, int y, bool platform) -> bool {
+      Block::Type type = map.blocks[y][x].type;
+      return !map.blocks[y][x].furniture && (!map.isPositionValid(x, y) || type == Block::air || (!platform && type == Block::platform) || type == Block::water || type == Block::lava || type == Block::torch);
+   };
+
+   bool downEmpty = isEmpty(x, y + 1, true);
+
+   if (downEmpty && !isEmpty(x - 1, y, false)) {
+      block.value2 = 2;
+   } else if (downEmpty && !isEmpty(x + 1, y, false)) {
+      block.value2 = 3;
+   } else if (downEmpty && map.walls[y][x].type != Block::air) {
+      block.value2 = 4;
+   } else if (!downEmpty && !isEmpty(x, y - 1, false)) {
+      block.value2 = 1;
+   } else if (!downEmpty) {
+      block.value2 = 0;
+   } else {
+      map.deleteBlock(x, y);
    }
 }
 
@@ -417,7 +455,7 @@ void GameState::renderGame() const {
          obj.posY = mousePos.y;
          obj.preview(map);
       } else {
-         drawTextureBlock(getTexture(blockMap[index]), {(float)(int)mousePos.x, (float)(int)mousePos.y, 1.f, 1.f}, Fade((drawWall ? wallTint : (map.blocks[mousePos.y][mousePos.x].furniture ? RED : WHITE)), previewAlpha));
+         DrawTexturePro(getTexture(blockMap[index]), {0, 0, 8, 8}, {(float)(int)mousePos.x, (float)(int)mousePos.y, 1, 1}, {0, 0}, 0, Fade((drawWall ? wallTint : (map.blocks[mousePos.y][mousePos.x].furniture ? RED : WHITE)), previewAlpha));
       }
    }
    /************************************/

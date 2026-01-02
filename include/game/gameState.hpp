@@ -29,6 +29,7 @@ struct GameState: public State {
    void updateSandPhysics(int x, int y);
    void updateGrassPhysics(int x, int y);
    void updateDirtPhysics(int x, int y);
+   void updateTorchPhysics(int x, int y);
 
    // Render
 
