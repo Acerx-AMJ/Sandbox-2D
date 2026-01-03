@@ -58,7 +58,9 @@ Map::~Map() {
 // Set block functions
 
 void Map::init() {
-   lightmap = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+   timeShaderLocation = GetShaderLocation(getShader("water"), "time");
+   lightmap = LoadRenderTexture(GetScreenWidth() / 2, GetScreenHeight() / 2);
+
    blocks = std::vector<std::vector<Block>>(sizeY, std::vector<Block>(sizeX, Block{}));
    walls  = std::vector<std::vector<Block>>(sizeY, std::vector<Block>(sizeX, Block{}));
 }
@@ -187,7 +189,7 @@ std::vector<Block>& Map::operator[](size_t index) {
 // Render functions
 
 void Map::renderLight(const Camera2D &camera, Texture2D &texture, float x, float y, const Vector2 &size, const Color &color) const {
-   drawTexture(texture, GetWorldToScreen2D({x + 0.5f, y + 0.5f}, camera), size, 0, color);
+   drawTexture(texture, {(((x + 0.5f - camera.target.x) * camera.zoom) + camera.offset.x) / 2.0f, (((y + 0.5f - camera.target.y) * camera.zoom) + camera.offset.y) / 2.0f}, size, 0, color);
 }
 
 void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &player, float accumulator, const Rectangle &cameraBounds, const Camera2D &camera) const {
@@ -237,20 +239,18 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
       droppedItem.render();
    }
 
-   // Render blocks
    Shader &waterShader = getShader("water");
-
-   int timeLocation = GetShaderLocation(waterShader, "time");
    float time = GetTime();
-   SetShaderValue(waterShader, timeLocation, &time, SHADER_UNIFORM_FLOAT);
+   SetShaderValue(waterShader, timeShaderLocation, &time, SHADER_UNIFORM_FLOAT);
 
    struct Liquid {
       const Block *pointer;
       int x, y;
    };
-   std::vector<Liquid> liquidTiles;
-   liquidTiles.reserve(64);
+   static std::vector<Liquid> liquidTiles;
+   liquidTiles.clear();
 
+   // Render blocks
    for (int y = cameraBounds.y; y <= cameraBounds.height; ++y) {
       for (int x = cameraBounds.x; x <= cameraBounds.width; ++x) {
          const Block &block = blocks[y][x];
@@ -295,10 +295,10 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
    ClearBackground(BLACK);
    BeginBlendMode(BLEND_ADDITIVE);
 
-   int lightBoundsMinX = std::max<int>(0, cameraBounds.x - 6);
-   int lightBoundsMinY = std::max<int>(0, cameraBounds.y - 6);
-   int lightBoundsMaxX = std::min<int>(sizeX - 1, cameraBounds.width + 6);
-   int lightBoundsMaxY = std::min<int>(sizeY - 1, cameraBounds.height + 6);
+   int lightBoundsMinX = std::max<int>(0, cameraBounds.x - 8);
+   int lightBoundsMinY = std::max<int>(0, cameraBounds.y - 8);
+   int lightBoundsMaxX = std::min<int>(sizeX - 1, cameraBounds.width + 8);
+   int lightBoundsMaxY = std::min<int>(sizeY - 1, cameraBounds.height + 8);
 
    Color airLightColor   = getLightBasedOnTime();
    Color waterLightColor = Fade(airLightColor, 0.1f);
@@ -307,10 +307,10 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
    static float counter = 0.0f;
    counter += GetFrameTime();
 
-   float sizeOffset     = std::sin(counter * 1.5f) * camera.zoom * 0.8f;
-   float positionOffset = std::cos(counter * 0.8f) * camera.zoom * 0.015f;
+   float sizeOffset     = std::sin(counter * 1.5f) * camera.zoom * 0.4f;
+   float positionOffset = std::cos(counter * 0.8f) * camera.zoom * 0.0075f;
 
-   Vector2 lightSize      = {7.0f * camera.zoom, 7.0f * camera.zoom};
+   Vector2 lightSize      = {3.5f * camera.zoom, 3.5f * camera.zoom};
    Vector2 lightLargeSize = {lightSize.x + lightSize.x, lightSize.y + lightSize.y};
    Vector2 lightHugeSize  = {lightLargeSize.x + lightSize.x, lightLargeSize.y + lightSize.y};
    Vector2 liquidSize     = {lightSize.x + sizeOffset, lightSize.y + sizeOffset};
@@ -321,15 +321,6 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
 
    for (int y = lightBoundsMinY; y <= lightBoundsMaxY; ++y) {
       for (int x = lightBoundsMinX; x <= lightBoundsMaxX; ++x) {
-         if (isTransparent(x, y)) {
-            switch (walls[y][x].type) {
-            case Block::lamp:
-               renderLight(camera, lightLargeTexture, x, y, lightLargeSize, {255, 255, 0, 255});
-               break;
-            default: break;
-            }
-         }
-
          switch (blocks[y][x].type) {
          case Block::lava:
             renderLight(camera, lightTexture, x + positionOffset, y + positionOffset, liquidSize, {255, 125, 0, 255});
@@ -361,9 +352,8 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
    EndTextureMode();
 
    BeginBlendMode(BLEND_MULTIPLIED);
-   DrawTexturePro(lightmap.texture, {0, 0, (float)GetScreenWidth(), -(float)GetScreenHeight()}, {0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()}, {0, 0}, 0, WHITE);
+   DrawTexturePro(lightmap.texture, {0, 0, (float)lightmap.texture.width, -(float)lightmap.texture.height}, {0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()}, {0, 0}, 0, WHITE);
    EndBlendMode();
 
-   // DrawFPS(100, 100);
    BeginMode2D(camera); // EndTextureMode disables it for some reason
 }

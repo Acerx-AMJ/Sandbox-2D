@@ -354,6 +354,10 @@ Furniture Furniture::get(int x, int y, const Map &map, Type type, bool debug) {
    // Make a table
 
    case Type::table: {
+      if (!debug && (isBlockEmpty(map, x, y + 2) || isBlockEmpty(map, x + 1, y + 2) || isBlockEmpty(map, x + 2, y + 2))) {
+         return {};
+      }
+
       Furniture table ("table", x, y, 3, 2, Furniture::table);
       table.isWalkable = true;
       
@@ -420,6 +424,7 @@ FurnitureTexture Furniture::getFurnitureIcon(unsigned char id) {
    constexpr std::array<Vector2, furnitureCount> textureSizes {{
       {}, {textureSize, textureSize * 2}, {}, {}, {},
       {}, {}, {}, {}, {textureSize, textureSize},
+      {textureSize * 3, textureSize * 2},
    }};
    return {getTexture(getName(id)), textureSizes[id].x, textureSizes[id].y};
 }

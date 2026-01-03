@@ -9,7 +9,6 @@ uniform float time;
 
 out vec2 fragTexCoord;
 out vec4 fragColor;
-out float timeThing;
 
 void main() {
    vec3 position = vertexPosition;
@@ -21,7 +20,6 @@ void main() {
    }
 
    gl_Position = mvp * vec4(position, 1.0);
-   fragTexCoord = vertexTexCoord;
+   fragTexCoord = vertexTexCoord + vec2(time * -0.25, 0.0);
    fragColor = vec4(1.0, 1.0, 1.0, vertexColor.a);
-   timeThing = time;
 }

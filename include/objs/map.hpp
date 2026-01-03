@@ -41,7 +41,7 @@ struct Map {
    
    std::vector<std::vector<Block>> blocks, walls;
    std::vector<Furniture> furniture;
-   int sizeX = 0, sizeY = 0;
+   int sizeX = 0, sizeY = 0, timeShaderLocation = 0;
 
    // Deconstructor
 
