@@ -48,6 +48,8 @@ struct MenuState: public State {
 
    void loadWorldButtons();
    void sortWorldButtonsByFavorites();
+   void resetSelection();
+   void selectButton(Button &button);
 
    std::string generateRandomWorldName() const;
    bool isWorldFavorite(const std::string &name) const;

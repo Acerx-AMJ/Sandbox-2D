@@ -25,8 +25,7 @@ constexpr int defaultMapSizeY = 750;
 
 // Constructors
 
-MenuState::MenuState()
-: backgroundTexture(getRandomBackground()), foregroundTexture(getRandomForeground()) {
+MenuState::MenuState(): backgroundTexture(getRandomBackground()), foregroundTexture(getRandomForeground()) {
    const Vector2 center = getScreenCenter();
 
    // Init title screen
@@ -168,11 +167,7 @@ void MenuState::updateLevelSelection() {
    }
 
    if (worldSearchBar.changed) {
-      if (anySelected) {
-         anySelected = false;
-         selectedButton->texture = &getTexture("button_long");
-         selectedButton = nullptr;
-      }
+      resetSelection();
       loadWorldButtons();
    }
 
@@ -189,18 +184,11 @@ void MenuState::updateLevelSelection() {
          continue;
       }
 
-      if (selectedButton) {
-         selectedButton->texture = &getTexture("button_long");
-      }
-
       if (selectedButton == &button) {
          wantsToPlay = true;
          break;
       }
-
-      selectedButton = &button;
-      selectedButton->texture = &getTexture("button_long_selected");
-      anySelected = true;
+      selectButton(button);
    }
 
    // Quick world navigation
@@ -330,10 +318,7 @@ void MenuState::updateLevelSelection() {
 
       if (getLatestVersion() != getFileVersion(selectedWorld)) {
          invalidVersionClicked = true;
-         anySelected = false;
-         selectedButton->texture = &getTexture("button_long");
-         selectedButton = nullptr;
-
+         resetSelection();
          insertPopup("Confirmation Request", format("World '{}' uses an outdated file version. The latest version is {}, whereas its version is {}. Are you sure that you want to continue? Your world might get corrupted and become unrecoverable!", selectedWorld, getLatestVersion(), getFileVersion(selectedWorld)), true);
          return;
       }
@@ -348,10 +333,8 @@ void MenuState::updateLevelSelection() {
    }
    invalidVersionClicked = false;
 
-   if (selectedButton && isMousePressedOutsideUI(MOUSE_BUTTON_LEFT)) {
-      selectedButton->texture = &getTexture("button_long");
-      selectedButton = nullptr;
-      anySelected = false;
+   if (anySelected && isMousePressedOutsideUI(MOUSE_BUTTON_LEFT)) {
+      resetSelection();
    }
 }
 
@@ -605,21 +588,6 @@ void MenuState::loadWorldButtons() {
    sortWorldButtonsByFavorites();
 }
 
-std::string MenuState::generateRandomWorldName() const {
-   const std::string adjective = getRandomLineFromFile("assets/adjectives.txt");
-   const std::string noun      = getRandomLineFromFile("assets/nouns.txt");
-   return adjective + " " + noun;
-}
-
-bool MenuState::isWorldFavorite(const std::string &name) const {
-   for (const std::string &world: favoriteWorlds) {
-      if (world == name) {
-         return true;
-      }
-   }
-   return false;
-}
-
 void MenuState::sortWorldButtonsByFavorites() {
    std::sort(worldButtons.begin(), worldButtons.end(), [](Button &a, Button &b) -> bool {
       if (a.favorite != b.favorite) {
@@ -642,6 +610,38 @@ void MenuState::sortWorldButtonsByFavorites() {
       worldFrame.scrollHeight = std::max(worldFrame.rectangle.height, button.rectangle.y + button.rectangle.height / 2.f);
       index += 1;
    }
+}
+
+void MenuState::resetSelection() {
+   if (anySelected) {
+      anySelected = false;
+      selectedButton->texture = &getTexture("button_long");
+      selectedButton = nullptr;
+   }
+}
+
+void MenuState::selectButton(Button &button) {
+   if (anySelected) {
+      selectedButton->texture = &getTexture("button_long");
+   }
+   anySelected = true;
+   selectedButton = &button;
+   selectedButton->texture = &getTexture("button_long_selected");
+}
+
+std::string MenuState::generateRandomWorldName() const {
+   const std::string adjective = getRandomLineFromFile("assets/adjectives.txt");
+   const std::string noun      = getRandomLineFromFile("assets/nouns.txt");
+   return adjective + " " + noun;
+}
+
+bool MenuState::isWorldFavorite(const std::string &name) const {
+   for (const std::string &world: favoriteWorlds) {
+      if (world == name) {
+         return true;
+      }
+   }
+   return false;
 }
 
 // Helper functions

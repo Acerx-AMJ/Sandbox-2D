@@ -14,7 +14,6 @@ constexpr float soundPitchMax = 1.05f;
 static std::unordered_map<std::string, std::vector<std::string>> savedSounds;
 static std::unordered_map<std::string, Sound> sounds;
 static std::unordered_map<std::string, Music> music;
-static Music *currentMusic = nullptr;
 
 // Load functions
 
@@ -30,14 +29,6 @@ void loadMusic(const std::string &name, const std::string &path) {
 
 void saveSound(const std::string &name, const std::vector<std::string> &soundList) {
    savedSounds[name] = soundList;
-}
-
-void loadSavedSounds() {
-   saveSound("click", {"click1", "click2", "click3"});
-   saveSound("hover", {"hover1", "hover2"});
-   saveSound("trash", {"trash1", "trash2", "trash3"});
-   saveSound("footstep", {"footstep1", "footstep2", "footstep3", "footstep4"});
-   saveSound("pickup", {"pickup1", "pickup2", "pickup3", "pickup4"});
 }
 
 void loadSounds() {
@@ -56,6 +47,14 @@ void loadMusic() {
          loadMusic(file.path().stem().string(), file.path().string());
       }
    }
+}
+
+void loadSavedSounds() {
+   saveSound("click", {"click1", "click2", "click3"});
+   saveSound("hover", {"hover1", "hover2"});
+   saveSound("trash", {"trash1", "trash2", "trash3"});
+   saveSound("footstep", {"footstep1", "footstep2", "footstep3", "footstep4"});
+   saveSound("pickup", {"pickup1", "pickup2", "pickup3", "pickup4"});
 }
 
 // Play functions
@@ -77,26 +76,5 @@ void playSound(const std::string &name, float volume) {
 
 void playMusic(const std::string &name) {
    assert(music.count(name), "Music '{}' does not exist.", name);
-   currentMusic = &music[name];
-   PlayMusicStream(*currentMusic);
-}
-
-// Get functions
-
-Sound& getSound(const std::string &name) {
-   assert(savedSounds.count(name) || sounds.count(name), "Sound '{}' does not exist.", name);
-   return sounds[name];
-}
-
-Music& getMusic(const std::string &name) {
-   assert(music.count(name), "Music '{}' does not exist.", name);
-   return music[name];
-}
-
-// Update functions
-
-void updateMusic() {
-   if (currentMusic) {
-      UpdateMusicStream(*currentMusic);
-   }
+   PlayMusicStream(music[name]);
 }

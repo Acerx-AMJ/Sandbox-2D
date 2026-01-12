@@ -1,6 +1,5 @@
 #include "game/loadingState.hpp"
 #include "mngr/input.hpp"
-#include "mngr/sound.hpp"
 #include "ui/popup.hpp"
 #include "util/render.hpp"
 #include <raylib.h>
@@ -8,20 +7,16 @@
 #include <ctime>
 
 int main() {
-   // Initialize the game
-   
    srand(time(nullptr));
    SetConfigFlags(FLAG_VSYNC_HINT);
    InitWindow(GetMonitorWidth(GetCurrentMonitor()), GetMonitorHeight(GetCurrentMonitor()), "Sandbox-2D");
    ToggleFullscreen();
    SetTargetFPS(60);
-   
    InitAudioDevice();
    SetExitKey(KEY_NULL);
+
    State *current = new LoadingState();
    
-   // Run the game
-
    while (!WindowShouldClose()) {
       if (current->quitState) {
          State *newState = current->change();
@@ -34,7 +29,6 @@ int main() {
       }
 
       updateInput();
-      updateMusic();
       updatePopups(current->realDt);
 
       if (!anyPopups()) {
@@ -49,9 +43,6 @@ int main() {
          drawRect(Fade(BLACK, current->alpha));
       EndDrawing();
    }
-
-   // De-initialize the game
-
    CloseWindow();
    CloseAudioDevice();
 }

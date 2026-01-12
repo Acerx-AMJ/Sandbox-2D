@@ -1,4 +1,5 @@
 #include "game/state.hpp"
+#include <algorithm>
 #include <raylib.h>
 
 // Constants
@@ -10,11 +11,7 @@ constexpr float fadeTime = 0.4f;
 
 void State::updateStateLogic() {
    realDt = GetFrameTime();
-
-   dt = realDt;
-   if (dt > maxDT) {
-      dt = maxDT;
-   }
+   dt = std::min(maxDT, realDt);
 
    if (fadingIn) {
       updateFadingIn();

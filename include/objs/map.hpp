@@ -18,21 +18,21 @@ constexpr inline unsigned char playerThreshold    = maxWaterLayers / 2;
 // Bad practice to make enums unsigned, but as blocks attributes will grow, it'll be
 // increasingly useful, also makes bitwise operations slightly easier (probably).
 enum class BlockType: unsigned short {
-   empty        = 1,
-   grass        = 2,
-   dirt         = 4,
-   sand         = 8,
-   ice          = 16,
-   solid        = 32,
-   platform     = 64,
-   transparent  = 128,
-   water        = 256,
-   lava         = 512,
-   liquid       = 1024,
-   lightsource  = 2048,
-   torch        = 4096,
-   furniture    = 8192,
-   furnitureTop = 16384,
+   empty        = 1 <<  0,
+   grass        = 1 <<  1,
+   dirt         = 1 <<  2,
+   sand         = 1 <<  3,
+   ice          = 1 <<  4,
+   solid        = 1 <<  5,
+   platform     = 1 <<  6,
+   transparent  = 1 <<  7,
+   water        = 1 <<  8,
+   lava         = 1 <<  9,
+   liquid       = 1 << 10,
+   lightsource  = 1 << 11,
+   torch        = 1 << 12,
+   furniture    = 1 << 13,
+   furnitureTop = 1 << 14,
 };
 
 // Block type operators
@@ -72,13 +72,7 @@ std::string getBlockNameFromId(unsigned short id);
 
 // Map
 
-struct Map {
-   RenderTexture lightmap;
-   
-   std::vector<std::vector<Block>> blocks, walls;
-   std::vector<Furniture> furniture;
-   int sizeX = 0, sizeY = 0, timeShaderLocation = 0;
-
+struct Map {   
    // Constructors
 
    void init();
@@ -118,6 +112,16 @@ struct Map {
 
    void renderLight(const Camera2D &camera, Texture2D &texture, float x, float y, const Vector2 &size, const Color &color) const;
    void render(const std::vector<struct DroppedItem> &droppedItems, const struct Player &player, float accumulator, const Rectangle &cameraBounds, const Camera2D &camera) const;
+
+   // Members
+
+   RenderTexture lightmap;
+   std::vector<std::vector<Block>> blocks, walls;
+   std::vector<Furniture> furniture;
+
+   int sizeX = 0;
+   int sizeY = 0;
+   int timeShaderLocation = 0;
 };
 
 #endif

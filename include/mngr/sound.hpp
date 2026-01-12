@@ -11,22 +11,13 @@ void loadSound(const std::string &name, const std::string &path);
 void loadMusic(const std::string &name, const std::string &path);
 void saveSound(const std::string &name, const std::vector<std::string> &soundList);
 
-void loadSavedSounds();
 void loadSounds();
 void loadMusic();
+void loadSavedSounds();
 
 // Play functions
 
 void playSound(const std::string &name, float volume = 1.f);
 void playMusic(const std::string &name);
-
-// Get functions
-
-Sound& getSound(const std::string &name);
-Music& getMusic(const std::string &name);
-
-// Update functions
-
-void updateMusic();
 
 #endif
