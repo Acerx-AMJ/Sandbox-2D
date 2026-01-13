@@ -103,11 +103,6 @@ void GameState::fixedUpdate() {
             } else if (updateHoney && map.isLiquidOfType(x, y, LiquidType::honey)) {
                updateHoneyPhysics(x, y);
             }
-
-            // Do not update the block if it has any liquid in it. Remove
-            // later if any flowable blocks need to be updated or it just
-            // won't with liquid inside
-            continue;
          }
 
          if (type & BlockType::sand) {
