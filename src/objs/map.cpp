@@ -11,7 +11,7 @@
 
 // Constants
 
-constexpr unsigned short blockCount = 22;
+constexpr unsigned short blockCount = 23;
 
 // NOTE: due to logic in gameState.cpp, any grass blocks must be defined RIGHT
 // BEFORE the dirt block, for an example, you can see blocks 1 and 2
@@ -37,7 +37,8 @@ static inline const std::unordered_map<std::string, unsigned short> blockIds {
    {"lamp", 18},
    {"torch", 19},
    {"honey_block", 20},
-   {"crispy_honey_block", 21}
+   {"crispy_honey_block", 21},
+   {"slime_block", 22}
 };
 
 constexpr static inline std::array<const char*, blockCount> blockNames {
@@ -62,7 +63,8 @@ constexpr static inline std::array<const char*, blockCount> blockNames {
    "lamp",
    "torch",
    "honey_block",
-   "crispy_honey_block"
+   "crispy_honey_block",
+   "slime_block"
 };
 
 // This is a nightmare to edit, but at least makes other code easier!
@@ -87,8 +89,9 @@ constexpr static inline const std::array<BlockType, blockCount> blockAttributes 
    BlockType::solid | BlockType::dirt, // mud
    BlockType::lightsource | BlockType::solid, // lamp
    BlockType::transparent | BlockType::lightsource | BlockType::torch | BlockType::flowable, // torch
-   BlockType::solid, // honey block
+   BlockType::solid | BlockType::sticky, // honey block
    BlockType::solid, // crispy honey block
+   BlockType::solid | BlockType::bouncy | BlockType::transparent, // slime block
 }};
 
 // Block getter functions

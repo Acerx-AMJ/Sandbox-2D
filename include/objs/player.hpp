@@ -32,6 +32,7 @@ struct Player {
    int feetCollisionY = 0;
 
    bool onGround = false;
+   bool shouldBounce = false;
    float coyoteTimer = 0.f;
    float foxTimer = 0.f;
 

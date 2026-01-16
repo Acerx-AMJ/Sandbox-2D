@@ -58,11 +58,11 @@ notSittingAnymore:
 
    // Handle gravity
    if (!onGround) {
-      velocity.y += gravity * waterMultiplier;
+      velocity.y += gravity;
       if (velocity.y >= maxGravity) {
-         velocity.y = maxGravity * waterMultiplier;
+         velocity.y = maxGravity;
       }
-   } else {
+   } else if (!shouldBounce) {
       velocity.y = 0.001f; // Needed
    }
 
@@ -90,13 +90,24 @@ notSittingAnymore:
    jumpTimer -= fixedUpdateDT;
    if (((IsKeyDown(KEY_SPACE) && coyoteTimer > 0) || (onGround && foxTimer > 0)) && jumpTimer <= 0) {
       playSound("jump");
-      velocity.y = -jumpSpeed;
       coyoteTimer = 0.f;
       jumpTimer = jumpTime;
+
+      if (shouldBounce) {
+         velocity.y += jumpSpeed * 0.5f;
+      } else {
+         velocity.y = -jumpSpeed;
+      }
+   }
+
+   if (shouldBounce) {
+      shouldBounce = false;
+      velocity.y = std::abs(velocity.y) * -0.8f;
    }
 
    // Do everything else
    velocity.x *= waterMultiplier;
+   velocity.y *= std::min(1.0f, waterMultiplier * 1.6f);
 
    if (directionX != 0 ) {
       flipX = (directionX == 1);
@@ -127,9 +138,8 @@ void Player::updateCollisions(Map &map) {
 
    for (int y = max(0, (int)position.y); y < maxY; ++y) {
       for (int x = max(0, (int)position.x); x < maxX; ++x) {
-         // Only check water and lava tile count in the first iteration
          waterTileCount += (map.isLiquidAtAll(x, y) &&  map.isLiquidOfType(x, y, LiquidType::water) && map.getLiquidHeight(x, y) > playerLiquidThreshold);
-         lavaTileCount  += (map.isLiquidAtAll(x, y) && !map.isLiquidOfType(x, y, LiquidType::water) && map.getLiquidHeight(x, y) > playerLiquidThreshold);
+         lavaTileCount  += (map.isu(x, y, BlockType::sticky) || (map.isLiquidAtAll(x, y) && !map.isLiquidOfType(x, y, LiquidType::water) && map.getLiquidHeight(x, y) > playerLiquidThreshold));
 
          if ((!map.isu(x, y, BlockType::solid) && !map.isPlatformedFurniture(x, y)) || ((map.isu(x, y, BlockType::platform) || map.isu(x, y, BlockType::furnitureTop)) && IsKeyDown(KEY_S))) {
             continue;
@@ -147,10 +157,12 @@ void Player::updateCollisions(Map &map) {
          }
 
          if (previousPosition.y + playerSize.y <= y) {
+            shouldBounce = (!onGround && map.isu(x, y, BlockType::bouncy) && std::abs(velocity.y) > 0.5f);
+            iceTileCount += map.isu(x, y, BlockType::ice);
+
             position.y = y - playerSize.y;
             onGround = true;
             collisionY = true;
-            iceTileCount += map.isu(x, y, BlockType::ice);
          }
       }
    }
@@ -172,6 +184,10 @@ void Player::updateCollisions(Map &map) {
 
    for (int y = max(0, (int)position.y - 1); y < maxY; ++y) {
       for (int x = max(0, (int)position.x); x < maxX; ++x) {
+         // Necessary for the player sticking to sticky walls
+         waterTileCount += (map.isLiquidAtAll(x, y) &&  map.isLiquidOfType(x, y, LiquidType::water) && map.getLiquidHeight(x, y) > playerLiquidThreshold);
+         lavaTileCount  += (map.isu(x, y, BlockType::sticky) || (map.isLiquidAtAll(x, y) && !map.isLiquidOfType(x, y, LiquidType::water) && map.getLiquidHeight(x, y) > playerLiquidThreshold));
+
          if ((!map.isu(x, y, BlockType::solid) && !map.isPlatformedFurniture(x, y)) || ((map.isu(x, y, BlockType::platform) || map.isu(x, y, BlockType::furnitureTop)) && !IsKeyDown(KEY_W))) {
             continue;
          }

@@ -39,6 +39,8 @@ enum class BlockType: unsigned short {
    furniture    = 1 << 10,
    furnitureTop = 1 << 11,
    flowable     = 1 << 12,
+   sticky       = 1 << 13,
+   bouncy       = 1 << 14,
 };
 
 // Block type operators
