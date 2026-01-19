@@ -26,11 +26,18 @@ constexpr float deceleration  = 0.167f;
 constexpr float coyoteTime   = 0.1f;
 constexpr float foxTime      = 0.1f;
 constexpr float jumpTime     = 0.25f;
-constexpr float immunityTime = 0.4f;
+
+constexpr float baseRegeneration         = 15.0f;
+constexpr float regenerationInHoney      = 25.0f;
+constexpr float immunityTime             = 0.4f;
+constexpr float timeToStartRegenerating  = 15.0f;
+constexpr float timeToRampUpRegeneration = 10.0f;
+constexpr int framesToRegenerateOnce     = 20;
 
 // Constructors
 
 void Player::init() {
+   displayHearts = hearts;
    delta = velocity = {0, 0};
    previousPosition = position;
 }
@@ -41,10 +48,13 @@ void Player::updatePlayer(Map &map) {
    updateMovement();
    updateCollisions(map);
    updateAnimation();
+   handleRegeneration();
 
    delta = {position.x - previousPosition.x, position.y - previousPosition.y};
    previousPosition = position;
+
    immunityFrame -= fixedUpdateDT;
+   timeSinceLastDamage += fixedUpdateDT;
 }
 
 void Player::updateMovement() {
@@ -251,6 +261,8 @@ void Player::updateCollisions(Map &map) {
       takeDamage(random(25, 45));
    }
 
+   regeneration = (honeyTileCount > 0 ? regenerationInHoney : baseRegeneration);
+
    if (!collisionY) {
       onGround = false;
    }
@@ -304,6 +316,29 @@ void Player::takeDamage(int damage) {
    }
    hearts = max(0, hearts - damage);
    immunityFrame = immunityTime;
+   timeSinceLastDamage = timeSpentRegenerating = 0.0f;
+}
+
+void Player::handleRegeneration() {
+   displayHearts = lerp(displayHearts, hearts, 0.2f);
+
+   if (hearts == maxHearts) {
+      timeSinceLastDamage = timeSpentRegenerating = 0.0f;
+      displayHearts = maxHearts;
+      return;
+   }
+
+   if (timeSinceLastDamage < timeToStartRegenerating) {
+      return;
+   }
+
+   timeSpentRegenerating += fixedUpdateDT;
+   regenerationFrameCounter = (regenerationFrameCounter + 1) % framesToRegenerateOnce;
+   if (regenerationFrameCounter != 0) {
+      return;
+   }
+
+   hearts = min<int>(maxHearts, hearts + regeneration * min(1.0f, timeSpentRegenerating / timeToRampUpRegeneration));
 }
 
 // Render functions

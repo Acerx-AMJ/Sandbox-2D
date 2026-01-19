@@ -13,7 +13,7 @@ void main() {
 
    if (uv.x > fragColor.a) {
       float linearY = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
-      finalColor = vec4(linearY, linearY, linearY, color.a);
+      finalColor = vec4(linearY / 3.0, linearY / 3.0, linearY / 3.0, color.a); // Make the color 3x darker than it should be
    } else {
       finalColor = vec4(color.rgb, color.a);
    }

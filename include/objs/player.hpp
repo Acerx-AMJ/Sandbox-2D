@@ -18,6 +18,7 @@ struct Player {
    // Health functions
 
    void takeDamage(int damage);
+   void handleRegeneration();
 
    // Render
 
@@ -53,8 +54,13 @@ struct Player {
    bool sitting = false;
 
    int hearts = 100;
+   int displayHearts = 100;
    int maxHearts = 100;
    float immunityFrame = 0.0f;
+   float timeSinceLastDamage = 0.0f;
+   float timeSpentRegenerating = 0.0f;
+   float regeneration = 0.0f;
+   int regenerationFrameCounter = 0;
 };
 
 #endif

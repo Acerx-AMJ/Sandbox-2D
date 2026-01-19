@@ -521,11 +521,11 @@ void GameState::renderUI() const {
 
    BeginShaderMode(grayscaleShader);
    for (int i = 0; i < counter; ++i) {
-      float a = 1.0f - min(1.0f, float((i + 1) * heartValue - player.hearts) / heartValue);
+      float a = 1.0f - min(1.0f, float((i + 1) * heartValue - player.displayHearts) / heartValue);
       drawTextureNoOrigin(heartIcon, {startingX + padding * (i % heartsPerRow), startingY + padding * int(i / heartsPerRow)}, {size, size}, Fade(WHITE, a));
    }
    EndShaderMode();
-   drawText({startingX + (GetScreenWidth() - startingX) / 2.0f, startingY / 2.0f}, TextFormat("HP: %d/%d", player.hearts, player.maxHearts), 20);
+   drawText({startingX + (GetScreenWidth() - startingX) / 2.0f, startingY / 2.0f}, TextFormat("HP: %d/%d, RG: %.1f/%.1f/%.1f", player.hearts, player.maxHearts, player.timeSinceLastDamage, player.timeSpentRegenerating, player.regeneration), 20);
 }
 
 // Change states

@@ -6,7 +6,6 @@
 ### Survival
 - Add death.
 - Add hazards like drowning, fall damage and suffocation.
-- Add regeneration.
 - Add damage indicators and some cool effects.
 
 ### Furniture
