@@ -3,6 +3,8 @@
 
 #include "objs/map.hpp"
 
+constexpr int maxBreath = 100;
+
 struct Player {
    // Constructors
 
@@ -26,8 +28,8 @@ struct Player {
 
    // Getter functions
 
-   Vector2 getCenter();
-   Rectangle getBounds();
+   Vector2 getCenter() const;
+   Rectangle getBounds() const;
 
    // Members
 
@@ -53,14 +55,16 @@ struct Player {
    bool flipX = false;
    bool sitting = false;
 
+   int breathFrameCounter = 0;
+   int breath = maxBreath;
+
    int hearts = 100;
-   int displayHearts = 100;
    int maxHearts = 100;
+   int regenerationFrameCounter = 0;
    float immunityFrame = 0.0f;
    float timeSinceLastDamage = 0.0f;
    float timeSpentRegenerating = 0.0f;
    float regeneration = 0.0f;
-   int regenerationFrameCounter = 0;
 };
 
 #endif

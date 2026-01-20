@@ -458,15 +458,14 @@ void GameState::render() const {
    const float delta = (paused ? 0 : player.delta.x * dt);
    drawBackground(foregroundTexture, backgroundTexture, delta, delta, (paused ? 0.0f : 1.0f) * dt);
 
-   BeginMode2D(camera);
    renderGame();
-   EndMode2D();
    renderUI();
 }
 
 // Render game
 
 void GameState::renderGame() const {
+   BeginMode2D(camera);
    map.render(droppedItems, player, accumulator, cameraBounds, camera);
 
    /************************************/
@@ -498,6 +497,45 @@ void GameState::renderGame() const {
 // Render UI
 
 void GameState::renderUI() const {
+   // Render breath dynamically
+   if (player.breath != maxBreath) {
+      Texture2D &bubbleIcon = getTexture("bubble_icon");
+      
+      float size = 1.25f;
+      float padding = size + 0.075f;
+      int breathValue = 10;
+      int bubbles = 10;
+      float startingY = player.position.y - 1.25f;
+      float startingX = player.getCenter().x - padding * 5;
+
+      for (int i = 0; i < bubbles; ++i) {
+         float a = 1.0f - min(1.0f, float((i + 1) * breathValue - player.breath) / breathValue);
+         drawTextureNoOrigin(bubbleIcon, {startingX + padding * i, startingY}, {size, size}, Fade(WHITE, a));
+      }
+   }
+   EndMode2D();
+
+   // Render all of the hearts dynamically
+   Texture2D &heartIcon = getTexture("heart_icon");
+   Shader &grayscaleShader = getShader("grayscale");
+   
+   float size = 25;
+   float padding = size + 5;
+   int heartValue = 20;
+   int counter = player.maxHearts / heartValue;
+   int heartsPerRow = 10;
+   float startingY = 40;
+   float startingX = GetScreenWidth() - size * heartsPerRow - 5 * (heartsPerRow - 1) - 15;
+
+   BeginShaderMode(grayscaleShader);
+   for (int i = 0; i < counter; ++i) {
+      float a = 1.0f - min(1.0f, float((i + 1) * heartValue - player.hearts) / heartValue);
+      drawTextureNoOrigin(heartIcon, {startingX + padding * (i % heartsPerRow), startingY + padding * int(i / heartsPerRow)}, {size, size}, Fade(WHITE, a));
+   }
+   EndShaderMode();
+   drawText({startingX + (GetScreenWidth() - startingX) / 2.0f, startingY / 2.0f}, TextFormat("HP: %d/%d, RG: %.1f/%.1f/%.1f", player.hearts, player.maxHearts, player.timeSinceLastDamage, player.timeSpentRegenerating, player.regeneration), 20);
+
+   // Render other game UI
    inventory.render();
 
    if (paused) {
@@ -505,27 +543,6 @@ void GameState::renderUI() const {
       menuButton.render();
    }
    pauseButton.render();
-
-   // Render all of the hearts dynamically
-   Texture2D &heartIcon = getTexture("heart_icon");
-   Shader &grayscaleShader = getShader("grayscale");
-   
-   int heartValue = 20;
-   int counter = player.maxHearts / heartValue;
-   int heartsPerRow = 10;
-   float size = 25;
-   float padding = size + 5;
-
-   float startingX = GetScreenWidth() - size * heartsPerRow - 5 * (heartsPerRow - 1) - 15;
-   float startingY = 40;
-
-   BeginShaderMode(grayscaleShader);
-   for (int i = 0; i < counter; ++i) {
-      float a = 1.0f - min(1.0f, float((i + 1) * heartValue - player.displayHearts) / heartValue);
-      drawTextureNoOrigin(heartIcon, {startingX + padding * (i % heartsPerRow), startingY + padding * int(i / heartsPerRow)}, {size, size}, Fade(WHITE, a));
-   }
-   EndShaderMode();
-   drawText({startingX + (GetScreenWidth() - startingX) / 2.0f, startingY / 2.0f}, TextFormat("HP: %d/%d, RG: %.1f/%.1f/%.1f", player.hearts, player.maxHearts, player.timeSinceLastDamage, player.timeSpentRegenerating, player.regeneration), 20);
 }
 
 // Change states

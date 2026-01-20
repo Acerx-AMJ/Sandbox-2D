@@ -33,11 +33,11 @@ constexpr float immunityTime             = 0.4f;
 constexpr float timeToStartRegenerating  = 15.0f;
 constexpr float timeToRampUpRegeneration = 10.0f;
 constexpr int framesToRegenerateOnce     = 20;
+constexpr int framesToUpdateBreath       = 10;
 
 // Constructors
 
 void Player::init() {
-   displayHearts = hearts;
    delta = velocity = {0, 0};
    previousPosition = position;
 }
@@ -135,6 +135,7 @@ void Player::updateCollisions(Map &map) {
 
    bool collisionY = false;
    bool canGoUpSlopes = true;
+   bool liquidsAboveHead = false;
    int waterTileCount = 0;
    int lavaTileCount = 0;
    int honeyTileCount = 0;
@@ -159,6 +160,7 @@ void Player::updateCollisions(Map &map) {
             waterTileCount += map.isLiquidOfType(x, y, LiquidType::water);
             lavaTileCount  += map.isLiquidOfType(x, y, LiquidType::lava);
             honeyTileCount += map.isLiquidOfType(x, y, LiquidType::honey);
+            liquidsAboveHead += (y <= position.y + 1.0f);
          }
          honeyTileCount += map.isu(x, y, BlockType::sticky);
 
@@ -210,6 +212,7 @@ void Player::updateCollisions(Map &map) {
             waterTileCount += map.isLiquidOfType(x, y, LiquidType::water);
             lavaTileCount  += map.isLiquidOfType(x, y, LiquidType::lava);
             honeyTileCount += map.isLiquidOfType(x, y, LiquidType::honey);
+            liquidsAboveHead += (y <= position.y + 1.0f);
          }
          honeyTileCount += map.isu(x, y, BlockType::sticky);
 
@@ -246,6 +249,19 @@ void Player::updateCollisions(Map &map) {
 
    position.x = clamp(position.x, 0.f, map.sizeX - playerSize.x);
    position.y = clamp(position.y, 0.f, map.sizeY - playerSize.y);
+
+   breathFrameCounter = (breathFrameCounter + 1) % framesToUpdateBreath;
+   if (breathFrameCounter == 0) {
+      if (liquidsAboveHead) {
+         breath = max(0, breath - 2);
+      } else {
+         breath = min(maxBreath, breath + 1);
+      }
+
+      if (breath == 0) {
+         takeDamage(random(1, 3));
+      }
+   }
 
    if (honeyTileCount > 0) {
       waterMultiplier = 0.5f;
@@ -320,11 +336,8 @@ void Player::takeDamage(int damage) {
 }
 
 void Player::handleRegeneration() {
-   displayHearts = lerp(displayHearts, hearts, 0.2f);
-
    if (hearts == maxHearts) {
       timeSinceLastDamage = timeSpentRegenerating = 0.0f;
-      displayHearts = maxHearts;
       return;
    }
 
@@ -351,10 +364,10 @@ void Player::render(float accumulator) const {
 
 // Getter functions
 
-Vector2 Player::getCenter() {
+Vector2 Player::getCenter() const {
    return {position.x + playerSize.x / 2.f, position.y + playerSize.y / 2.f};
 }
 
-Rectangle Player::getBounds() {
+Rectangle Player::getBounds() const {
    return {position.x, position.y, playerSize.x, playerSize.y};
 }
