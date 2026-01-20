@@ -2,6 +2,7 @@
 #define OBJS_PLAYER_HPP
 
 #include "objs/map.hpp"
+#include <limits>
 
 constexpr int maxBreath = 100;
 
@@ -42,6 +43,7 @@ struct Player {
    bool shouldBounce = false;
    float coyoteTimer = 0.f;
    float foxTimer = 0.f;
+   float maximumY = std::numeric_limits<float>::max();
 
    float waterMultiplier = 1.f;
    float iceMultiplier = 1.f;
@@ -64,7 +66,8 @@ struct Player {
    float immunityFrame = 0.0f;
    float timeSinceLastDamage = 0.0f;
    float timeSpentRegenerating = 0.0f;
-   float regeneration = 0.0f;
+   float regenSpeedMultiplier = 1.0f;
+   float regeneration = 15.0f;
 };
 
 #endif

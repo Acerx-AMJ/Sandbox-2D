@@ -27,13 +27,16 @@ constexpr float coyoteTime   = 0.1f;
 constexpr float foxTime      = 0.1f;
 constexpr float jumpTime     = 0.25f;
 
-constexpr float baseRegeneration         = 15.0f;
-constexpr float regenerationInHoney      = 25.0f;
 constexpr float immunityTime             = 0.4f;
 constexpr float timeToStartRegenerating  = 15.0f;
 constexpr float timeToRampUpRegeneration = 10.0f;
+constexpr float regenSpeedInHoney        = 1.8f;
 constexpr int framesToRegenerateOnce     = 20;
 constexpr int framesToUpdateBreath       = 10;
+
+constexpr float minimumFallHeight = 35.0f;
+constexpr float maximumFallHeight = 110.0f;
+constexpr float maximumFallDamage = 500.0f;
 
 // Constructors
 
@@ -54,7 +57,7 @@ void Player::updatePlayer(Map &map) {
    previousPosition = position;
 
    immunityFrame -= fixedUpdateDT;
-   timeSinceLastDamage += fixedUpdateDT;
+   timeSinceLastDamage += fixedUpdateDT * regenSpeedMultiplier;
 }
 
 void Player::updateMovement() {
@@ -133,6 +136,7 @@ void Player::updateCollisions(Map &map) {
    if (sitting) return;
    position.y += velocity.y;
 
+   bool wasOnGround = onGround;
    bool collisionY = false;
    bool canGoUpSlopes = true;
    int liquidsAboveHead = 0;
@@ -175,8 +179,8 @@ void Player::updateCollisions(Map &map) {
          }
 
          // Not necessary in both loops
-         blocksInHeadX1 += (y <= position.y + 1.0f && x >= position.x + playerSize.x / 2.0f);
-         blocksInHeadX2 += (y <= position.y + 1.0f && x <  position.x + playerSize.x / 2.0f);
+         blocksInHeadX1 += (y <= position.y + 1.0f && x >= position.x + playerSize.x / 2.0f && !map.isu(x, y, BlockType::platform));
+         blocksInHeadX2 += (y <= position.y + 1.0f && x <  position.x + playerSize.x / 2.0f && !map.isu(x, y, BlockType::platform));
 
          if (previousPosition.y >= y + 1.f && !map.isu(x, y, BlockType::platform)) {
             velocity.y = max(0.f, velocity.y);
@@ -256,6 +260,18 @@ void Player::updateCollisions(Map &map) {
    position.x = clamp(position.x, 0.f, map.sizeX - playerSize.x);
    position.y = clamp(position.y, 0.f, map.sizeY - playerSize.y);
 
+   // Apply damage to the player
+
+   if (honeyTileCount > 0 && !onGround) {
+      maximumY = min(maximumY, position.y);
+   }
+
+   // Ignore fall damage if player is touching liquids or didn't fall
+   // from that great of a height
+   if (!wasOnGround && onGround && !shouldBounce && honeyTileCount + lavaTileCount + waterTileCount == 0 && position.y - maximumY >= minimumFallHeight) {
+      takeDamage(min(1.0f, ((position.y - maximumY) - minimumFallHeight) / (maximumFallHeight - minimumFallHeight)) * maximumFallDamage);
+   }
+
    breathFrameCounter = (breathFrameCounter + 1) % framesToUpdateBreath;
    if (breathFrameCounter == 0) {
       if (liquidsAboveHead || (blocksInHeadX1 && blocksInHeadX2)) {
@@ -283,13 +299,19 @@ void Player::updateCollisions(Map &map) {
       takeDamage(random(25, 45));
    }
 
-   regeneration = (honeyTileCount > 0 ? regenerationInHoney : baseRegeneration);
+   // Get other things right
 
+   regenSpeedMultiplier = (honeyTileCount > 0 ? regenSpeedInHoney : 1.0f);
    if (!collisionY) {
       onGround = false;
    }
+
    if (onGround) {
-      iceMultiplier = (iceTileCount > 0 ? .2f : 1.f);
+      iceMultiplier = (iceTileCount > 0 ? 0.2f : 1.0f);
+      maximumY = std::numeric_limits<float>::max();
+   } else {
+      maximumY = min(maximumY, position.y);
+      iceMultiplier = 1.0f;
    }
 }
 
@@ -351,7 +373,7 @@ void Player::handleRegeneration() {
       return;
    }
 
-   timeSpentRegenerating += fixedUpdateDT;
+   timeSpentRegenerating += fixedUpdateDT * regenSpeedMultiplier;
    regenerationFrameCounter = (regenerationFrameCounter + 1) % framesToRegenerateOnce;
    if (regenerationFrameCounter != 0) {
       return;
