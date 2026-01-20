@@ -32,17 +32,18 @@ constexpr float timeToRespawn = 10.0f;
 // Temporary way to switch, delete and place blocks. blockMap blocks must be in the same order as
 // the blockIds map in objs/block.cpp. Everything between these multi-comments is temporary.
 static int index = 0;
-static int size = 27;
+static int size = 29;
 static const char *blockMap[] {
    "grass", "dirt", "clay", "stone", "sand", "sandstone", "bricks", "glass", "planks", "stone_bricks", "tiles", "obsidian",
    "platform", "snow", "ice", "mud", "jungle_grass", "lamp", "torch", "honey_block", "crispy_honey_block", "slime_block",
+   "bubble_block", "slime_platform",
    "sapling", "cactus_seed", "table", "chair", "door"
 };
 static bool drawWall = false;
 static bool canDraw = false;
 static Furniture obj;
 inline FurnitureType getFurnitureType() {
-   static int si = 22;
+   static int si = 24;
    static std::unordered_map<int, FurnitureType> ftypes = {{
       {si, FurnitureType::sapling}, {si + 1, FurnitureType::cactusSeed}, {si + 2, FurnitureType::table}, {si + 3, FurnitureType::chair},
       {si + 4, FurnitureType::door},
