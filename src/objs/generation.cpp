@@ -72,7 +72,7 @@ void MapGenerator::generate() {
    const Vector2 spawnLocation = findPlayerSpawnLocation();
 
    setInfo("Saving to File...", 0.95f);
-   saveWorldData(name, spawnLocation.x, spawnLocation.y, 100, 100, 50.f, map, nullptr, nullptr);
+   saveWorldData(name, spawnLocation.x, spawnLocation.y, 100, 100, 100, 50.f, map, nullptr, nullptr);
 
    setInfo("Generating Completed!", 1.0f);
    playSound("load");

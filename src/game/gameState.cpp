@@ -53,7 +53,7 @@ GameState::GameState(const std::string &worldName)
 
 GameState::~GameState() {
    inventory.discardItem();
-   saveWorldData(worldName, player.position.x, player.position.y, player.hearts, player.maxHearts, camera.zoom, map, &inventory, &droppedItems);
+   saveWorldData(worldName, player.position.x, player.position.y, player.breath, player.hearts, player.maxHearts, camera.zoom, map, &inventory, &droppedItems);
    resetBackground();
 }
 
