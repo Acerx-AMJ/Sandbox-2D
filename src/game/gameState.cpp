@@ -1,5 +1,6 @@
 #include "game/gameState.hpp"
 #include "game/menuState.hpp"
+#include "mngr/particle.hpp"
 #include "mngr/resource.hpp"
 #include "mngr/input.hpp"
 #include "mngr/sound.hpp"
@@ -108,7 +109,12 @@ void GameState::fixedUpdate() {
    }
 
    if (player.hearts == 0) {
+      Phase lastPhase = phase;
       phase = Phase::died;
+
+      if (lastPhase != phase) {
+         spawnDeathParticles(player.getCenter());
+      }
       calculateCameraBounds(); // Make sure the camera does not go out of bounds
    } else {
       player.updatePlayer(map);
@@ -495,6 +501,7 @@ void GameState::render() const {
    BeginMode2D(camera);
    map.render(droppedItems, player, accumulator, cameraBounds, camera);
 
+   renderParticles();
    for (const DamageIndicator &indicator: map.damageIndicators) {
       drawText(indicator.position, std::to_string(indicator.damage).c_str(), 1.0f, (indicator.critical ? YELLOW : RED), 0.1f);
    }

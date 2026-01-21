@@ -1,4 +1,5 @@
 #include "game/state.hpp"
+#include "mngr/particle.hpp"
 #include <algorithm>
 #include <raylib.h>
 
@@ -23,6 +24,7 @@ void State::updateStateLogic() {
 
    accumulator += dt;
    while (accumulator >= fixedUpdateDT) {
+      updateParticles();
       fixedUpdate();
       accumulator -= fixedUpdateDT;
    }
