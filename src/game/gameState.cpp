@@ -505,6 +505,11 @@ void GameState::render() const {
       drawText(indicator.position, std::to_string(indicator.damage).c_str(), 1.0f, (indicator.critical ? YELLOW : RED), 0.1f);
    }
 
+   // Render effects
+   if (player.hearts != player.maxHearts) {
+      drawTextureNoOrigin(getTexture("vignette"), {0, 0}, getScreenSize(), Fade(WHITE, 1.0f - float(player.hearts) / player.maxHearts));
+   }
+
    if (phase == Phase::died) {
       EndMode2D();
       drawText(getScreenCenter({0, -30.0f}), "YOU'VE DIED!", 120, RED);

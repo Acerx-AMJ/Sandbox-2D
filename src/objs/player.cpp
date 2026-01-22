@@ -290,7 +290,7 @@ void Player::updateCollisions(Map &map) {
       }
 
       if (breath == 0) {
-         takeDamage(map, random(1, 2), 0, 0.0f);
+         takeDamage(map, random(1, 6), 0, 0.0f);
       }
    }
 
