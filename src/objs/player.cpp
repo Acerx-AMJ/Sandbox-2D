@@ -41,7 +41,9 @@ constexpr float maximumFallDamage = 500.0f;
 // Constructors
 
 void Player::init() {
-   lastHearts = hearts;
+   lastHearts = displayHearts = hearts;
+   displayBreath = breath;
+   
    timeSinceLastDamage = immunityTime; // Prevent player from spawning in red
    delta = velocity = {0, 0};
    previousPosition = position;
@@ -62,6 +64,9 @@ void Player::updatePlayer(Map &map) {
 
    immunityFrame -= fixedUpdateDT;
    timeSinceLastDamage += fixedUpdateDT * regenSpeedMultiplier;
+
+   displayHearts = lerp(displayHearts, float(hearts), 0.3f);
+   displayBreath = lerp(displayBreath, float(breath), 0.3f);
 }
 
 void Player::updateMovement() {

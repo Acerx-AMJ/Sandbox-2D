@@ -69,6 +69,9 @@ struct Player {
    float timeSpentRegenerating = 0.0f;
    float regenSpeedMultiplier = 1.0f;
    float regeneration = 15.0f;
+
+   float displayHearts = 100;
+   float displayBreath = 100;
 };
 
 #endif

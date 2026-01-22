@@ -290,14 +290,13 @@ void GameState::updateDying() {
    deathTimer += realDt;
    if (deathTimer >= timeToRespawn) {
       player.previousPosition = player.position = playerSpawnPosition;
-      player.hearts = player.maxHearts;
-      player.breath = maxBreath;
+      player.hearts = player.lastHearts = player.displayHearts = player.maxHearts;
+      player.displayBreath = player.breath = maxBreath;
       player.velocity = {0, 0};
       player.timeSinceLastDamage = player.immunityFrame = 1.2f; // Give the player a second of immunity
       player.onGround = player.shouldBounce = player.feetCollision = player.torsoCollision = false;
       player.fallTimer = player.walkTimer = player.jumpTimer = player.coyoteTimer = player.foxTimer = 0.0f;
 
-      camera.target = player.getCenter();
       phase = Phase::playing;
       deathTimer = 0.0f;
    }
@@ -549,9 +548,14 @@ void GameState::render() const {
       float startingY = player.position.y - 1.25f;
       float startingX = player.getCenter().x - padding * 5;
 
+      float static sineCounter = 0.0f;
+      sineCounter += 1.0f - float(player.breath) / maxBreath;
+      float sine = std::sin(sineCounter * 0.5f) / 20.0f;
+      float halfSine = sine / 2.0f;
+
       for (int i = 0; i < bubbles; ++i) {
-         float a = 1.0f - min(1.0f, float((i + 1) * breathValue - player.breath) / breathValue);
-         drawTextureNoOrigin(bubbleIcon, {startingX + padding * i, startingY}, {size, size}, Fade(WHITE, a));
+         float a = 1.0f - min(1.0f, float((i + 1) * breathValue - player.displayBreath) / breathValue);
+         drawTextureNoOrigin(bubbleIcon, {startingX + padding * i - halfSine, startingY - halfSine}, {size + sine, size + sine}, Fade(WHITE, a));
       }
    }
    EndMode2D();
@@ -568,10 +572,15 @@ void GameState::render() const {
    float startingY = 40;
    float startingX = GetScreenWidth() - size * heartsPerRow - 5 * (heartsPerRow - 1) - 15;
 
+   float static sineCounter = 0.0f;
+   sineCounter += 1.0f - float(player.hearts) / player.maxHearts;
+   float sine = std::sin(sineCounter * 0.5f);
+   float halfSine = sine / 2.0f;
+
    BeginShaderMode(grayscaleShader);
    for (int i = 0; i < counter; ++i) {
-      float a = 1.0f - min(1.0f, float((i + 1) * heartValue - player.hearts) / heartValue);
-      drawTextureNoOrigin(heartIcon, {startingX + padding * (i % heartsPerRow), startingY + padding * int(i / heartsPerRow)}, {size, size}, Fade(WHITE, a));
+      float a = 1.0f - min(1.0f, float((i + 1) * heartValue - player.displayHearts) / heartValue);
+      drawTextureNoOrigin(heartIcon, {startingX + padding * (i % heartsPerRow) - halfSine, startingY + padding * int(i / heartsPerRow) - halfSine}, {size + sine, size + sine}, Fade(WHITE, a));
    }
    EndShaderMode();
    drawText({startingX + (GetScreenWidth() - startingX) / 2.0f, startingY / 2.0f}, format("HP: {}/{}", player.hearts, player.maxHearts).c_str(), 20);

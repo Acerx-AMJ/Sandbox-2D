@@ -6,8 +6,6 @@
 ### Survival
 - Add damage indicators and some cool effects.
 - - Heart and bubble sine wave effects
-- - Add a cool animation whenever you spawn in
-- - Death particles
 
 ### Furniture
 - Add furniture with chest logic.
