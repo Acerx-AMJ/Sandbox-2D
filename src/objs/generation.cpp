@@ -184,8 +184,8 @@ void MapGenerator::generateTrees() {
    int counter = 0, counterThreshold = 0;
    
    for (int x = 0; x < map.sizeX; ++x) {
-      while (y < map.sizeY - 1 && map.isu(x, y + 1, BlockType::empty)) { y++; }
-      while (y > 0 && !map.isu(x, y, BlockType::empty)) { y--; }
+      while (y < map.sizeY - 1 && map.isEmpty(x, y + 1)) { y++; }
+      while (y > 0 && !map.isEmpty(x, y)) { y--; }
 
       if (counter >= counterThreshold && chance(biomeData[(int)getBiome(x)].treeRate)) {
          bool sapling = chance(5);

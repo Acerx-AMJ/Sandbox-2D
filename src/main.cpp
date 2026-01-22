@@ -10,7 +10,12 @@ int main() {
    srand(time(nullptr));
    SetConfigFlags(FLAG_VSYNC_HINT);
    InitWindow(GetMonitorWidth(GetCurrentMonitor()), GetMonitorHeight(GetCurrentMonitor()), "Sandbox-2D");
+
+   // Apple has issues with fullscreen. Just don't do that
+   #ifndef __APPLE__
    ToggleFullscreen();
+   #endif
+
    SetTargetFPS(60);
    InitAudioDevice();
    SetExitKey(KEY_NULL);
