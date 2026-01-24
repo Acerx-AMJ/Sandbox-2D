@@ -25,13 +25,13 @@ constexpr int treeBranchChance   = 15;
 constexpr int cactusBranchChance = 50;
 constexpr int cactusFlowerChance = 10;
 
-constexpr int textureSize    = 8;
+constexpr int textureSize = 8;
 
 // Furniture ID constants
 
 constexpr int furnitureCount = 13;
 
-static inline const std::unordered_map<std::string, int> furnitureTextureIds {
+static inline const std::unordered_map<std::string, unsigned short> furnitureTextureIds {
    {"tree", 0}, {"sapling", 1}, {"palm", 2}, {"palm_sapling", 3}, {"pine", 4},
    {"pine_sapling", 5}, {"jungle_tree", 6}, {"jungle_sapling", 7}, {"cactus", 8}, {"cactus_seed", 9},
    {"table", 10}, {"chair", 11}, {"door", 12}
@@ -41,6 +41,12 @@ static inline const std::array<const char*, furnitureCount> furnitureTextureName
    "tree", "sapling", "palm", "palm_sapling", "pine",
    "pine_sapling", "jungle_tree", "jungle_sapling", "cactus", "cactus_seed",
    "table", "chair", "door"
+};
+
+static inline const std::array<FurnitureType, furnitureCount> furnitureTypes {
+   FurnitureType::tree, FurnitureType::sapling, FurnitureType::tree, FurnitureType::sapling, FurnitureType::tree,
+   FurnitureType::sapling, FurnitureType::tree, FurnitureType::sapling, FurnitureType::cactus, FurnitureType::cactusSeed,
+   FurnitureType::table, FurnitureType::chair, FurnitureType::door,
 };
 
 // Helper functions
@@ -53,7 +59,7 @@ inline void setBlock(FurniturePiece &piece, int tx, int ty) {
 
 // Furniture constructors
 
-Furniture::Furniture(FurnitureType type, unsigned char id, short value, short value2, int posX, int posY, short sizeX, short sizeY)
+Furniture::Furniture(FurnitureType type, unsigned short id, short value, short value2, int posX, int posY, short sizeX, short sizeY)
    : type(type), id(id), value(value), value2(value2), posX(posX), posY(posY), sizeX(sizeX), sizeY(sizeY) {
    pieces = std::vector<std::vector<FurniturePiece>>(sizeY, std::vector<FurniturePiece>(sizeX, FurniturePiece{}));   
 }
@@ -180,7 +186,7 @@ Furniture getFurniture(int x, int y, const Map &map, FurnitureType type, bool pl
       if (!debug && (height < (palm ? palmSizeMin : treeSizeMin))) {
          return {};
       }
-      static std::unordered_map<unsigned char, std::string> textureMap {
+      static std::unordered_map<unsigned short, std::string> textureMap {
          {getBlockIdFromName("grass"), "tree"}, {getBlockIdFromName("dirt"), "tree"},        {getBlockIdFromName("sand"),         "palm"},
          {getBlockIdFromName("snow"),  "pine"}, {getBlockIdFromName("mud"),  "jungle_tree"}, {getBlockIdFromName("jungle_grass"), "jungle_tree"}
       };
@@ -256,13 +262,13 @@ Furniture getFurniture(int x, int y, const Map &map, FurnitureType type, bool pl
          return {};
       }
 
-      static std::unordered_map<unsigned char, std::string> textureMap {
+      static std::unordered_map<unsigned short, std::string> textureMap {
          {getBlockIdFromName("grass"), "sapling"},      {getBlockIdFromName("dirt"), "sapling"},        {getBlockIdFromName("sand"),         "palm_sapling"},
          {getBlockIdFromName("snow"),  "pine_sapling"}, {getBlockIdFromName("mud"),  "jungle_sapling"}, {getBlockIdFromName("jungle_grass"), "jungle_sapling"}
       };
 
       int offsetTx = (random(0, 100) / 33) * textureSize;
-      unsigned char btype = map.blocks[y + 2][x].id;
+      unsigned short btype = map.blocks[y + 2][x].id;
       Furniture sapling ((!textureMap.count(btype) ? "sapling" : textureMap[btype]), x, y, 1, 2, FurnitureType::sapling);
 
       setBlock(sapling.pieces[0][0], offsetTx, 0 * textureSize);
@@ -448,15 +454,19 @@ void Furniture::render(const Rectangle &cameraBounds) const {
 
 // Id functions
 
-unsigned char getFurnitureIdFromName(const std::string &name) {
+unsigned short getFurnitureIdFromName(const std::string &name) {
    return furnitureTextureIds.at(name);
 }
 
-std::string getFurnitureNameFromId(unsigned char id) {
+std::string getFurnitureNameFromId(unsigned short id) {
    return furnitureTextureNames.at(id);
 }
 
-FurnitureTexture getFurnitureIcon(unsigned char id) {
+FurnitureType getFurnitureType(unsigned short id) {
+   return furnitureTypes.at(id);
+}
+
+FurnitureTexture getFurnitureIcon(unsigned short id) {
    constexpr std::array<Vector2, furnitureCount> textureSizes {{
       {}, {textureSize, textureSize * 2}, {}, {}, {},
       {}, {}, {}, {}, {textureSize, textureSize},

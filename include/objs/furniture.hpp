@@ -44,7 +44,7 @@ struct Furniture {
    // Constructors
 
    Furniture() = default;
-   Furniture(FurnitureType type, unsigned char id, short value, short value2, int posX, int posY, short sizeX, short sizeY);
+   Furniture(FurnitureType type, unsigned short id, short value, short value2, int posX, int posY, short sizeX, short sizeY);
    Furniture(const std::string &texture, int posX, int posY, short sizeX, short sizeY, FurnitureType type);
 
    // Update functions
@@ -61,7 +61,7 @@ struct Furniture {
 
    std::vector<std::vector<FurniturePiece>> pieces;
    FurnitureType type = FurnitureType::none;
-   unsigned char id = 0;
+   unsigned short id = 0;
 
    short value = 0;
    short value2 = 0;
@@ -76,9 +76,10 @@ struct Furniture {
 
 // Furniture getter functions
 
-unsigned char getFurnitureIdFromName(const std::string &name);
-std::string getFurnitureNameFromId(unsigned char id);
-FurnitureTexture getFurnitureIcon(unsigned char id);
+unsigned short getFurnitureIdFromName(const std::string &name);
+std::string getFurnitureNameFromId(unsigned short id);
+FurnitureType getFurnitureType(unsigned short id);
+FurnitureTexture getFurnitureIcon(unsigned short id);
 
 // Furniture generation functions
 

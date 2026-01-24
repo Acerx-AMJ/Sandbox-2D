@@ -241,6 +241,46 @@ void Inventory::update() {
          return;
       }
    }
+
+   if (!open && anySelected) {
+      discardItem();
+   }
+}
+
+// Placement functions
+
+bool Inventory::canPlaceBlock() {
+   return getSelected().type == ItemType::block && getSelected().count > 0;
+}
+
+void Inventory::placeBlock(int x, int y, bool playerFacingLeft) {
+   Item &item = getSelected();
+
+   // Place furniture
+   if (item.isFurniture) {
+      Furniture furniture = getFurniture(x, y, map, getFurnitureType(item.id), playerFacingLeft);
+      if (furniture.type == FurnitureType::none) {
+         return;
+      }
+      map.addFurniture(furniture);
+   }
+
+   // Place blocks
+   else {
+      if (!((item.isWall && (map.walls[y][x].type & BlockType::empty)) || (!item.isWall && (map.blocks[y][x].type & BlockType::empty)))) {
+         return;
+      }
+      map.setBlock(x, y, item.id, item.isWall);
+   }
+
+   item.count -= 1;
+   if (item.count <= 0) {
+      item = Item{};
+   }
+}
+
+Item &Inventory::getSelected() {
+   return items[selectedY][selectedX];
 }
 
 // Helper functions
@@ -380,9 +420,9 @@ bool Inventory::placeItem(Item &item) {
 }
 
 int Inventory::getItemStackSize(const Item &item) {
-   if (item.type == Item::item) {
+   if (item.type == ItemType::item || item.type == ItemType::block) {
       return itemStackSize;
-   } else if (item.type == Item::equipment) {
+   } else if (item.type == ItemType::equipment) {
       return equipmentStackSize;
    } else {
       return potionStackSize;
@@ -447,13 +487,13 @@ void Inventory::render() const {
 }
 
 void Inventory::renderItem(const Item &item, const Vector2 &position, bool isSelected) const {
-   Color drawColor = (isSelected ? Fade(WHITE, 0.75f) : WHITE);
+   Color drawColor = Fade((item.isWall ? wallTint : WHITE), (isSelected ? 0.75f : 1.0f));
 
    if (!item.isFurniture) {
       drawTexture(getTexture(getBlockNameFromId(item.id)), position, itemframeItemSize, 0.0f, drawColor);
    } else if (item.isFurniture) {
       FurnitureTexture texture = getFurnitureIcon(item.id);
-      Vector2 newPos = Vector2Add(position, Vector2Scale(itemframeSize, 0.5f));
+      Vector2 newPos = position;//Vector2Add(position, Vector2Scale(itemframeSize, 0.5f));
       Vector2 fSize = itemframeItemSize;
 
       if (texture.sizeX < texture.sizeY) {
@@ -465,7 +505,8 @@ void Inventory::renderItem(const Item &item, const Vector2 &position, bool isSel
    }
 
    if (item.count != 1) {
+      Color textColor = (isSelected ? Fade(WHITE, 0.75f) : WHITE);
       Vector2 textPosition = Vector2Subtract(position, itemFrameCountOffset);
-      drawText(textPosition, std::to_string(item.count).c_str(), 25, drawColor);
+      drawText(textPosition, std::to_string(item.count).c_str(), 25, textColor);
    }
 }

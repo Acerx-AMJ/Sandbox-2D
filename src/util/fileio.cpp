@@ -10,7 +10,7 @@
 
 // Please increment after any breaking changes to warn players
 // about corrupted worlds
-constexpr int fileVersion = 7;
+constexpr int fileVersion = 8;
 
 // File functions
 

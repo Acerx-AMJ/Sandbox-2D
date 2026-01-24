@@ -33,6 +33,12 @@ struct Inventory {
 
    void update();
 
+   // Placement functions
+
+   bool canPlaceBlock();
+   void placeBlock(int x, int y, bool playerFacingLeft);
+   Item &getSelected();
+
    // Helper functions
 
    void toggleInventoryOpen();

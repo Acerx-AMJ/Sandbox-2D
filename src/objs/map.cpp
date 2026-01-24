@@ -300,7 +300,7 @@ bool Map::isSoil(int x, int y) const {
 }
 
 bool Map::isEmpty(int x, int y) const {
-   return isPositionValid(x, y) && (blocks[y][x].type & BlockType::empty) && !isLiquid(x, y);
+   return isPositionValid(x, y) && (blocks[y][x].type & BlockType::empty) && !isLiquid(x, y) && !(blocks[y][x].type & BlockType::furniture);
 }
 
 bool Map::isNotSolid(int x, int y) const {

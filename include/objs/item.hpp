@@ -3,15 +3,24 @@
 
 #include <raylib.h>
 
-struct Item {
-   enum Type { item, equipment, potion };
+// Item type
 
-   Type type = Type::item;
-   unsigned char id = 0;
-   bool isFurniture = false;
-   bool favorite = false;
-   int count = 0;
+enum class ItemType: unsigned char {
+   block, item, equipment, potion
 };
+
+// Item
+
+struct Item {
+   ItemType type = ItemType::block;
+   unsigned short id = 0;
+   unsigned short count = 0;
+   bool isFurniture = false;
+   bool isWall = false;
+   bool favorite = false;
+};
+
+// Selected item
 
 struct SelectedItem {
    Item item;
@@ -22,18 +31,23 @@ struct SelectedItem {
    void reset();
 };
 
-struct DroppedItem {
-   Item::Type type = Item::item;
-   unsigned char id = 0;
-   bool isFurniture = false;
-   int count = 0;
+// Dropped item
 
-   int tileX = 0, tileY = 0;
+struct DroppedItem {
+   ItemType type = ItemType::block;
+   unsigned short id = 0;
+   unsigned short count = 0;
    float lifetime = 0.f;
-   bool inBounds = false, flagForDeletion = false;
+   int tileX = 0;
+   int tileY = 0;
+
+   bool isFurniture = false;
+   bool isWall = false;
+   bool inBounds = false;
+   bool flagForDeletion = false;
 
    DroppedItem() = default;
-   DroppedItem(Item::Type type, unsigned char id, bool isFurniture, int count, int tileX, int tileY, float lifetime);
+   DroppedItem(ItemType type, unsigned short id, unsigned short count, bool isFurniture, bool isWall, int tileX, int tileY, float lifetime);
    DroppedItem(Item &item, int tileX, int tileY);
 
    void update(const Rectangle &cameraBounds, float dt);

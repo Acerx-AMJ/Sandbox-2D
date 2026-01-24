@@ -24,11 +24,11 @@ void SelectedItem::reset()  {
 
 // Dropped item functions
 
-DroppedItem::DroppedItem(Item::Type type, unsigned char id, bool isFurniture, int count, int tileX, int tileY, float lifetime)
-   : type(type), id(id), isFurniture(isFurniture), count(count), tileX(tileX), tileY(tileY), lifetime(lifetime) {}
+DroppedItem::DroppedItem(ItemType type, unsigned short id, unsigned short count, bool isFurniture, bool isWall, int tileX, int tileY, float lifetime)
+   : type(type), id(id), count(count), lifetime(lifetime), tileX(tileX), tileY(tileY), isFurniture(isFurniture), isWall(isWall) {}
 
 DroppedItem::DroppedItem(Item &item, int tileX, int tileY)
-   : type(item.type), id(item.id), isFurniture(item.isFurniture), count(item.count), tileX(tileX), tileY(tileY), lifetime(0.0f) {}
+   : type(item.type), id(item.id), count(item.count), lifetime(0.0f), tileX(tileX), tileY(tileY), isFurniture(item.isFurniture), isWall(item.isWall) {}
 
 void DroppedItem::update(const Rectangle &cameraBounds, float dt) {
    lifetime += dt;
@@ -46,11 +46,12 @@ void DroppedItem::render() const {
 
    float offsetY = std::sin(lifetime * droppedItemFloatSpeed) * droppedItemFloatHeight;
 
+   Color drawColor = (isWall ? wallTint : WHITE);
    Vector2 position = {tileX + 0.5f, (tileY + 0.5f) - offsetY};
    Vector2 size = droppedItemSize;
 
    if (!isFurniture) {
-      drawTexture(getTexture(getBlockNameFromId(id)), position, size, 0.0f, WHITE);
+      drawTexture(getTexture(getBlockNameFromId(id)), position, size, 0.0f, drawColor);
    } else {
       FurnitureTexture texture = getFurnitureIcon(id);
 
@@ -59,7 +60,7 @@ void DroppedItem::render() const {
       } else if (texture.sizeX > texture.sizeY) {
          size.y *= texture.sizeY / texture.sizeX;
       }
-      DrawTexturePro(texture.texture, {0, 0, (float)texture.sizeX, (float)texture.sizeY}, {position.x, position.y, size.x, size.y}, {0, 0}, 0, WHITE);
+      DrawTexturePro(texture.texture, {0, 0, (float)texture.sizeX, (float)texture.sizeY}, {position.x, position.y, size.x, size.y}, Vector2Scale(size, 0.5f), 0, drawColor);
    }
 
    if (count != 1) {

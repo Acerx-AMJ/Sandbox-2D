@@ -14,7 +14,6 @@
 #include <raymath.h>
 #include <algorithm>
 #include <cmath>
-#include <unordered_map>
 
 // Constants
 
@@ -30,30 +29,6 @@ constexpr int grassGrowSpeedMax = 255;
 
 constexpr float timeToRespawn = 10.0f;
 
-/************************************/
-// Temporary way to switch, delete and place blocks. blockMap blocks must be in the same order as
-// the blockIds map in objs/block.cpp. Everything between these multi-comments is temporary.
-static int blockIndex = 0;
-static int size = 29;
-static const char *blockMap[] {
-   "grass", "dirt", "clay", "stone", "sand", "sandstone", "bricks", "glass", "planks", "stone_bricks", "tiles", "obsidian",
-   "platform", "snow", "ice", "mud", "jungle_grass", "lamp", "torch", "honey_block", "crispy_honey_block", "slime_block",
-   "bubble_block", "slime_platform",
-   "sapling", "cactus_seed", "table", "chair", "door"
-};
-static bool drawWall = false;
-static bool canDraw = false;
-static Furniture obj;
-inline FurnitureType getFurnitureType() {
-   static int si = 24;
-   static std::unordered_map<int, FurnitureType> ftypes = {{
-      {si, FurnitureType::sapling}, {si + 1, FurnitureType::cactusSeed}, {si + 2, FurnitureType::table}, {si + 3, FurnitureType::chair},
-      {si + 4, FurnitureType::door},
-   }};
-   return ftypes.count(blockIndex) ? ftypes[blockIndex] : FurnitureType::none;
-}
-/************************************/
-
 // Constructors
 
 GameState::GameState(const std::string &worldName)
@@ -62,6 +37,28 @@ GameState::GameState(const std::string &worldName)
    
    // Init world and camera
    loadWorldData(worldName, playerSpawnPosition, player, camera.zoom, map, inventory, droppedItems);
+
+   inventory.items[0][1] = Item{ItemType::block, 1, 9999, false, false, false};
+   inventory.items[0][2] = Item{ItemType::block, 2, 9999, false, false, false};
+   inventory.items[0][3] = Item{ItemType::block, 3, 9999, false, false, false};
+   inventory.items[0][4] = Item{ItemType::block, 4, 9999, false, false, false};
+   inventory.items[0][5] = Item{ItemType::block, 5, 9999, false, false, false};
+   inventory.items[0][6] = Item{ItemType::block, 6, 9999, false, false, false};
+   inventory.items[0][7] = Item{ItemType::block, 7, 9999, false, false, false};
+
+   inventory.items[1][1] = Item{ItemType::block, 1, 9999, false, true, false};
+   inventory.items[1][2] = Item{ItemType::block, 2, 9999, false, true, false};
+   inventory.items[1][3] = Item{ItemType::block, 3, 9999, false, true, false};
+   inventory.items[1][4] = Item{ItemType::block, 4, 9999, false, true, false};
+   inventory.items[1][5] = Item{ItemType::block, 5, 9999, false, true, false};
+   inventory.items[1][6] = Item{ItemType::block, 6, 9999, false, true, false};
+   inventory.items[1][7] = Item{ItemType::block, 7, 9999, false, true, false};
+
+   inventory.items[2][1] = Item{ItemType::block, 1, 9999, true, false, false};
+   inventory.items[2][2] = Item{ItemType::block, 9, 9999, true, false, false};
+   inventory.items[2][3] = Item{ItemType::block, 10, 9999, true, false, false};
+   inventory.items[2][4] = Item{ItemType::block, 11, 9999, true, false, false};
+   inventory.items[2][5] = Item{ItemType::block, 12, 9999, true, false, false};
 
    camera.zoom = clamp(camera.zoom, minCameraZoom, maxCameraZoom);
    camera.target = player.getCenter();
@@ -200,73 +197,42 @@ void GameState::updatePlaying() {
       return f.deleted;
    }), map.furniture.end());
 
-   /************************************/
-   // Move this to a different function later on!
+   // Place and destroy blocks
    Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
+   int mouseX = mousePos.x;
+   int mouseY = mousePos.y;
 
-   if (isKeyPressed(KEY_Y)) {
-      blockIndex = (blockIndex + 1) % size;
-   }
+   if (map.isPositionValid(mouseX, mouseY) && inventory.canPlaceBlock()) {
+      canDrawPreview = (inventory.getSelected().isFurniture || !CheckCollisionRecs(player.getBounds(), {(float)mouseX, (float)mouseY, 1, 1}));
 
-   if (isKeyPressed(KEY_T)) {
-      blockIndex = (blockIndex == 0 ? size - 1 : blockIndex - 1);
-   }
-
-   if (isKeyPressed(KEY_R)) {
-      drawWall =! drawWall;
-   }
-
-   if (map.isPositionValid(mousePos.x, mousePos.y)) {
-      FurnitureType ftype = getFurnitureType();
-      canDraw = (drawWall || ftype != FurnitureType::none || !CheckCollisionRecs(player.getBounds(), {(float)(int)mousePos.x, (float)(int)mousePos.y, 1.f, 1.f}));
-
-      if (isMouseDownOutsideUI(MOUSE_BUTTON_LEFT)) {
-         map.deleteBlock(mousePos.x, mousePos.y, drawWall);
-      } else if (isMouseDownOutsideUI(MOUSE_BUTTON_RIGHT) && canDraw && ((drawWall && ftype == FurnitureType::none) || !map.isu(mousePos.x, mousePos.y, BlockType::furniture))) {
-         if (ftype != FurnitureType::none) {
-            generateFurniture(mousePos.x, mousePos.y, map, ftype, player.flipX);
-         } else {
-            map.setBlock(mousePos.x, mousePos.y, blockMap[blockIndex], drawWall);
-         }
-      } else if (isMousePressedOutsideUI(MOUSE_BUTTON_MIDDLE) && !((drawWall ? map.walls : map.blocks)[mousePos.y][mousePos.x].type & BlockType::empty)) {
-         blockIndex = (drawWall ? map.walls : map.blocks)[mousePos.y][mousePos.x].id - 1;
+      if (isMouseDownOutsideUI(MOUSE_BUTTON_RIGHT)) {
+         inventory.placeBlock(mouseX, mouseY, player.flipX);
       }
+   } else {
+      canDrawPreview = false;
+   }
 
-      if (IsKeyDown(KEY_Z)) {
-         map.liquidsHeights[mousePos.y][mousePos.x] = 32;
-         map.liquidTypes[mousePos.y][mousePos.x] = LiquidType::water;
-      } else if (IsKeyDown(KEY_X)) {
-         map.liquidsHeights[mousePos.y][mousePos.x] = 32;
-         map.liquidTypes[mousePos.y][mousePos.x] = LiquidType::lava;
-      } else if (IsKeyDown(KEY_C)) {
-         map.liquidsHeights[mousePos.y][mousePos.x] = 32;
-         map.liquidTypes[mousePos.y][mousePos.x] = LiquidType::honey;
+   // Update dropped items
+   const Rectangle playerBounds = player.getBounds();
+   
+   for (auto &droppedItem: droppedItems) {
+      droppedItem.update(cameraBounds, dt);
+
+      if (!droppedItem.inBounds || !CheckCollisionRecs(playerBounds, droppedItem.getBounds())) {
+         continue;
+      }
+      Item item {droppedItem.type, droppedItem.id, droppedItem.count, droppedItem.isFurniture, droppedItem.isWall, false};
+      const int count = droppedItem.count;
+
+      droppedItem.count = (inventory.placeItem(item) ? 0 : item.count);
+      if (count != droppedItem.count) {
+         playSound("pickup");
       }
    }
-   /************************************/
 
-   if (!droppedItems.empty()) {
-      const Rectangle playerBounds = player.getBounds();
-      
-      for (auto &droppedItem: droppedItems) {
-         droppedItem.update(cameraBounds, dt);
-
-         if (!droppedItem.inBounds || !CheckCollisionRecs(playerBounds, droppedItem.getBounds())) {
-            continue;
-         }
-         Item item {droppedItem.type, droppedItem.id, droppedItem.isFurniture, false, droppedItem.count};
-         const int count = droppedItem.count;
-
-         droppedItem.count = (inventory.placeItem(item) ? 0 : item.count);
-         if (count != droppedItem.count) {
-            playSound("pickup");
-         }
-      }
-
-      droppedItems.erase(std::remove_if(droppedItems.begin(), droppedItems.end(), [](DroppedItem &i) -> bool {
-         return i.flagForDeletion || i.count <= 0;
-      }), droppedItems.end());
-   }
+   droppedItems.erase(std::remove_if(droppedItems.begin(), droppedItems.end(), [](DroppedItem &i) -> bool {
+      return i.flagForDeletion || i.count <= 0;
+   }), droppedItems.end());
 }
 
 // Update pause screen
@@ -519,26 +485,28 @@ void GameState::render() const {
 
    /************************************/
    // Scary method of rendering furniture and block preview correctly
-   Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
-   if (canDraw && map.isPositionValid(mousePos.x, mousePos.y)) {
-      FurnitureType ftype = getFurnitureType();
-      if (ftype != FurnitureType::none) {
-         static BlockType oldBelow = BlockType::empty;
-         static bool flippedX = false;
+   if (canDrawPreview) {
+      Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
+
+      
+      // FurnitureType ftype = getFurnitureType();
+      // if (ftype != FurnitureType::none) {
+      //    static BlockType oldBelow = BlockType::empty;
+      //    static bool flippedX = false;
          
-         BlockType below = (map.isPositionValid(mousePos.x, mousePos.y + obj.sizeY) ? map.blocks[mousePos.y + obj.sizeY][mousePos.x].type : BlockType::empty);
+      //    BlockType below = (map.isPositionValid(mousePos.x, mousePos.y + obj.sizeY) ? map.blocks[mousePos.y + obj.sizeY][mousePos.x].type : BlockType::empty);
          
-         if (ftype != obj.type || oldBelow != below || flippedX != player.flipX) {
-            obj = getFurniture(mousePos.x, mousePos.y, map, ftype, player.flipX, true);
-         }
-         flippedX = player.flipX;
-         oldBelow = below;
-         obj.posX = mousePos.x;
-         obj.posY = mousePos.y;
-         obj.preview(map);
-      } else {
-         DrawTexturePro(getTexture(blockMap[blockIndex]), {0, 0, 8, 8}, {(float)(int)mousePos.x, (float)(int)mousePos.y, 1, 1}, {0, 0}, 0, Fade((drawWall ? wallTint : (map.isu(mousePos.x, mousePos.y, BlockType::furniture) ? RED : WHITE)), previewAlpha));
-      }
+      //    if (ftype != obj.type || oldBelow != below || flippedX != player.flipX) {
+      //       obj = getFurniture(mousePos.x, mousePos.y, map, ftype, player.flipX, true);
+      //    }
+      //    flippedX = player.flipX;
+      //    oldBelow = below;
+      //    obj.posX = mousePos.x;
+      //    obj.posY = mousePos.y;
+      //    obj.preview(map);
+      // } else {
+      //    DrawTexturePro(getTexture(blockMap[blockIndex]), {0, 0, 8, 8}, {(float)(int)mousePos.x, (float)(int)mousePos.y, 1, 1}, {0, 0}, 0, Fade((drawWall ? wallTint : (map.isu(mousePos.x, mousePos.y, BlockType::furniture) ? RED : WHITE)), previewAlpha));
+      // }
    }
    /************************************/
 

@@ -63,6 +63,8 @@ struct GameState: public State {
    Phase phase = Phase::playing;
    Phase phaseBeforePausing = Phase::playing;
 
+   bool canDrawPreview = false;
+
    float deathTimer = 0.0f;
    int physicsCounter = 0;
    int lavaCounter = 0;
