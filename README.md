@@ -1,5 +1,5 @@
 # Sandbox-2D
-Sandbox-2D is a 2D sidescrolling sandbox game where you can build, destroy and play with physics. It has procedurally generated worlds featuring different biomes.
+Build whatever your heart desires, survive the environment or simply play around - it's up to you. Sandbox-2D is a sandbox survival game where you can build, destroy and explore. Ready for the laid-back experience? Download it now for free on [Itch.io](https://acerxamj.itch.io/sandbox-2d).
 
 ![Main Menu Screenshot](assets/screenshots/2026-01-01_19-00.png)
 
@@ -12,11 +12,14 @@ Sandbox-2D is a 2D sidescrolling sandbox game where you can build, destroy and p
 - [Credits](#credits)
 
 ## Features
+
+The game is a WIP, so stay tuned for new features! Currently it includes;
 - Building and destroying.
 - Water, lava and sand physics.
 - Player controller.
 - World generation with multiple biomes.
 - Lighting system.
+- Survival mode.
 
 ![Game Screenshot](assets/screenshots/2026-01-01_18-48_1.png)
 
@@ -29,13 +32,10 @@ Sandbox-2D is a 2D sidescrolling sandbox game where you can build, destroy and p
 - RIGHT CLICK - destroy blocks
 - MIDDLE CLICK - select a block
 
-- T, Y - switch blocks
-- R - toggle building in foreground/background
-
+- E - Toggle inventory
+- ESC - Toggle pause screen
 - MINUS - zoom in
 - EQUAL - zoom out
-- ESC - Toggle pause screen
-- E - Toggle inventory
 
 ## Installation
 This project only depends on Raylib 5.5 and it uses C++ standard 17.

@@ -38,46 +38,4 @@ Commit messages and PRs must be gramatically correct. In commit messages explain
 Do not create PRs of incomplete features or broken builds. Make sure to test your code before sending it.
 
 ### Code Style
-These are all recommendations. When modifying existing code, try to follow the style of the surrounding code. Your PR won't get declined because it doesn't follow this (unless it's completely unreadable). Just try your best at writting clean code and it'll be fine.
-
-#### Formatting
-- Use 3 spaces for indentation, not tabs.
-- Opening braces go on the same line, with a space before them.
-- Pointers should go before name in variables (`int *pointer`) and after variable in functions (`int* getPointer()`).
-#### Naming
-Write descriptive names. If a short name is descriptive, use that. Do not shorten common words like position, velocity and pointer to pos, vel and ptr.
-
-- Classes, structs and enums: PascalCase
-- Functions, variables, constants and files: camelCase
-#### File Structure
-Header files go in include/ and source files in src/. Both directories have equal folders, that must be mirrored (unless a file is header only):
-- game/ - contains game logic and states.
-- mngr/ - contains managers of a specific task.
-- objs/ - contains objects used in the game.
-- ui/ - strictly contains just UI elements (buttons, scrollframes, etc.).
-- util/ - contains utility headers.
-
-Header files must use #ifndef guards and they should be defined as FOLDER_FILE_HPP. For example include/util/fileio.hpp has the include header UTIL_FILEIO_HPP.
-
-Sort headers alphabetically from A to Z. Include order is:
-1. Project headers.
-2. Third-party headers.
-3. Standard library headers.
-#### C++ Practices
-- Do not use macros, use constexpr where needed.
-- Do not use `using namespace ...` unless it's for literals (e.g.: `using namespace std::string_literals`).
-- Only use `class` keyword for `enum class`, use `struct` for objects. Do not use `private:` or `protected:`.
-- Use `enum class` when an enum is not defined in an object.
-- Prefer range-based `for` when appropriate.
-- Only use polymorphism when the benefits outweight the negatives, prefer composition.
-- Try to avoid allocating memory on the heap yourself. Using standard containers like std::vector is completely fine.
-- Avoid templates outside utility functions.
-- Apply const correctness where possible.
-- Only group variables if no value is assigned to any (`int a, b, c;` and `int a = 1; int b = 2; int c = 3;`) 
-#### Error Handling
-- Try to handle gracefully without crashing.
-- If a failure is unrecoverable, use the util/format.hpp warn or assert functions.
-- Do not use try/catch blocks.
-#### Comments
-- Use comments for separating code blocks or to describe why you're using a specific solution.
-- Do not use multi-line comments.
+When writing or modifying existing code try to follow the style of the surrounding code. As long as the code is readable, it most likely will be fine.
