@@ -59,7 +59,7 @@ void LoadingState::fixedUpdate() {
    // Loading state does not require any physics
 }
 
-void LoadingState::render() const {
+void LoadingState::render() {
    std::string finalLoadingText = loadingText;
    if (loadPhase != Load::count) {
       finalLoadingText = format("{}{}/{}", loadingText, (int)loadPhase, (int)Load::count);

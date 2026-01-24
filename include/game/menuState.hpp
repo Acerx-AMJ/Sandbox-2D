@@ -33,12 +33,12 @@ struct MenuState: public State {
 
    // Render
 
-   void render() const override;
-   void renderTitle() const;
-   void renderLevelSelection() const;
-   void renderLevelCreation() const;
-   void renderLevelRenaming() const;
-   void renderGeneratingLevel() const;
+   void render() override;
+   void renderTitle();
+   void renderLevelSelection();
+   void renderLevelCreation();
+   void renderLevelRenaming();
+   void renderGeneratingLevel();
 
    // Change states
 

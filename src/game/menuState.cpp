@@ -461,7 +461,7 @@ void MenuState::updateGeneratingLevel() {
 
 // Render
 
-void MenuState::render() const {
+void MenuState::render() {
    drawBackground(foregroundTexture, backgroundTexture, 1.0f * dt, 1.0f * dt, 15.0f * dt);
 
    switch (phase) {
@@ -475,7 +475,7 @@ void MenuState::render() const {
 
 // Render title
 
-void MenuState::renderTitle() const {
+void MenuState::renderTitle() {
    drawText(getScreenCenter({0.f, -200.0f}), "SANDBOX 2D", 180);
    playButton.render();
    optionsButton.render();
@@ -484,7 +484,7 @@ void MenuState::renderTitle() const {
 
 // Render level selection screen
 
-void MenuState::renderLevelSelection() const {
+void MenuState::renderLevelSelection() {
    drawText(getScreenCenter({0.f, -425.0f}), "SELECT WORLD", 180);
    backButton.render();
    renameButton.render();
@@ -513,7 +513,7 @@ void MenuState::renderLevelSelection() const {
 
 // Render level creation screen
 
-void MenuState::renderLevelCreation() const {
+void MenuState::renderLevelCreation() {
    drawText(getScreenCenter({0.f, -400.0f}), "CREATE WORLD", 180);
    backButtonCreation.render();
    createButtonCreation.render();
@@ -525,7 +525,7 @@ void MenuState::renderLevelCreation() const {
 
 // Render level renaming screen
 
-void MenuState::renderLevelRenaming() const {
+void MenuState::renderLevelRenaming() {
    drawText(getScreenCenter({0.0f, -400.0f}), "RENAME WORLD", 180);
    backButtonRenaming.render();
    renameButtonRenaming.render();
@@ -538,7 +538,7 @@ void MenuState::renderLevelRenaming() const {
 
 // Render level generation screen
 
-void MenuState::renderGeneratingLevel() const {
+void MenuState::renderGeneratingLevel() {
    generationProgressBar.render();
    drawText(getScreenCenter({0.0f, -100.0f}), generationInfoText.c_str(), 50.0f);
    drawText(getScreenCenter({0.0f, 100.0f}), generationSplash.c_str(), 40.0f);

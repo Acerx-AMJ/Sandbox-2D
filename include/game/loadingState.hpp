@@ -19,7 +19,7 @@ struct LoadingState: public State {
    void update() override;
    void fixedUpdate() override;
 
-   void render() const override;
+   void render() override;
    State* change() override;
 
    // Members

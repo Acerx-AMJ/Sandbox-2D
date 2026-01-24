@@ -37,7 +37,7 @@ struct Inventory {
 
    bool canPlaceBlock();
    void placeBlock(int x, int y, bool playerFacingLeft);
-   Item &getSelected();
+   const Item &getSelected() const;
 
    // Helper functions
 

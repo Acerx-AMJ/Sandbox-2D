@@ -254,7 +254,7 @@ bool Inventory::canPlaceBlock() {
 }
 
 void Inventory::placeBlock(int x, int y, bool playerFacingLeft) {
-   Item &item = getSelected();
+   Item &item = items[selectedY][selectedX];
 
    // Place furniture
    if (item.isFurniture) {
@@ -279,7 +279,7 @@ void Inventory::placeBlock(int x, int y, bool playerFacingLeft) {
    }
 }
 
-Item &Inventory::getSelected() {
+const Item &Inventory::getSelected() const {
    return items[selectedY][selectedX];
 }
 

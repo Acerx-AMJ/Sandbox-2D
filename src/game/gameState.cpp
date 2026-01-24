@@ -459,7 +459,7 @@ void GameState::updateTorchPhysics(int x, int y) {
 
 // Render
 
-void GameState::render() const {
+void GameState::render() {
    const float delta = (phase != Phase::playing ? 0 : player.delta.x * dt);
    drawBackground(foregroundTexture, backgroundTexture, delta, delta, (phase == Phase::paused ? 0.0f : 1.0f) * dt);
 
@@ -483,32 +483,31 @@ void GameState::render() const {
       return;
    }
 
-   /************************************/
-   // Scary method of rendering furniture and block preview correctly
+   // Render block preview
    if (canDrawPreview) {
       Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
-
+      int mouseX = mousePos.x;
+      int mouseY = mousePos.y;
       
-      // FurnitureType ftype = getFurnitureType();
-      // if (ftype != FurnitureType::none) {
-      //    static BlockType oldBelow = BlockType::empty;
-      //    static bool flippedX = false;
-         
-      //    BlockType below = (map.isPositionValid(mousePos.x, mousePos.y + obj.sizeY) ? map.blocks[mousePos.y + obj.sizeY][mousePos.x].type : BlockType::empty);
-         
-      //    if (ftype != obj.type || oldBelow != below || flippedX != player.flipX) {
-      //       obj = getFurniture(mousePos.x, mousePos.y, map, ftype, player.flipX, true);
-      //    }
-      //    flippedX = player.flipX;
-      //    oldBelow = below;
-      //    obj.posX = mousePos.x;
-      //    obj.posY = mousePos.y;
-      //    obj.preview(map);
-      // } else {
-      //    DrawTexturePro(getTexture(blockMap[blockIndex]), {0, 0, 8, 8}, {(float)(int)mousePos.x, (float)(int)mousePos.y, 1, 1}, {0, 0}, 0, Fade((drawWall ? wallTint : (map.isu(mousePos.x, mousePos.y, BlockType::furniture) ? RED : WHITE)), previewAlpha));
-      // }
+      const Item &item = inventory.getSelected();
+
+      if (item.isFurniture) {
+         BlockType below = (map.isPositionValid(mouseX, mouseY + furniturePreview.sizeY) ? map.blocks[mouseY + furniturePreview.sizeY][mouseX].type : BlockType::empty);
+
+         if (lastFurnitureType != getFurnitureType(item.id) || oldBlockBelowPreview != below || flippedPreviewX != player.flipX) {
+            furniturePreview = getFurniture(mouseX, mouseY, map, getFurnitureType(item.id), player.flipX, true);
+         }
+         flippedPreviewX = player.flipX;
+         lastFurnitureType = furniturePreview.type;
+         oldBlockBelowPreview = below;
+
+         furniturePreview.posX = mouseX;
+         furniturePreview.posY = mouseY;
+         furniturePreview.preview(map);
+      } else {
+         DrawTexturePro(getTexture(getBlockNameFromId(item.id)), {0, 0, 8, 8}, {(float)mouseX, (float)mouseY, 1, 1}, {0, 0}, 0, Fade(item.isWall ? wallTint : WHITE, previewAlpha));
+      }
    }
-   /************************************/
 
    // Render breath dynamically
    if (player.breath != maxBreath) {

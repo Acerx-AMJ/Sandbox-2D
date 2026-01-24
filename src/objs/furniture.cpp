@@ -427,13 +427,15 @@ void generateFurniture(int x, int y, Map &map, FurnitureType type, bool playerFa
 // Render furniture
 
 void Furniture::preview(const Map &map) const {
+   bool valid = isValid(map);
+   
    for (int y = posY; y - posY < sizeY; ++y) {
       for (int x = posX; x - posX < sizeX; ++x) {
          const FurniturePiece &piece = pieces[y - posY][x - posX];
          if (piece.nil) {
             continue;
          }
-         Color color = Fade((map.isNotSolid(x, y) ? WHITE : RED), previewAlpha);
+         Color color = Fade((map.isNotSolid(x, y) && valid ? WHITE : RED), previewAlpha);
          DrawTexturePro(getTexture(furnitureTextureNames[id]), {(float)piece.tx, (float)piece.ty, textureSize, textureSize}, {(float)x, (float)y, 1.f, 1.f}, {0, 0}, 0, color);
       }
    }

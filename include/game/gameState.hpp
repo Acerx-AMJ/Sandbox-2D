@@ -40,7 +40,7 @@ struct GameState: public State {
 
    // Other
 
-   void render() const override;
+   void render() override;
    State* change() override;
    void calculateCameraBounds();
 
@@ -63,7 +63,11 @@ struct GameState: public State {
    Phase phase = Phase::playing;
    Phase phaseBeforePausing = Phase::playing;
 
+   Furniture furniturePreview;
+   FurnitureType lastFurnitureType = FurnitureType::none;
+   BlockType oldBlockBelowPreview = BlockType::empty;
    bool canDrawPreview = false;
+   bool flippedPreviewX = false;
 
    float deathTimer = 0.0f;
    int physicsCounter = 0;

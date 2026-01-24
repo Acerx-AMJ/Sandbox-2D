@@ -42,5 +42,6 @@
 - Add more sounds for sitting, opening doors, swimming, drowning, stepping on sticky and bouncy blocks. And fix existing sounds.
 
 # Bugs
+- Fix door logic
 - Chairs teleport you.
 - Platforms while holding W make you go up really quickly.
