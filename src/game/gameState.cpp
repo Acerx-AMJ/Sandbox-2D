@@ -38,28 +38,6 @@ GameState::GameState(const std::string &worldName)
    // Init world and camera
    loadWorldData(worldName, playerSpawnPosition, player, camera.zoom, map, inventory, droppedItems);
 
-   inventory.items[0][1] = Item{ItemType::block, 1, 9999, false, false, false};
-   inventory.items[0][2] = Item{ItemType::block, 2, 9999, false, false, false};
-   inventory.items[0][3] = Item{ItemType::block, 3, 9999, false, false, false};
-   inventory.items[0][4] = Item{ItemType::block, 4, 9999, false, false, false};
-   inventory.items[0][5] = Item{ItemType::block, 5, 9999, false, false, false};
-   inventory.items[0][6] = Item{ItemType::block, 6, 9999, false, false, false};
-   inventory.items[0][7] = Item{ItemType::block, 7, 9999, false, false, false};
-
-   inventory.items[1][1] = Item{ItemType::block, 1, 9999, false, true, false};
-   inventory.items[1][2] = Item{ItemType::block, 2, 9999, false, true, false};
-   inventory.items[1][3] = Item{ItemType::block, 3, 9999, false, true, false};
-   inventory.items[1][4] = Item{ItemType::block, 4, 9999, false, true, false};
-   inventory.items[1][5] = Item{ItemType::block, 5, 9999, false, true, false};
-   inventory.items[1][6] = Item{ItemType::block, 6, 9999, false, true, false};
-   inventory.items[1][7] = Item{ItemType::block, 7, 9999, false, true, false};
-
-   inventory.items[2][1] = Item{ItemType::block, 1, 9999, true, false, false};
-   inventory.items[2][2] = Item{ItemType::block, 9, 9999, true, false, false};
-   inventory.items[2][3] = Item{ItemType::block, 10, 9999, true, false, false};
-   inventory.items[2][4] = Item{ItemType::block, 11, 9999, true, false, false};
-   inventory.items[2][5] = Item{ItemType::block, 12, 9999, true, false, false};
-
    camera.zoom = clamp(camera.zoom, minCameraZoom, maxCameraZoom);
    camera.target = player.getCenter();
    camera.offset = center;
@@ -202,11 +180,13 @@ void GameState::updatePlaying() {
    int mouseX = mousePos.x;
    int mouseY = mousePos.y;
 
-   if (map.isPositionValid(mouseX, mouseY) && inventory.canPlaceBlock()) {
-      canDrawPreview = (inventory.getSelected().isFurniture || !CheckCollisionRecs(player.getBounds(), {(float)mouseX, (float)mouseY, 1, 1}));
+   if (map.isPositionValid(mouseX, mouseY)) {
+      canDrawPreview = (inventory.canPlaceBlock() && (inventory.getSelected().isFurniture || !CheckCollisionRecs(player.getBounds(), {(float)mouseX, (float)mouseY, 1, 1})));
 
-      if (isMouseDownOutsideUI(MOUSE_BUTTON_RIGHT)) {
+      if (isMouseDownOutsideUI(MOUSE_BUTTON_RIGHT) && inventory.canPlaceBlock()) {
          inventory.placeBlock(mouseX, mouseY, player.flipX);
+      } else if (isMousePressedOutsideUI(MOUSE_BUTTON_MIDDLE)) {
+         inventory.selectItem(mouseX, mouseY);
       }
    } else {
       canDrawPreview = false;

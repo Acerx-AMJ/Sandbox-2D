@@ -279,6 +279,49 @@ void Inventory::placeBlock(int x, int y, bool playerFacingLeft) {
    }
 }
 
+void Inventory::selectItem(int x, int y) {
+   unsigned short id = 0;
+   bool furniture = false;
+   bool wall = false;
+
+   if (map.blocks[y][x].type & BlockType::furniture) {
+      // First find the right id
+      for (const Furniture &furniture: map.furniture) {
+         if (furniture.posX <= x && furniture.posX + furniture.sizeX > x
+          && furniture.posY <= y && furniture.posY + furniture.sizeY > y
+          && !furniture.pieces[y - furniture.posY][x - furniture.posX].nil) {
+            id = furniture.id;
+            break;
+         }
+      }
+      furniture = true;
+   } else if (!map.isEmpty(x, y)) {
+      id = map.blocks[y][x].id;
+   } else if (!(map.walls[y][x].type & BlockType::empty)) {
+      id = map.walls[y][x].id;
+      wall = true;
+   } else {
+      // Do not pick any elements
+      return;
+   }
+
+   for (int y = 0; y < inventoryHeight; ++y) {
+      for (int x = 0; x < inventoryWidth; ++x) {
+         Item &item = items[y][x];
+
+         if (item.isFurniture == furniture && item.isWall == wall && item.id == id) {
+            if (y == 0) {
+               selectedX = x;
+               selectedY = 0;
+            } else {
+               std::swap(item, items[selectedY][selectedX]);
+            }
+            return;
+         }
+      }
+   }
+}
+
 const Item &Inventory::getSelected() const {
    return items[selectedY][selectedX];
 }

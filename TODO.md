@@ -9,7 +9,6 @@
 - Add tables, chests and so on.
 
 ### Inventory
-- Make blocks found in the inventory be placeable.
 - Add the "10th" slot by clicking and using an inventory slot that isn't in the hotbar.
 - Add quick-stacking to nearby chests
 - Add inventory sorting.
