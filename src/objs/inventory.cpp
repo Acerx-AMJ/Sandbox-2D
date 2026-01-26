@@ -241,9 +241,22 @@ void Inventory::update() {
          return;
       }
    }
+
+   // Discard the first row of items only if a hotbar item
+   // has been selected
+   if (!open && anySelected && 10 > (reinterpret_cast<unsigned long>(selectedItem.address) - reinterpret_cast<unsigned long>(items)) / sizeof(Item)) {
+      discardItem();
+   }
 }
 
 // Placement functions
+
+void Inventory::tryToPlaceItemOrDropAtCoordinates(Item &item, int x, int y) {
+   if (!placeItem(item)) {
+      DroppedItem droppedItem {item, x, y};
+      droppedItems.push_back(droppedItem);
+   }
+}
 
 bool Inventory::canPlaceBlock() {
    const Item &selected = getSelected();
@@ -290,15 +303,7 @@ void Inventory::selectItem(int x, int y) {
    bool wall = false;
 
    if (map.blocks[y][x].type & BlockType::furniture) {
-      // First find the right id
-      for (const Furniture &furniture: map.furniture) {
-         if (furniture.posX <= x && furniture.posX + furniture.sizeX > x
-          && furniture.posY <= y && furniture.posY + furniture.sizeY > y
-          && !furniture.pieces[y - furniture.posY][x - furniture.posX].nil) {
-            id = furniture.id;
-            break;
-         }
-      }
+      id = map.getFurnitureAtPosition(x, y).id;
       furniture = true;
    } else if (!map.isEmpty(x, y)) {
       id = map.blocks[y][x].id;

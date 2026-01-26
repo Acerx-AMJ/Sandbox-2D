@@ -190,27 +190,29 @@ void GameState::updatePlaying() {
          canDrawPreview = canDrawPreview && inventory.canPlaceBlock(); // To avoid attempting to draw air on placing last block
       } else if (isMousePressedOutsideUI(MOUSE_BUTTON_MIDDLE)) {
          inventory.selectItem(mouseX, mouseY);
-      } else if (isMouseDownOutsideUI(MOUSE_BUTTON_LEFT) && (!(map.blocks[mouseY][mouseX].type & BlockType::empty) || !(map.walls[mouseY][mouseX].type & BlockType::empty))) {
+      } else if (isMouseDownOutsideUI(MOUSE_BUTTON_LEFT) && (!(map.blocks[mouseY][mouseX].type & BlockType::empty) || !(map.walls[mouseY][mouseX].type & BlockType::empty) || (map.blocks[mouseY][mouseX].type & BlockType::furniture))) {
          bool isWall = (map.blocks[mouseY][mouseX].type & BlockType::empty);
+         bool isFurniture = (map.blocks[mouseY][mouseX].type & BlockType::furniture);
          Block &block = (isWall ? map.walls : map.blocks)[mouseY][mouseX];
 
-         if (mouseX != player.lastBreakingX || mouseY != player.lastBreakingY || isWall != player.breakingWall) {
+         if (mouseX != player.lastBreakingX || mouseY != player.lastBreakingY || isWall != player.breakingWall || isFurniture != player.breakingFurniture) {
             player.breakTime = 0;
          }
 
          player.breakTime += realDt;
          player.breakingWall = isWall;
+         player.breakingFurniture = isFurniture;
          player.lastBreakingX = mouseX;
          player.lastBreakingY = mouseY;
 
-         if (player.breakTime >= getBlockBreakingTime(block.id)) {
-            Item item {ItemType::block, block.id, 1, false, player.breakingWall, false};
-            if (!inventory.placeItem(item)) {
-               DroppedItem droppedItem {item, mouseX, mouseY};
-               droppedItems.push_back(droppedItem);
+         if (player.breakTime >= (player.breakingFurniture ? getFurnitureBreakingTime(map.getFurnitureAtPosition(mouseX, mouseY).id) : getBlockBreakingTime(block.id))) {
+            if (player.breakingFurniture) {
+               map.getFurnitureAtPosition(mouseX, mouseY).destroy(map, inventory, mouseX, mouseY);
+            } else {
+               Item item {ItemType::block, block.id, 1, false, player.breakingWall, false};
+               inventory.tryToPlaceItemOrDropAtCoordinates(item, mouseX, mouseY);
+               map.deleteBlockWithoutDeletingLiquids(mouseX, mouseY, player.breakingWall);
             }
-
-            map.deleteBlockWithoutDeletingLiquids(mouseX, mouseY, player.breakingWall);
             player.breakTime = 0;
          }
       }
@@ -517,7 +519,9 @@ void GameState::render() {
 
    // Render block breaking preview
    if (player.breakTime != 0.0f) {
-      int textureX = (player.breakTime / getBlockBreakingTime((player.breakingWall ? map.walls : map.blocks)[player.lastBreakingY][player.lastBreakingX].id)) * 5;
+      // TODO: Change this in the future, shit logic
+      float breakTime = (player.breakingFurniture ? getFurnitureBreakingTime(map.getFurnitureAtPosition(player.lastBreakingX, player.lastBreakingY).id) : getBlockBreakingTime((player.breakingWall ? map.walls : map.blocks)[player.lastBreakingY][player.lastBreakingX].id));
+      int textureX = (player.breakTime / breakTime) * 5;
       Texture2D &texture = getTexture("breaking");
       DrawTexturePro(texture, {textureX * 8.0f, 0, 8, 8}, {(float)player.lastBreakingX, (float)player.lastBreakingY, 1, 1}, {0, 0}, 0, (player.breakingWall ? wallTint : WHITE));
    }

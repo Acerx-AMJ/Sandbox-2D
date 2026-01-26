@@ -49,6 +49,7 @@ struct Furniture {
 
    // Update functions
 
+   void destroy(struct Map &map, struct Inventory &inventory, int cursorX, int cursorY);
    void update(struct Map &map, struct Player &player, const Vector2 &mousePos);
    bool isValid(const struct Map &map) const;
 
@@ -76,6 +77,7 @@ struct Furniture {
 
 // Furniture getter functions
 
+float getFurnitureBreakingTime(unsigned short id);
 unsigned short getFurnitureIdFromName(const std::string &name);
 std::string getFurnitureNameFromId(unsigned short id);
 FurnitureType getFurnitureType(unsigned short id);

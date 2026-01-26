@@ -35,6 +35,7 @@ struct Inventory {
 
    // Placement functions
 
+   void tryToPlaceItemOrDropAtCoordinates(Item &item, int x, int y);
    bool canPlaceBlock();
    void placeBlock(int x, int y, bool playerFacingLeft);
    void selectItem(int x, int y);

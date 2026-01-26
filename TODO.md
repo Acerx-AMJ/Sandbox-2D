@@ -8,6 +8,7 @@
 - Add tables, chests and so on.
 
 ### Inventory
+- Make new blocks light up until hovered on
 - Add quick-stacking to nearby chests
 - Add inventory sorting.
 - Display item's name and description on hover.
@@ -39,6 +40,7 @@
 - Add more sounds for sitting, opening doors, swimming, drowning, stepping on sticky and bouncy blocks. And fix existing sounds.
 
 # Bugs
+- Fix breaking blocks below furniture
 - Fix door logic
 - Chairs teleport you.
 - Platforms while holding W make you go up really quickly.

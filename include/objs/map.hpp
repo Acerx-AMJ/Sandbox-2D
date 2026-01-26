@@ -119,6 +119,7 @@ struct Map {
 
    // Set furniture functions
 
+   Furniture &getFurnitureAtPosition(int x, int y);
    void addFurniture(Furniture &object);
    void removeFurniture(Furniture &object);
 

@@ -13,7 +13,7 @@
 
 // Constants
 
-constexpr unsigned short blockCount = 25;
+constexpr unsigned short blockCount = 26;
 
 // NOTE: due to logic in gameState.cpp, any grass blocks must be defined RIGHT
 // BEFORE the dirt block, for an example, you can see blocks 1 and 2
@@ -43,6 +43,7 @@ static inline const std::unordered_map<std::string, unsigned short> blockIds {
    {"slime_block", 22},
    {"bubble_block", 23},
    {"slime_platform", 24},
+   {"cactus_block", 25},
 };
 
 constexpr static inline std::array<const char*, blockCount> blockNames {
@@ -71,6 +72,7 @@ constexpr static inline std::array<const char*, blockCount> blockNames {
    "slime_block",
    "bubble_block",
    "slime_platform",
+   "cactus_block",
 };
 
 // This is a nightmare to edit, but at least makes other code easier!
@@ -100,6 +102,7 @@ constexpr static inline const std::array<BlockType, blockCount> blockAttributes 
    BlockType::solid | BlockType::bouncy | BlockType::transparent, // slime block
    BlockType::transparent, // bubble block
    BlockType::platform | BlockType::transparent | BlockType::solid | BlockType::flowable | BlockType::bouncy, // Slime platform
+   BlockType::solid, // cactus
 }};
 
 // Block breaking times
@@ -129,6 +132,7 @@ constexpr static inline const std::array<float, blockCount> blockBreakingTimes {
    1.0f, // slime block
    0.25f, // bubble block
    0.75f, // slime platform
+   0.75f, // cactus
 }};
 
 // Block getter functions
@@ -287,6 +291,19 @@ void Map::moveBlock(int oldX, int oldY, int newX, int newY) {
 }
 
 // Set furniture functions
+
+Furniture &Map::getFurnitureAtPosition(int x, int y) {
+   for (Furniture &furniture: furniture) {
+      if (furniture.posX <= x && furniture.posX + furniture.sizeX > x
+         && furniture.posY <= y && furniture.posY + furniture.sizeY > y
+         && !furniture.pieces[y - furniture.posY][x - furniture.posX].nil) {
+         return furniture;
+         break;
+      }
+   }
+   assert(false, "Error: No furniture at position ({}, {}).", x, y);
+   std::exit(-1); // Silence warning
+}
 
 void Map::addFurniture(Furniture &object) {
    for (int y = object.posY; y < object.sizeY + object.posY; ++y) {

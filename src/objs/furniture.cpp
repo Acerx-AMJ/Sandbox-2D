@@ -1,5 +1,6 @@
 #include "mngr/resource.hpp"
 #include "objs/furniture.hpp"
+#include "objs/inventory.hpp"
 #include "objs/map.hpp"
 #include "objs/player.hpp"
 #include "util/random.hpp"
@@ -37,16 +38,62 @@ static inline const std::unordered_map<std::string, unsigned short> furnitureTex
    {"table", 10}, {"chair", 11}, {"door", 12}
 };
 
-static inline const std::array<const char*, furnitureCount> furnitureTextureNames {
+constexpr static inline std::array<const char*, furnitureCount> furnitureTextureNames {
    "tree", "sapling", "palm", "palm_sapling", "pine",
    "pine_sapling", "jungle_tree", "jungle_sapling", "cactus", "cactus_seed",
    "table", "chair", "door"
 };
 
-static inline const std::array<FurnitureType, furnitureCount> furnitureTypes {
+constexpr static inline std::array<FurnitureType, furnitureCount> furnitureTypes {
    FurnitureType::tree, FurnitureType::sapling, FurnitureType::tree, FurnitureType::sapling, FurnitureType::tree,
    FurnitureType::sapling, FurnitureType::tree, FurnitureType::sapling, FurnitureType::cactus, FurnitureType::cactusSeed,
    FurnitureType::table, FurnitureType::chair, FurnitureType::door,
+};
+
+constexpr static inline std::array<float, furnitureCount> furnitureBreakingTimes {
+   5.0f, // tree
+   0.25f, // sapling
+   5.0f, // palm tree
+   0.25f, // palm sapling
+   5.0f, // pine tree
+   0.25f, // pine sapling
+   5.0f, // jungle tree
+   0.25f, // jungle sapling
+   2.5f, // cactus
+   0.25f, // cactus seed
+   1.0f, // table
+   1.0f, // chair
+   1.0f, // door
+};
+
+// Furniture drops
+
+struct FurnitureItem {
+   const char *name;
+   bool isWall = false;
+   bool isFurniture = false;
+   int min = 0;
+   int max = 0;
+};
+
+struct FurnitureDrop {
+   std::vector<FurnitureItem> items;
+};
+
+static inline const std::array<FurnitureDrop, furnitureCount> furnitureDrops {
+   FurnitureDrop{{{"planks", false, false, 20, 35}, {"sapling", false, true, 0, 3}}}, // tree
+   FurnitureDrop{}, // sapling
+   FurnitureDrop{{{"planks", false, false, 20, 35}, {"sapling", false, true, 0, 3}}}, // palm
+   FurnitureDrop{}, // palm sapling
+   FurnitureDrop{{{"planks", false, false, 20, 35}, {"sapling", false, true, 0, 3}}}, // pine
+   FurnitureDrop{}, // pine sapling
+   FurnitureDrop{{{"planks", false, false, 20, 35}, {"sapling", false, true, 0, 3}}}, // jungle
+   FurnitureDrop{}, // jungle sapling
+   FurnitureDrop{{{"cactus_block", false, false, 5, 17}, {"cactus_seed", false, true, 0, 2}}}, // cactus
+   FurnitureDrop{}, // cactus seed
+   FurnitureDrop{{{"table", false, true, 1, 1}}}, // table
+   FurnitureDrop{{{"chair", false, true, 1, 1}}}, // chair
+   FurnitureDrop{{{"door", false, true, 1, 1}}}, // door
 };
 
 // Helper functions
@@ -67,6 +114,18 @@ Furniture::Furniture(FurnitureType type, unsigned short id, short value, short v
 Furniture::Furniture(const std::string &texture, int posX, int posY, short sizeX, short sizeY, FurnitureType type)
    : type(type), id(furnitureTextureIds.at(texture)), posX(posX), posY(posY), sizeX(sizeX), sizeY(sizeY) {
    pieces = std::vector<std::vector<FurniturePiece>>(sizeY, std::vector<FurniturePiece>(sizeX, FurniturePiece{}));
+}
+
+// Destroy furniture
+
+void Furniture::destroy(Map &map, Inventory &inventory, int cursorX, int cursorY) {
+   map.removeFurniture(*this);
+   const FurnitureDrop &drop = furnitureDrops.at(id);
+
+   for (const FurnitureItem &item: drop.items) {
+      Item dropped {ItemType::block, (item.isFurniture ? getFurnitureIdFromName(item.name) : getBlockIdFromName(item.name)), static_cast<unsigned short>(random(item.min, item.max)), item.isFurniture, item.isWall, false};
+      inventory.tryToPlaceItemOrDropAtCoordinates(dropped, cursorX, cursorY);
+   }
 }
 
 // Update furniture
@@ -455,6 +514,10 @@ void Furniture::render(const Rectangle &cameraBounds) const {
 }
 
 // Id functions
+
+float getFurnitureBreakingTime(unsigned short id) {
+   return furnitureBreakingTimes.at(id);
+}
 
 unsigned short getFurnitureIdFromName(const std::string &name) {
    return furnitureTextureIds.at(name);

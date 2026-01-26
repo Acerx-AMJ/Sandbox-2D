@@ -76,6 +76,7 @@ struct Player {
    int lastBreakingX = 0;
    int lastBreakingY = 0;
    bool breakingWall = false;
+   bool breakingFurniture = false;
    float breakTime = 0.0f;
 };
 
