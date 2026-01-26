@@ -102,7 +102,41 @@ constexpr static inline const std::array<BlockType, blockCount> blockAttributes 
    BlockType::platform | BlockType::transparent | BlockType::solid | BlockType::flowable | BlockType::bouncy, // Slime platform
 }};
 
+// Block breaking times
+constexpr static inline const std::array<float, blockCount> blockBreakingTimes {{
+   0.0f, // air
+   0.75f, // dirt
+   0.75f, // grass
+   1.0f, // clay
+   3.5f, // stone
+   0.5f, // sand
+   3.0f, // sandstone
+   2.5f, // bricks
+   0.25f, // glass
+   1.5f, // planks
+   3.5f, // stone bricks
+   3.5f, // tiles
+   2.5f, // obsidian
+   1.0f, // platform
+   0.5f, // snow
+   3.5f, // ice
+   0.75f, // jungle grass
+   0.75f, // mud
+   1.0f, // lamp
+   0.25f, // torch
+   1.5f, // honey block
+   2.5f, // crispy honey block
+   1.0f, // slime block
+   0.25f, // bubble block
+   0.75f, // slime platform
+}};
+
 // Block getter functions
+
+float getBlockBreakingTime(unsigned short id) {
+   // Too lazy for an assert here right now
+   return blockBreakingTimes.at(id);
+}
 
 // Asserts in these two functions would be too slow, as they're called often (especially in
 // world generation code), that's why debug asserts are used instead

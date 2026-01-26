@@ -72,6 +72,10 @@ struct Player {
 
    float displayHearts = 100;
    float displayBreath = 100;
+
+   int lastBreakingX = 0;
+   int lastBreakingY = 0;
+   float breakTime = 0.0f;
 };
 
 #endif

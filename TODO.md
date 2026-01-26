@@ -1,5 +1,4 @@
 ### Tools
-- Make blocks break slower based on type. Make them drop blocks.
 - Implement tools, tools should make certain blocks break faster. Make blocks drop based on tool used.
 - Add ores that complement tools + new tool variants.
 
