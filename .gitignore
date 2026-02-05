@@ -1,5 +1,11 @@
 /.cache
 /.vscode
+/.vs
+/*.dll
+/*.lib
+/lib/raylib.h
+/lib/raymath.h
+/lib/rlgl.h
 /build
 /.clangd
 /*.zip

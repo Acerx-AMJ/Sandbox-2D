@@ -41,7 +41,7 @@ The game is a WIP, so stay tuned for new features! Currently it includes;
 This project only depends on Raylib 5.5 and it uses C++ standard 17.
 
 #### Prerequisites
-You must have git, cmake, a C++ compiler and raylib installed.
+You must have git, cmake, a C++ compiler and raylib installed. On Unix you must install Raylib through apt/homebrew or a different package manager (or edit the CMake). On Windows you must install Raylib through [Github Releases](https://github.com/raysan5/raylib/releases) and place all header files in lib folder and all raylib.dll and raylibdll.lib in the project directory.
 
 #### Installation
 1. Clone the repository:
