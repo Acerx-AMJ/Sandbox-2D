@@ -7,6 +7,7 @@
 #include "util/position.hpp"
 #include "util/render.hpp"
 #include <raymath.h>
+#include <array>
 
 // Constants
 
@@ -22,6 +23,17 @@ constexpr Vector2 selectedItemFrameOffset = {(selectedItemFrameSize.x - itemfram
 constexpr int itemStackSize      = 9999;
 constexpr int equipmentStackSize = 1;
 constexpr int potionStackSize    = 99;
+
+constexpr size_t toolCount = 2;
+struct ToolInfo {
+   const char *texture;
+   float breakMultiplier;
+};
+
+constexpr static inline std::array<ToolInfo, toolCount> toolInfo {{
+   ToolInfo{"wooden_pickaxe", 2.0f},
+   ToolInfo{"stone_pickaxe",  3.0f},
+}};
 
 // Constructors
 
@@ -244,7 +256,7 @@ void Inventory::update() {
 
    // Discard the first row of items only if a hotbar item
    // has been selected
-   if (!open && anySelected && 10 > (reinterpret_cast<unsigned long>(selectedItem.address) - reinterpret_cast<unsigned long>(items)) / sizeof(Item)) {
+   if (!open && anySelected && 10 > (reinterpret_cast<unsigned long long>(selectedItem.address) - reinterpret_cast<unsigned long long>(items)) / sizeof(Item)) {
       discardItem();
    }
 }
@@ -513,6 +525,24 @@ int Inventory::addItemCount(Item &item1, Item &item2) {
    return leftover;
 }
 
+float Inventory::getBlockBreakingMultiplier() {
+   if (anySelected && selectedItem.item.type == ItemType::equipment && selectedItem.item.id <= toolCount) {
+      return toolInfo.at(selectedItem.item.id - 1).breakMultiplier;
+   } else if (items[selectedY][selectedX].type == ItemType::equipment && items[selectedY][selectedX].id <= toolCount) {
+      return toolInfo.at(items[selectedY][selectedX].id - 1).breakMultiplier;
+   }
+   return 1.0f;
+}
+
+Texture2D *Inventory::getCurrentToolsTexture() const {
+   if (anySelected && selectedItem.item.type == ItemType::equipment && selectedItem.item.id <= toolCount) {
+      return &getTexture(toolInfo.at(selectedItem.item.id - 1).texture);
+   } else if (items[selectedY][selectedX].type == ItemType::equipment && items[selectedY][selectedX].id <= toolCount) {
+      return &getTexture(toolInfo.at(items[selectedY][selectedX].id - 1).texture);
+   }
+   return nullptr;
+}
+
 // Render functions
 
 void Inventory::render() const {
@@ -551,7 +581,7 @@ void Inventory::render() const {
          drawText(textPosition, "BIN", 25);
       } else {
          // Pointer arithmetic
-         int index = (reinterpret_cast<unsigned long>(selectedItem.address) - reinterpret_cast<unsigned long>(items)) / sizeof(Item);
+         int index = (reinterpret_cast<unsigned long long>(selectedItem.address) - reinterpret_cast<unsigned long long>(items)) / sizeof(Item);
          drawText(textPosition, std::to_string(index + 1).c_str(), 25);
       }
    }
@@ -575,6 +605,12 @@ void Inventory::render() const {
 }
 
 void Inventory::renderItem(const Item &item, const Vector2 &position, bool isSelected) const {
+   if (item.type == ItemType::equipment && item.id <= toolCount) {
+      Texture2D &texture = getTexture(toolInfo[item.id - 1].texture);
+      drawTexture(texture, position, itemframeItemSize);
+      return;
+   }
+   
    Color drawColor = Fade((item.isWall ? wallTint : WHITE), (isSelected ? 0.75f : 1.0f));
 
    if (!item.isFurniture) {

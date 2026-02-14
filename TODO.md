@@ -1,6 +1,6 @@
 ### Tools
-- Implement tools, tools should make certain blocks break faster. Make blocks drop based on tool used.
-- Add ores that complement tools + new tool variants.
+- Make blocks drop based on tool used.
+- Add ores.
 
 ### Furniture
 - Add furniture with chest logic.
@@ -26,13 +26,15 @@
 - Add different entity behaviour.
 - Add friendly mobs (like animals).
 - Add zombies and such.
+- Add weapons
+- Add armor
 
 ### Options
 - Add graphics settings
 - Add keybind settings
 - Add misc. settings
 - Music, sound settings
-- Maybe add localization settings?
+- Maybe add localization settings? Probably not
 
 ### Other
 - World generation.

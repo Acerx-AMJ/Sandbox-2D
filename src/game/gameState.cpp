@@ -160,7 +160,7 @@ void GameState::fixedUpdate() {
 void GameState::updatePlaying() {
    const float zoomFactor = isKeyPressed(KEY_EQUAL) - isKeyPressed(KEY_MINUS);
    if (zoomFactor != 0.f) {
-      camera.zoom = std::clamp<float>(std::exp(std::log(camera.zoom) + zoomFactor * 0.2f), minCameraZoom, maxCameraZoom);
+      camera.zoom = /* std:: */clamp<float>(std::exp(std::log(camera.zoom) + zoomFactor * 0.2f), minCameraZoom, maxCameraZoom);
    }
    inventory.update();
    calculateCameraBounds();
@@ -203,7 +203,7 @@ void GameState::updatePlaying() {
             player.breakTime = 0;
          }
 
-         player.breakTime += realDt;
+         player.breakTime += realDt * inventory.getBlockBreakingMultiplier();
          player.breakingWall = isWall;
          player.breakingFurniture = isFurniture;
          player.lastBreakingX = mouseX;
@@ -222,6 +222,7 @@ void GameState::updatePlaying() {
       }
    } else {
       canDrawPreview = false;
+      player.breakingBlock = false;
    }
 
    // Update dropped items
@@ -474,7 +475,7 @@ void GameState::render() {
    drawBackground(foregroundTexture, backgroundTexture, delta, delta, (phase == Phase::paused ? 0.0f : 1.0f) * dt);
 
    BeginMode2D(camera);
-   map.render(droppedItems, player, accumulator, cameraBounds, camera);
+   map.render(droppedItems, player, accumulator, cameraBounds, camera, inventory);
 
    renderParticles();
    for (const DamageIndicator &indicator: map.damageIndicators) {

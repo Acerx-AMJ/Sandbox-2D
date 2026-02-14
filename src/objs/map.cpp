@@ -1,6 +1,7 @@
 #include "game/state.hpp"
 #include "mngr/resource.hpp"
 #include "objs/map.hpp"
+#include "objs/inventory.hpp"
 #include "objs/item.hpp"
 #include "objs/player.hpp"
 #include "util/format.hpp"
@@ -402,7 +403,7 @@ void Map::renderLight(const Camera2D &camera, Texture2D &texture, float x, float
    drawTexture(texture, {(((x + 0.5f - camera.target.x) * camera.zoom) + camera.offset.x) / 2.0f, (((y + 0.5f - camera.target.y) * camera.zoom) + camera.offset.y) / 2.0f}, size, 0, color);
 }
 
-void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &player, float accumulator, const Rectangle &cameraBounds, const Camera2D &camera) const {
+void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &player, float accumulator, const Rectangle &cameraBounds, const Camera2D &camera, const Inventory &inventory) const {
    // Render background walls
    for (int y = cameraBounds.y; y <= cameraBounds.height; ++y) {
       for (int x = cameraBounds.x; x <= cameraBounds.width; ++x) {
@@ -457,7 +458,7 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
 
    // Render the player
    if (player.hearts != 0) {
-      player.render(accumulator);
+      player.render(accumulator, inventory.getCurrentToolsTexture());
    }
 
    for (const DroppedItem &droppedItem : droppedItems) {

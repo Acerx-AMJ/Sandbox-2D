@@ -25,7 +25,7 @@ struct Player {
 
    // Render
 
-   void render(float accumulator) const;
+   void render(float accumulator, Texture2D *itemTexture) const;
 
    // Getter functions
 
