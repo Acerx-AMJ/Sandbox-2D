@@ -77,6 +77,7 @@ struct Block {
 
 // Block getter functions
 float getBlockBreakingTime(unsigned short id);
+int getBlockBreakingLevel(unsigned short id);
 unsigned short getBlockIdFromName(const std::string &name);
 std::string getBlockNameFromId(unsigned short id);
 

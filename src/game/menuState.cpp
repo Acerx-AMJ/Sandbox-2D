@@ -216,7 +216,7 @@ void MenuState::updateLevelSelection() {
       favoriteButton.text = (selectedButton->favorite ? "Unfavorite" : "Favorite");
    }
 
-   deleteButton.disabled = !anySelected && !IsKeyDown(KEY_LEFT_SHIFT);
+   deleteButton.disabled = !anySelected;
    renameButton.disabled = !anySelected;
    favoriteButton.disabled = !anySelected;
    playWorldButton.disabled = !anySelected;
@@ -226,8 +226,9 @@ void MenuState::updateLevelSelection() {
    favoriteButton.update(dt);
    playWorldButton.update(dt);
 
-   if (IsKeyDown(KEY_LEFT_SHIFT)) {
+   if (IsKeyDown(KEY_LEFT_SHIFT) && !worldButtons.empty()) {
       deleteButton.text = "Delete All Worlds";
+      deleteButton.disabled = false;
    } else {
       deleteButton.text = "Delete World";
    }

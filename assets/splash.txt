@@ -20,5 +20,5 @@ TODO: fix this.
 Code is open-source on Github!
 Over 150 commits on Github!
 Make sure to star the repository on Github!
-Thanks to ZC Bernardino for creating the music!
 Hold shift while deleting worlds to batch delete!
+Now includes a stone pickaxe!

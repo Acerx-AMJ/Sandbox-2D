@@ -65,7 +65,8 @@ struct Inventory {
    bool placeItem(Item &item);
    int getItemStackSize(const Item &item);
    int addItemCount(Item &item1, Item &item2);
-   
+
+   int getBlockBreakingLevel();
    float getBlockBreakingMultiplier();
    Texture2D *getCurrentToolsTexture() const;
 

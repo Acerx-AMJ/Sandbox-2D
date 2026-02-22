@@ -46,6 +46,15 @@ GameState::GameState(const std::string &worldName)
    camera.rotation = 0.0f;
    calculateCameraBounds();
 
+   // for (int j = 1; j < 4; ++j) {
+   //    for (int i = 0; i < 10; ++i) {
+   //       if ((i + 1) + (j - 1) * 10 >= 26) {
+   //          break;
+   //       }
+   //       inventory.items[j][i] = Item{ItemType::block, static_cast<unsigned short>((i + 1) + (j - 1) * 10), 9999, false, false, false};
+   //    }
+   // }
+
    // Init UI
    continueButton.rectangle = {center.x, center.y, buttonWidth, buttonHeight};
    continueButton.text = "Continue";
@@ -211,10 +220,12 @@ void GameState::updatePlaying() {
 
          if (player.breakTime >= (player.breakingFurniture ? getFurnitureBreakingTime(map.getFurnitureAtPosition(mouseX, mouseY).id) : getBlockBreakingTime(block.id))) {
             if (player.breakingFurniture) {
-               map.getFurnitureAtPosition(mouseX, mouseY).destroy(map, inventory, mouseX, mouseY);
+               map.getFurnitureAtPosition(mouseX, mouseY).destroy(map, inventory, mouseX, mouseY, inventory.getBlockBreakingLevel());
             } else {
-               Item item {ItemType::block, block.id, 1, false, player.breakingWall, false};
-               inventory.tryToPlaceItemOrDropAtCoordinates(item, mouseX, mouseY);
+               if (getBlockBreakingLevel(block.id) <= inventory.getBlockBreakingLevel()) {
+                  Item item {ItemType::block, block.id, 1, false, player.breakingWall, false};
+                  inventory.tryToPlaceItemOrDropAtCoordinates(item, mouseX, mouseY);
+               }
                map.deleteBlockWithoutDeletingLiquids(mouseX, mouseY, player.breakingWall);
             }
             player.breakTime = 0;

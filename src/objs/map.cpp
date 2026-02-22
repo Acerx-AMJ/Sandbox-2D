@@ -136,11 +136,45 @@ constexpr static inline const std::array<float, blockCount> blockBreakingTimes {
    0.75f, // cactus
 }};
 
+// Block breaking level
+constexpr static inline const std::array<int, blockCount> blockBreakingLevels {{
+   0, // air
+   0, // dirt
+   0, // grass
+   0, // clay
+   1, // stone
+   0, // sand
+   1, // sandstone
+   2, // bricks
+   0, // glass
+   0, // planks
+   2, // stone bricks
+   2, // tiles
+   3, // obsidian
+   0, // platform
+   0, // snow
+   1, // ice
+   0, // jungle grass
+   0, // mud
+   0, // lamp
+   0, // torch
+   0, // honey block
+   0, // crispy honey block
+   0, // slime block
+   0, // bubble block
+   0, // slime platform
+   0, // cactus
+}};
+
 // Block getter functions
 
 float getBlockBreakingTime(unsigned short id) {
    // Too lazy for an assert here right now
    return blockBreakingTimes.at(id);
+}
+
+int getBlockBreakingLevel(unsigned short id) {
+   return blockBreakingLevels.at(id);
 }
 
 // Asserts in these two functions would be too slow, as they're called often (especially in

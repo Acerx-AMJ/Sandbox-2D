@@ -28,11 +28,12 @@ constexpr size_t toolCount = 2;
 struct ToolInfo {
    const char *texture;
    float breakMultiplier;
+   int breakLevel;
 };
 
 constexpr static inline std::array<ToolInfo, toolCount> toolInfo {{
-   ToolInfo{"wooden_pickaxe", 2.0f},
-   ToolInfo{"stone_pickaxe",  3.0f},
+   ToolInfo{"wooden_pickaxe", 2.0f, 1},
+   ToolInfo{"stone_pickaxe",  3.0f, 2},
 }};
 
 // Constructors
@@ -523,6 +524,15 @@ int Inventory::addItemCount(Item &item1, Item &item2) {
       item2 = Item{};
    }
    return leftover;
+}
+
+int Inventory::getBlockBreakingLevel() {
+   if (anySelected && selectedItem.item.type == ItemType::equipment && selectedItem.item.id <= toolCount) {
+      return toolInfo.at(selectedItem.item.id - 1).breakLevel;
+   } else if (items[selectedY][selectedX].type == ItemType::equipment && items[selectedY][selectedX].id <= toolCount) {
+      return toolInfo.at(items[selectedY][selectedX].id - 1).breakLevel;
+   }
+   return 0;
 }
 
 float Inventory::getBlockBreakingMultiplier() {

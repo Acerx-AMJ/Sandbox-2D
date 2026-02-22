@@ -49,7 +49,7 @@ struct Furniture {
 
    // Update functions
 
-   void destroy(struct Map &map, struct Inventory &inventory, int cursorX, int cursorY);
+   void destroy(struct Map &map, struct Inventory &inventory, int cursorX, int cursorY, int breakingLevel);
    void update(struct Map &map, struct Player &player, const Vector2 &mousePos);
    bool isValid(const struct Map &map) const;
 

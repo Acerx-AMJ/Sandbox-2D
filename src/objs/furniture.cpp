@@ -78,6 +78,7 @@ struct FurnitureItem {
 
 struct FurnitureDrop {
    std::vector<FurnitureItem> items;
+   int dropLevel = 0;
 };
 
 static inline const std::array<FurnitureDrop, furnitureCount> furnitureDrops {
@@ -118,9 +119,13 @@ Furniture::Furniture(const std::string &texture, int posX, int posY, short sizeX
 
 // Destroy furniture
 
-void Furniture::destroy(Map &map, Inventory &inventory, int cursorX, int cursorY) {
+void Furniture::destroy(Map &map, Inventory &inventory, int cursorX, int cursorY, int breakingLevel) {
    map.removeFurniture(*this);
    const FurnitureDrop &drop = furnitureDrops.at(id);
+
+   if (drop.dropLevel > breakingLevel) {
+      return;
+   }
 
    for (const FurnitureItem &item: drop.items) {
       Item dropped {ItemType::block, (item.isFurniture ? getFurnitureIdFromName(item.name) : getBlockIdFromName(item.name)), static_cast<unsigned short>(random(item.min, item.max)), item.isFurniture, item.isWall, false};
