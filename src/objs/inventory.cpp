@@ -24,7 +24,15 @@ constexpr int itemStackSize      = 9999;
 constexpr int equipmentStackSize = 1;
 constexpr int potionStackSize    = 99;
 
-constexpr size_t toolCount = 2;
+constexpr size_t itemCount = 4;
+constexpr static inline std::array<const char*, itemCount> itemTextures {{
+   "coal_lump",
+   "iron_lump",
+   "gold_lump",
+   "mythril_lump",
+}};
+
+constexpr size_t toolCount = 5;
 struct ToolInfo {
    const char *texture;
    float breakMultiplier;
@@ -32,8 +40,11 @@ struct ToolInfo {
 };
 
 constexpr static inline std::array<ToolInfo, toolCount> toolInfo {{
-   ToolInfo{"wooden_pickaxe", 2.0f, 1},
-   ToolInfo{"stone_pickaxe",  3.0f, 2},
+   ToolInfo{"wooden_pickaxe",  1.3f, 1},
+   ToolInfo{"stone_pickaxe",   1.6f, 2},
+   ToolInfo{"iron_pickaxe",    2.0f, 3},
+   ToolInfo{"gold_pickaxe",    2.2f, 3},
+   ToolInfo{"mythril_pickaxe", 2.5f, 3},
 }};
 
 // Constructors
@@ -615,6 +626,19 @@ void Inventory::render() const {
 }
 
 void Inventory::renderItem(const Item &item, const Vector2 &position, bool isSelected) const {
+   if (item.type == ItemType::item && item.id <= itemCount) {
+      Texture2D &texture = getTexture(itemTextures.at(item.id - 1));
+      drawTexture(texture, position, itemframeItemSize);
+
+      // fuck dry
+      if (item.count != 1) {
+         Color textColor = (isSelected ? Fade(WHITE, 0.75f) : WHITE);
+         Vector2 textPosition = Vector2Subtract(position, itemFrameCountOffset);
+         drawText(textPosition, std::to_string(item.count).c_str(), 25, textColor);
+      }
+      return;
+   }
+   
    if (item.type == ItemType::equipment && item.id <= toolCount) {
       Texture2D &texture = getTexture(toolInfo[item.id - 1].texture);
       drawTexture(texture, position, itemframeItemSize);

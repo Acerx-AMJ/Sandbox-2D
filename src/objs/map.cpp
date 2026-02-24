@@ -15,7 +15,7 @@
 
 // Constants
 
-constexpr unsigned short blockCount = 26;
+constexpr unsigned short blockCount = 30;
 
 // NOTE: due to logic in gameState.cpp, any grass blocks must be defined RIGHT
 // BEFORE the dirt block, for an example, you can see blocks 1 and 2
@@ -46,6 +46,10 @@ static inline const std::unordered_map<std::string, unsigned short> blockIds {
    {"bubble_block", 23},
    {"slime_platform", 24},
    {"cactus_block", 25},
+   {"coal_ore", 26},
+   {"iron_ore", 27},
+   {"gold_ore", 28},
+   {"mythril_ore", 29},
 };
 
 constexpr static inline std::array<const char*, blockCount> blockNames {
@@ -75,6 +79,10 @@ constexpr static inline std::array<const char*, blockCount> blockNames {
    "bubble_block",
    "slime_platform",
    "cactus_block",
+   "coal_ore",
+   "iron_ore",
+   "gold_ore",
+   "mythril_ore",
 };
 
 // This is a nightmare to edit, but at least makes other code easier!
@@ -105,6 +113,10 @@ constexpr static inline const std::array<BlockType, blockCount> blockAttributes 
    BlockType::transparent, // bubble block
    BlockType::platform | BlockType::transparent | BlockType::solid | BlockType::flowable | BlockType::bouncy, // Slime platform
    BlockType::solid, // cactus
+   BlockType::solid, // coal ore
+   BlockType::solid, // iron ore
+   BlockType::solid, // gold ore
+   BlockType::solid, // mythril ore
 }};
 
 // Block breaking times
@@ -113,7 +125,7 @@ constexpr static inline const std::array<float, blockCount> blockBreakingTimes {
    0.75f, // dirt
    0.75f, // grass
    1.0f, // clay
-   3.5f, // stone
+   2.0f, // stone
    0.5f, // sand
    3.0f, // sandstone
    2.5f, // bricks
@@ -135,6 +147,10 @@ constexpr static inline const std::array<float, blockCount> blockBreakingTimes {
    0.25f, // bubble block
    0.75f, // slime platform
    0.75f, // cactus
+   2.5f, // coal ore
+   2.5f, // iron ore
+   3.0f, // gold ore
+   3.25f, // mythril ore
 }};
 
 // Block breaking level
@@ -165,6 +181,44 @@ constexpr static inline const std::array<int, blockCount> blockBreakingLevels {{
    0, // bubble block
    0, // slime platform
    0, // cactus
+   1, // coal ore
+   2, // iron ore
+   3, // gold ore
+   3, // mythril ore
+}};
+
+// Block drops
+constexpr static inline const std::array<Item, blockCount> blockDrops {{
+   Item{}, // air
+   Item{}, // dirt
+   Item{}, // grass
+   Item{}, // clay
+   Item{}, // stone
+   Item{}, // sand
+   Item{}, // sandstone
+   Item{}, // bricks
+   Item{}, // glass
+   Item{}, // planks
+   Item{}, // stone bricks
+   Item{}, // tiles
+   Item{}, // obsidian
+   Item{}, // platform
+   Item{}, // snow
+   Item{}, // ice
+   Item{}, // jungle grass
+   Item{}, // mud
+   Item{}, // lamp
+   Item{}, // torch
+   Item{}, // honey block
+   Item{}, // crispy honey block
+   Item{}, // slime block
+   Item{}, // bubble block
+   Item{}, // slime platform
+   Item{}, // cactus
+   Item{ItemType::item, 1, 1, false, false, false}, // coal ore
+   Item{ItemType::item, 2, 1, false, false, false}, // iron ore
+   Item{ItemType::item, 3, 1, false, false, false}, // gold ore
+   Item{ItemType::item, 4, 1, false, false, false}, // mythril ore
 }};
 
 // Block getter functions
@@ -188,6 +242,10 @@ unsigned short getBlockIdFromName(const std::string &name) {
 std::string getBlockNameFromId(unsigned short id) {
    assertDebug(id < blockCount, "DEBUG: Block with the id '{}' does not exist. Valid IDs are in range {} to {}.", (int)id, 0, (int)blockCount - 1);
    return blockNames.at(id);
+}
+
+Item getBlockDropId(unsigned short id, bool iswall) {
+   return blockDrops.at(id).id == 0 ? Item{ItemType::block, id, 1, false, iswall, false} : blockDrops.at(id);
 }
 
 // Map constructors

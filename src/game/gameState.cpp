@@ -46,6 +46,8 @@ GameState::GameState(const std::string &worldName)
    camera.rotation = 0.0f;
    calculateCameraBounds();
 
+   inventory.items[0][0] = Item{ItemType::equipment, 5, 1};
+
    // Init UI
    continueButton.rectangle = {center.x, center.y, buttonWidth, buttonHeight};
    continueButton.text = "Continue";
@@ -214,7 +216,7 @@ void GameState::updatePlaying() {
                map.getFurnitureAtPosition(mouseX, mouseY).destroy(map, inventory, mouseX, mouseY, inventory.getBlockBreakingLevel());
             } else {
                if (getBlockBreakingLevel(block.id) <= inventory.getBlockBreakingLevel()) {
-                  Item item {ItemType::block, block.id, 1, false, player.breakingWall, false};
+                  Item item = getBlockDropId(block.id, player.breakingWall);
                   inventory.tryToPlaceItemOrDropAtCoordinates(item, mouseX, mouseY);
                }
                map.deleteBlockWithoutDeletingLiquids(mouseX, mouseY, player.breakingWall);

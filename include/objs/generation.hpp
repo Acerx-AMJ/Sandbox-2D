@@ -27,6 +27,8 @@ struct MapGenerator {
    siv::PerlinNoise heightNoise;
    siv::PerlinNoise sandDebriNoise;
    siv::PerlinNoise dirtDebriNoise;
+   siv::PerlinNoise oreNoise1;
+   siv::PerlinNoise oreNoise2;
 
    // Constructors
 

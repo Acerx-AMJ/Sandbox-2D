@@ -28,7 +28,7 @@ constexpr Color foregroundTintNight = {40, 40, 40, 255};
 constexpr Color foregroundTintDay   = {210, 210, 190, 255};
 
 static inline const std::vector<std::string> backgroundTextures {
-   "mountains1", "mountains2", "mountains3", "mountains4"
+   "mountains1", "mountains2", "mountains3", "mountains4", "mountains5"
 };
 
 static inline const std::vector<std::string> foregroundTextures {

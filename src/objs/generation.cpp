@@ -6,8 +6,11 @@
 
 // Constants
 
-constexpr float startY        = 0.5f;
-constexpr float seaLevel      = 0.4f;
+constexpr float startY         = 0.5f;
+constexpr float seaLevel       = 0.4f;
+constexpr float tier1OreStartY = 0.4f;
+constexpr float tier2OreStartY = 0.35f;
+
 constexpr int rockOffsetStart = 12;
 constexpr int rockOffsetMin   = 5;
 constexpr int rockOffsetMax   = 25;
@@ -59,6 +62,8 @@ void MapGenerator::generate() {
       heightNoise.reseed(rand());
       sandDebriNoise.reseed(rand());
       dirtDebriNoise.reseed(rand());
+      oreNoise1.reseed(rand());
+      oreNoise2.reseed(rand());
    }
 
    if (isFlat) {
@@ -163,21 +168,51 @@ void MapGenerator::generateWater() {
 }
 
 void MapGenerator::generateDebri() {
-   setInfo("Generating Debris...", 0.5f);
+   setInfo("Generating Debri and Ores...", 0.5f);
 
    unsigned short clayid = getBlockIdFromName("clay");
    unsigned short dirtid = getBlockIdFromName("dirt");
    unsigned short sandid = getBlockIdFromName("sand");
+   unsigned short coalid = getBlockIdFromName("coal_ore");
+   unsigned short ironid = getBlockIdFromName("iron_ore");
+   unsigned short goldid = getBlockIdFromName("gold_ore");
+   unsigned short mythid = getBlockIdFromName("mythril_ore");
+
+   int tier1OreY = tier1OreStartY * map.sizeY;
+   int tier2OreY = tier2OreStartY * map.sizeY;
 
    for (int x = 0; x < map.sizeX; ++x) {
       for (int y = rockStartHeights[x]; y < map.sizeY; ++y) {
          float value = dirtDebriNoise.octave2D(x * 0.05f, y * 0.05f, 3);
+
+         // Debris
          if (value >= 0.6125f) {
             map.lightSetBlock(x, y, clayid);
          } else if (value <= -0.6f) {
             map.lightSetBlock(x, y, dirtid);
          } else if (sandDebriNoise.octave2D(x * 0.05f, y * 0.05f, 3) <= -0.7f) {
             map.lightSetBlock(x, y, sandid);
+
+         // Tier 1 ores (coal, iron)
+         } else if (y >= tier1OreY) {
+
+         float ovalue1 = oreNoise1.octave2D(x * 0.1f, y * 0.1f, 3);
+         if (ovalue1 >= 0.8f) {
+            map.lightSetBlock(x, y, coalid);
+         } else if (ovalue1 <= -0.91f) {
+            map.lightSetBlock(x, y, ironid);
+
+         // Tier 2 ores (gold, mythril)
+         } else if (y >= tier2OreY) {
+
+         float ovalue2 = oreNoise2.octave2D(x * 0.125f, y * 0.125f, 3);
+         if (ovalue2 >= 0.925f) {
+            map.lightSetBlock(x, y, goldid);
+         } else if (ovalue2 <= -0.93f) {
+            map.lightSetBlock(x, y, mythid);
+         }
+
+         }
          }
       }
    }
