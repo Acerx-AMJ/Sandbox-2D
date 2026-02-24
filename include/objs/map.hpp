@@ -99,6 +99,10 @@ struct Map {
    void initContainers();
    ~Map();
 
+   // Collision checks
+
+   bool raycast(const Vector2 &start, const Vector2 &end);
+
    // Add damage indicator
 
    void addDamageIndicator(const Vector2 &position, int damage, bool critical);

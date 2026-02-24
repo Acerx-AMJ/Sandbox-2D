@@ -74,7 +74,7 @@ void Player::updateMovement() {
    int directionX = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
 
    if (sitting) {
-      if (directionX != 0 || IsKeyDown(KEY_SPACE) || IsKeyDown(KEY_S) || IsKeyDown(KEY_W)) {
+      if (directionX != 0 || IsKeyDown(KEY_SPACE) || IsKeyDown(KEY_S)/*  || IsKeyDown(KEY_W) */) {
          sitting = false;
          goto notSittingAnymore;
       }
@@ -236,7 +236,7 @@ void Player::updateCollisions(Map &map) {
          }
          honeyTileCount += map.isu(x, y, BlockType::sticky);
 
-         if ((!map.isu(x, y, BlockType::solid) && !map.isPlatformedFurniture(x, y)) || ((map.isu(x, y, BlockType::platform) || map.isu(x, y, BlockType::furnitureTop)) && !IsKeyDown(KEY_W))) {
+         if ((!map.isu(x, y, BlockType::solid) && !map.isPlatformedFurniture(x, y)) || ((map.isu(x, y, BlockType::platform) || map.isu(x, y, BlockType::furnitureTop)) /* && !IsKeyDown(KEY_W) */)) {
             continue;
          }
 
@@ -411,16 +411,19 @@ void Player::handleRegeneration() {
 void Player::render(float accumulator, Texture2D *itemTexture) const {
    Texture2D &texture = getTexture("player");
    const Vector2 drawPos = lerp(previousPosition, position, accumulator / fixedUpdateDT);
-   DrawTexturePro(texture, {frameX * playerFrameSizeX, 0.f, (flipX ? -playerFrameSizeX : playerFrameSizeX), playerFrameSizeY}, {drawPos.x, drawPos.y, playerSize.x, playerSize.y}, {0, 0}, 0, (timeSinceLastDamage <= 0.3f ? RED : WHITE));
-   DrawTexturePro(texture, {playerFrameSizeX * (breakingBlock || placedBlock ? 16 + breakAnimation : frameX), playerFrameSizeY, (flipX ? -playerFrameSizeX : playerFrameSizeX), playerFrameSizeY}, {drawPos.x, drawPos.y, playerSize.x, playerSize.y}, {0, 0}, 0, (timeSinceLastDamage <= 0.3f ? RED : WHITE));
+   float sitOffset = (sitting && (breakingBlock || placedBlock)) * (3.0f / 8.0f) * (flipX ? -1.0f : 1.0f);
 
+   DrawTexturePro(texture, {frameX * playerFrameSizeX, 0.f, (flipX ? -playerFrameSizeX : playerFrameSizeX), playerFrameSizeY}, {drawPos.x, drawPos.y, playerSize.x, playerSize.y}, {0, 0}, 0, (timeSinceLastDamage <= 0.3f ? RED : WHITE));
+   DrawTexturePro(texture, {playerFrameSizeX * (breakingBlock || placedBlock ? 16 + breakAnimation : frameX), playerFrameSizeY, (flipX ? -playerFrameSizeX : playerFrameSizeX), playerFrameSizeY}, {drawPos.x + sitOffset, drawPos.y, playerSize.x, playerSize.y}, {0, 0}, 0, (timeSinceLastDamage <= 0.3f ? RED : WHITE));
+
+   // Hard-coded tool animation 
    if (breakingBlock && itemTexture) {
       if (breakAnimation == 0) {
-         DrawTexturePro(*itemTexture, {0, 0, (float)itemTexture->width, (float)itemTexture->height}, {drawPos.x + ((flipX ? 12.0f : 13.0f) / 8.0f) - flipX, drawPos.y + (5.5f / 8.0f), 1.0f, 1.0f}, {1.0f, 1.0f}, 45.0f, WHITE);
+         DrawTexturePro(*itemTexture, {0, 0, (float)itemTexture->width, (float)itemTexture->height}, {drawPos.x + sitOffset + ((flipX ? 12.0f : 13.0f) / 8.0f) - flipX, drawPos.y + (5.5f / 8.0f), 1.0f, 1.0f}, {1.0f, 1.0f}, 45.0f, WHITE);
       } else if (breakAnimation == 1) {
-         DrawTexturePro(*itemTexture, {0, 0, (float)itemTexture->width, (float)itemTexture->height}, {drawPos.x + ((flipX ? 15.0f : 10.0f) / 8.0f) - flipX, drawPos.y + (8.0f / 8.0f) - flipX, 1.0f, 1.0f}, {(float)!flipX, 1.0f}, (flipX ? 90.0f : 0.0f), WHITE);
+         DrawTexturePro(*itemTexture, {0, 0, (float)itemTexture->width, (float)itemTexture->height}, {drawPos.x + sitOffset + ((flipX ? 15.0f : 10.0f) / 8.0f) - flipX, drawPos.y + (8.0f / 8.0f) - flipX, 1.0f, 1.0f}, {(float)!flipX, 1.0f}, (flipX ? 90.0f : 0.0f), WHITE);
       } else {
-         DrawTexturePro(*itemTexture, {0, 0, (float)itemTexture->width, (float)itemTexture->height}, {drawPos.x + ((flipX ? 20.0f : 7.0f) / 8.0f) - flipX, drawPos.y + (16.0f / 8.0f) - (flipX * 0.7f), 1.0f, 1.0f}, {(float)!flipX, 1.0f}, (flipX ? 135.0f : -45.0f), WHITE);
+         DrawTexturePro(*itemTexture, {0, 0, (float)itemTexture->width, (float)itemTexture->height}, {drawPos.x + sitOffset + ((flipX ? 20.0f : 7.0f) / 8.0f) - flipX, drawPos.y + (16.0f / 8.0f) - (flipX * 0.7f), 1.0f, 1.0f}, {(float)!flipX, 1.0f}, (flipX ? 135.0f : -45.0f), WHITE);
       }
    }
 }

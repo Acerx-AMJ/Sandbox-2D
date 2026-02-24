@@ -1,5 +1,4 @@
 ### Tools
-- Make blocks drop based on tool used.
 - Add ores.
 
 ### Furniture
@@ -36,6 +35,12 @@
 - Music, sound settings
 - Maybe add localization settings? Probably not
 
+### Cheats
+- Add console and commands
+- - give
+- - tp
+- - etc. etc.
+
 ### Other
 - World generation.
 - Make it so blocks get loaded automatically from a file
@@ -43,6 +48,3 @@
 
 # Bugs
 - Fix breaking blocks below furniture
-- Fix door logic
-- Chairs teleport you.
-- Platforms while holding W make you go up really quickly.

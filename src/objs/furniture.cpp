@@ -5,6 +5,7 @@
 #include "objs/player.hpp"
 #include "util/random.hpp"
 #include <array>
+#include <raymath.h>
 #include <unordered_map>
 
 // Constants
@@ -25,6 +26,9 @@ constexpr int treeRootChance     = 25;
 constexpr int treeBranchChance   = 15;
 constexpr int cactusBranchChance = 50;
 constexpr int cactusFlowerChance = 10;
+
+constexpr int sitRange = 25.0f; // Squared
+constexpr int interactionRange = 64.0f; // Squared
 
 constexpr int textureSize = 8;
 
@@ -169,7 +173,16 @@ void Furniture::update(Map &map, Player &player, const Vector2 &mousePos) {
    } break;
 
    case FurnitureType::chair: {
+      Vector2 chairpos = {(float)posX, (float)posY};
+
       if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionPointRec(mousePos, {(float)posX, (float)posY, (float)sizeX, (float)sizeY})) {
+         float range = Vector2DistanceSqr(chairpos, player.getCenter());
+         
+         // Raycast to make sure the player does not teleport
+         if (range > sitRange || map.raycast(chairpos, player.getCenter())) {
+            return;
+         }
+         
          player.placedBlock = true;
          player.sitting = true;
          player.flipX = (pieces[0][0].tx == 0); // Flip player if chair is flipped
@@ -184,13 +197,16 @@ void Furniture::update(Map &map, Player &player, const Vector2 &mousePos) {
       bool previousValue2 = value2;
 
       value2 = CheckCollisionRecs(doorRect, player.getBounds());
-      if (previousValue2 != value2 && (!value || !value2)) {
-         value = !value;
+      if (previousValue2 == true && value2 == false && (!value || !value2)) {
+         value = false; // Close the door
+      } else if (previousValue2 == false && value2 == true && (!value || !value2)) {
+         value = true; // Open the door
       }
 
-      if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionPointRec(mousePos, doorRect)) {
+      if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionPointRec(mousePos, doorRect) && Vector2DistanceSqr({(float)posX, (float)posY}, player.getCenter()) < interactionRange) {
          player.placedBlock = true;
          value = !value;
+         value2 = false;
       }
 
       for (int i = 0; value != previousValue && i < sizeY; ++i) {

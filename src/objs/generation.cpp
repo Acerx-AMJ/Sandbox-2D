@@ -132,7 +132,7 @@ void MapGenerator::generateTerrain() {
             const std::string &block = (last != current && chance(50) ? lastData.bottom : data.bottom);
             map.setBlock(x, yy, block);
 
-            if (std::string(block) != "sand") {
+            if (std::string(block) != "sand" && std::string(block) != "snow") {
                map.setBlock(x, yy, block, true);
             }
          } else {

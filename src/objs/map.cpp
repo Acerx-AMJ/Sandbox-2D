@@ -10,6 +10,7 @@
 #include "util/render.hpp"
 #include <array>
 #include <cmath>
+#include <raymath.h>
 #include <unordered_map>
 
 // Constants
@@ -210,6 +211,54 @@ void Map::initContainers() {
 
 Map::~Map() {
    UnloadRenderTexture(lightmap);
+}
+
+// Collision
+
+bool Map::raycast(const Vector2 &start, const Vector2 &end) {
+   Vector2 dir = Vector2Normalize({start.x - end.x, start.y - end.y});
+   Vector2 stepSize = {fabs(1.0f / dir.x), fabs(1.0f / dir.y)};
+   Vector2 mapcheck = {truncf(start.x), truncf(start.y)};
+   Vector2 vstep;
+   Vector2 length;
+
+   if (dir.x < 0.0f) {
+      vstep.x = -1.0f;
+      length.x = (start.x - mapcheck.x) * stepSize.x;
+   } else {
+      vstep.x = 1.0f;
+      length.x = ((mapcheck.x + 1.0f) - start.x) * stepSize.x;
+   }
+
+   if (dir.y < 0.0f) {
+      vstep.y = -1.0f;
+      length.y = (start.y - mapcheck.y) * stepSize.y;
+   } else {
+      vstep.y = 1.0f;
+      length.y = ((mapcheck.y + 1.0f) - start.y) * stepSize.y;
+   }
+
+   float maxDist = Vector2Distance(start, end);
+   float dist = 0.0f;
+
+   while (dist < maxDist) {
+      if (length.x < length.y) {
+         mapcheck.x += vstep.x;
+         dist = length.x;
+         length.x += stepSize.x;
+      } else {
+         mapcheck.y += vstep.y;
+         dist = length.y;
+         length.y += stepSize.y;
+      }
+
+      if (isPositionValid(mapcheck.x, mapcheck.y)) {
+         if (isu(mapcheck.x, mapcheck.y, BlockType::solid) && !isu(mapcheck.x, mapcheck.y, BlockType::platform)) {
+            return true;
+         }
+      }
+   }
+   return false;
 }
 
 // Add damage indicator
