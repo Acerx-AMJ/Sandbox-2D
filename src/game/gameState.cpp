@@ -46,8 +46,6 @@ GameState::GameState(const std::string &worldName)
    camera.rotation = 0.0f;
    calculateCameraBounds();
 
-   inventory.items[0][0] = Item{ItemType::equipment, 5, 1};
-
    // Init UI
    continueButton.rectangle = {center.x, center.y, buttonWidth, buttonHeight};
    continueButton.text = "Continue";

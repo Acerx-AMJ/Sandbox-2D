@@ -8,8 +8,7 @@
 
 constexpr float startY         = 0.5f;
 constexpr float seaLevel       = 0.4f;
-constexpr float tier1OreStartY = 0.4f;
-constexpr float tier2OreStartY = 0.35f;
+constexpr float tier2OreStartY = 0.45f;
 
 constexpr int rockOffsetStart = 12;
 constexpr int rockOffsetMin   = 5;
@@ -178,7 +177,6 @@ void MapGenerator::generateDebri() {
    unsigned short goldid = getBlockIdFromName("gold_ore");
    unsigned short mythid = getBlockIdFromName("mythril_ore");
 
-   int tier1OreY = tier1OreStartY * map.sizeY;
    int tier2OreY = tier2OreStartY * map.sizeY;
 
    for (int x = 0; x < map.sizeX; ++x) {
@@ -194,21 +192,21 @@ void MapGenerator::generateDebri() {
             map.lightSetBlock(x, y, sandid);
 
          // Tier 1 ores (coal, iron)
-         } else if (y >= tier1OreY) {
+         } else {
 
          float ovalue1 = oreNoise1.octave2D(x * 0.1f, y * 0.1f, 3);
-         if (ovalue1 >= 0.8f) {
+         if (ovalue1 >= 0.65f) {
             map.lightSetBlock(x, y, coalid);
-         } else if (ovalue1 <= -0.91f) {
+         } else if (ovalue1 <= -0.7f) {
             map.lightSetBlock(x, y, ironid);
 
          // Tier 2 ores (gold, mythril)
          } else if (y >= tier2OreY) {
 
          float ovalue2 = oreNoise2.octave2D(x * 0.125f, y * 0.125f, 3);
-         if (ovalue2 >= 0.925f) {
+         if (ovalue2 >= 0.725f) {
             map.lightSetBlock(x, y, goldid);
-         } else if (ovalue2 <= -0.93f) {
+         } else if (ovalue2 <= -0.75f) {
             map.lightSetBlock(x, y, mythid);
          }
 

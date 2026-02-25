@@ -26,7 +26,7 @@ constexpr int potionStackSize    = 99;
 
 constexpr size_t itemCount = 4;
 constexpr static inline std::array<const char*, itemCount> itemTextures {{
-   "coal_lump",
+   "coal",
    "iron_lump",
    "gold_lump",
    "mythril_lump",
@@ -496,7 +496,7 @@ bool Inventory::placeItem(Item &item) {
       for (int x = 0; x < inventoryWidth; ++x) {
          Item &it = items[y][x];
 
-         if (it.id == item.id && it.isWall == item.isWall && it.isFurniture == item.isFurniture && addItemCount(it, item) <= 0) {
+         if (it.id == item.id && it.type == item.type && it.isWall == item.isWall && it.isFurniture == item.isFurniture && addItemCount(it, item) <= 0) {
             return true;
          } else if (!firstAvailableSpot && it.id == 0) {
             firstAvailableSpot = &it;

@@ -630,6 +630,7 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
    EndShaderMode();
 
    // Render lights
+   return;
    BeginTextureMode(lightmap);
    ClearBackground(BLACK);
    BeginBlendMode(BLEND_ADDITIVE);
