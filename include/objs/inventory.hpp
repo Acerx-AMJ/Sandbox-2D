@@ -73,7 +73,8 @@ struct Inventory {
    // Render functions
    
    void render() const;
-   void renderItem(const Item &item, const Vector2 &position, bool isSelected) const;
 };
+
+void drawItem(ItemType type, unsigned short id, unsigned short count, bool isFurniture, bool isWall, const Vector2 &position, const Vector2 &size, bool isSelected, bool isworldspace = false);
 
 #endif

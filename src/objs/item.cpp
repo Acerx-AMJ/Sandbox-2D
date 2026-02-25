@@ -1,7 +1,5 @@
 #include "objs/item.hpp"
-#include "mngr/resource.hpp"
-#include "objs/map.hpp"
-#include "util/render.hpp"
+#include "objs/inventory.hpp"
 #include <raylib.h>
 #include <raymath.h>
 #include <cmath>
@@ -45,28 +43,9 @@ void DroppedItem::render() const {
    }
 
    float offsetY = std::sin(lifetime * droppedItemFloatSpeed) * droppedItemFloatHeight;
-
-   Color drawColor = (isWall ? wallTint : WHITE);
    Vector2 position = {tileX + 0.5f, (tileY + 0.5f) - offsetY};
    Vector2 size = droppedItemSize;
-
-   if (!isFurniture) {
-      drawTexture(getTexture(getBlockNameFromId(id)), position, size, 0.0f, drawColor);
-   } else {
-      FurnitureTexture texture = getFurnitureIcon(id);
-
-      if (texture.sizeX < texture.sizeY) {
-         size.x *= texture.sizeX / texture.sizeY;
-      } else if (texture.sizeX > texture.sizeY) {
-         size.y *= texture.sizeY / texture.sizeX;
-      }
-      DrawTexturePro(texture.texture, {0, 0, (float)texture.sizeX, (float)texture.sizeY}, {position.x, position.y, size.x, size.y}, Vector2Scale(size, 0.5f), 0, drawColor);
-   }
-
-   if (count != 1) {
-      position.y -= 0.7f;
-      drawText(position, std::to_string(count).c_str(), 0.75f, WHITE, 0.1f);
-   }
+   drawItem(type, id, count, isFurniture, isWall, position, size, false, true);
 }
 
 Rectangle DroppedItem::getBounds() const {

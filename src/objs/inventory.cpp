@@ -580,7 +580,7 @@ void Inventory::render() const {
 
          drawTextureNoOrigin(getFrameTexture(isSelected, isFavorite), position, size);
          if (item.id != 0 && (!anySelected || !selectedItem.fullSelect || selectedItem.address != &item)) {
-            renderItem(item, Vector2Add(position, getOrigin(size)), false);
+            drawItem(item.type, item.id, item.count, item.isFurniture, item.isWall, Vector2Add(position, getOrigin(size)), itemframeItemSize, false);
          }
 
          if (y == 0) {
@@ -595,7 +595,7 @@ void Inventory::render() const {
       Vector2 position = getFramePosition(10, 0, true);
       Vector2 size = getFrameSize(true);
       drawTextureNoOrigin(getFrameTexture(true, selectedItem.address->favorite),position, size);
-      renderItem(selectedItem.item, Vector2Add(position, getOrigin(size)), true);
+      drawItem(selectedItem.item.type, selectedItem.item.id, selectedItem.item.count, selectedItem.item.isFurniture, selectedItem.item.isWall, Vector2Add(position, getOrigin(size)), itemframeItemSize, true);
 
       Vector2 textPosition = Vector2Add(position, itemframeIndexOffset);
       if (selectedItem.fromTrash) {
@@ -615,45 +615,47 @@ void Inventory::render() const {
 
       drawTextureNoOrigin(getTrashTexture(trashOccupied), position, size);
       if (trashOccupied) {
-         renderItem(trashedItem, Vector2Add(position, getOrigin(size)), false);
+         drawItem(trashedItem.type, trashedItem.id, trashedItem.count, trashedItem.isFurniture, trashedItem.isWall, Vector2Add(position, getOrigin(size)), itemframeItemSize, false);
       }
    }
 
    // Render selected item
    if (anySelected && !externalSlot) {
-      renderItem(selectedItem.item, GetMousePosition(), true);
+      drawItem(selectedItem.item.type, selectedItem.item.id, selectedItem.item.count, selectedItem.item.isFurniture, selectedItem.item.isWall, GetMousePosition(), itemframeItemSize, true);
    }
 }
 
-void Inventory::renderItem(const Item &item, const Vector2 &position, bool isSelected) const {
-   if (item.type == ItemType::item && item.id <= itemCount) {
-      Texture2D &texture = getTexture(itemTextures.at(item.id - 1));
-      drawTexture(texture, position, itemframeItemSize);
+// Draw item
+
+void drawItem(ItemType type, unsigned short id, unsigned short count, bool isFurniture, bool isWall, const Vector2 &position, const Vector2 &size, bool isSelected, bool isworldspace) {
+   if (type == ItemType::item && id <= itemCount) {
+      Texture2D &texture = getTexture(itemTextures.at(id - 1));
+      drawTexture(texture, position, size);
 
       // fuck dry
-      if (item.count != 1) {
+      if (count != 1) {
          Color textColor = (isSelected ? Fade(WHITE, 0.75f) : WHITE);
-         Vector2 textPosition = Vector2Subtract(position, itemFrameCountOffset);
-         drawText(textPosition, std::to_string(item.count).c_str(), 25, textColor);
+         Vector2 textPosition = Vector2Subtract(position, (isworldspace ? Vector2{0.0f, -0.7f} : itemFrameCountOffset));
+         drawText(textPosition, std::to_string(count).c_str(), (isworldspace ? 0.75f : 25.0f), textColor, (isworldspace ? 0.1f : 1.0f));
       }
       return;
    }
    
-   if (item.type == ItemType::equipment && item.id <= toolCount) {
-      Texture2D &texture = getTexture(toolInfo[item.id - 1].texture);
-      drawTexture(texture, position, itemframeItemSize);
+   if (type == ItemType::equipment && id <= toolCount) {
+      Texture2D &texture = getTexture(toolInfo[id - 1].texture);
+      drawTexture(texture, position, size);
       return;
    }
    
-   Color drawColor = Fade((item.isWall ? wallTint : WHITE), (isSelected ? 0.75f : 1.0f));
+   Color drawColor = Fade((isWall ? wallTint : WHITE), (isSelected ? 0.75f : 1.0f));
 
-   if (!item.isFurniture) {
-      Texture2D &texture = getTexture(getBlockNameFromId(item.id));
-      DrawTexturePro(texture, {0, 0, 8, 8}, {position.x, position.y, itemframeItemSize.x, itemframeItemSize.y}, getOrigin(itemframeItemSize), 0, drawColor);
-   } else if (item.isFurniture) {
-      FurnitureTexture texture = getFurnitureIcon(item.id);
+   if (!isFurniture) {
+      Texture2D &texture = getTexture(getBlockNameFromId(id));
+      DrawTexturePro(texture, {0, 0, 8, 8}, {position.x, position.y, size.x, size.y}, getOrigin(size), 0, drawColor);
+   } else if (isFurniture) {
+      FurnitureTexture texture = getFurnitureIcon(id);
       Vector2 newPos = position;//Vector2Add(position, Vector2Scale(itemframeSize, 0.5f));
-      Vector2 fSize = itemframeItemSize;
+      Vector2 fSize = size;
 
       if (texture.sizeX < texture.sizeY) {
          fSize.x *= texture.sizeX / texture.sizeY;
@@ -663,9 +665,9 @@ void Inventory::renderItem(const Item &item, const Vector2 &position, bool isSel
       DrawTexturePro(texture.texture, {0, 0, (float)texture.sizeX, (float)texture.sizeY}, {newPos.x, newPos.y, fSize.x, fSize.y}, Vector2Scale(fSize, 0.5f), 0, drawColor);
    }
 
-   if (item.count != 1) {
+   if (count != 1) {
       Color textColor = (isSelected ? Fade(WHITE, 0.75f) : WHITE);
-      Vector2 textPosition = Vector2Subtract(position, itemFrameCountOffset);
-      drawText(textPosition, std::to_string(item.count).c_str(), 25, textColor);
+      Vector2 textPosition = Vector2Subtract(position, (isworldspace ? Vector2{0.0f, -0.7f} : itemFrameCountOffset));
+      drawText(textPosition, std::to_string(count).c_str(), (isworldspace ? 0.75f : 25.0f), textColor, (isworldspace ? 0.1f : 1.0f));
    }
 }

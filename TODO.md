@@ -48,5 +48,3 @@
 
 # Bugs
 - Fix breaking blocks below furniture
-- Fix dropped item textures for tools and items
-- Fix this game
