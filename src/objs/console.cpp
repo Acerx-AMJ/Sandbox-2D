@@ -6,6 +6,12 @@
 #include "util/render.hpp"
 #include <sstream>
 
+// Constants
+
+constexpr int maxVisibleLinesOnScreenAtOnce = 6;
+
+// init
+
 void Console::init() {
    input.rectangle = {500.0f, GetScreenHeight() - 25.0f, 1000.0f, 50.0f};
    input.fallback = "'help' for a list of commands.";
@@ -24,6 +30,7 @@ void Console::update(Map &map, Player &player, Inventory &inventory) {
 
    if (wastyping && !input.typing && IsKeyPressed(KEY_ENTER)) {
       handleCommand(map, player, inventory);
+      input.typing = true;
    }
 
    bool shouldRenderBefore = shouldRender;
@@ -41,7 +48,16 @@ void Console::update(Map &map, Player &player, Inventory &inventory) {
    } else {
       input.alpha = 1.0f;
    }
-   renderInGameState = shouldRender || fadingout;
+   renderInGameState = shouldRender || fadingout || input.typing;
+
+   if (renderInGameState) {
+      float thing = GetMouseWheelMove();
+      if (thing >= 1.0f) {
+         scrollback = std::max(0, scrollback - 1);
+      } else if (thing <= -1.0f) {
+         scrollback = std::min((int)output.size() - maxVisibleLinesOnScreenAtOnce, scrollback + 1);
+      }
+   }
 }
 
 void Console::render() {
@@ -49,8 +65,8 @@ void Console::render() {
    input.render();
    drawRect({input.rectangle.x, input.rectangle.y - 125.0f - input.rectangle.height, input.rectangle.width, input.rectangle.height + 250.0f}, Fade(BLACK, (fadingout ? fadeoutTimer * 1.5f : 0.75f)));
 
-   for (int i = 0; i < 6 /* hard-coded */ && (size_t)i < output.size(); ++i) {
-      DrawTextPro(getFont("andy"), output[i].c_str(), {input.rectangle.x - input.rectangle.width / 2.0f + 5.0f, (input.rectangle.y - 125.0f) - (input.rectangle.height + 250.0f) / 2.0f + i * 40}, {0, getOrigin(output[i].c_str(), 35, 1).y}, 0, 35, 1, Fade(WHITE, (fadingout ? fadeoutTimer * 2.0f : 1.0f)));
+   for (int i = scrollback; i < scrollback + maxVisibleLinesOnScreenAtOnce && (size_t)i < output.size(); ++i) {
+      DrawTextPro(getFont("andy"), output[i].c_str(), {input.rectangle.x - input.rectangle.width / 2.0f + 5.0f, (input.rectangle.y - 125.0f) - (input.rectangle.height + 250.0f) / 2.0f + (i - scrollback) * 40}, {0, getOrigin(output[i].c_str(), 35, 1).y}, 0, 35, 1, Fade(WHITE, (fadingout ? fadeoutTimer * 2.0f : 1.0f)));
    }
 }
 
@@ -79,6 +95,7 @@ void Console::handleCommand(Map &map, Player &player, Inventory &inventory) {
 
    input.text.clear();
    outputDelay = 10.0f;
+   scrollback = std::max(0, (int)output.size() - maxVisibleLinesOnScreenAtOnce);
 }
 
 void Console::help(const Args&, Map&, Player&, Inventory&) {

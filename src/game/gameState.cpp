@@ -172,14 +172,14 @@ void GameState::updatePlaying() {
 
    console.update(map, player, inventory);
 
-   if (console.renderInGameState && handleKeyPressWithSound(KEY_ESCAPE)) {
+   if (console.renderInGameState && IsKeyPressed(KEY_ESCAPE)) {
       console.outputDelay = 0.0f;
-      console.shouldRender = console.fadingout = false;
+      console.input.typing = console.shouldRender = console.fadingout = false;
    }
    setInputBlocking(console.input.typing);
    player.blockInput = console.input.typing;
 
-   inventory.update();
+   inventory.update(!console.renderInGameState);
    calculateCameraBounds();
 
    if (phase != Phase::playing) {
@@ -597,7 +597,7 @@ void GameState::render() {
    drawText({startingX + (GetScreenWidth() - startingX) / 2.0f, startingY / 2.0f}, format("HP: {}/{}", player.hearts, player.maxHearts).c_str(), 20);
 
    // Render other game UI
-   if (phase != Phase::died && (console.input.typing || console.renderInGameState)) {
+   if (phase != Phase::died && console.renderInGameState) {
       console.render();
    }
    inventory.render();

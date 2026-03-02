@@ -33,10 +33,8 @@
 - Maybe add localization settings? Probably not
 
 ### Cheats
-- Add console and commands
-- - give
-- - tp
-- - etc. etc.
+- Add history
+- give command
 
 ### Other
 - World generation.

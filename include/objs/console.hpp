@@ -26,6 +26,7 @@ struct Console {
    bool shouldRender = false;
    bool fadingout = false;
    bool renderInGameState = false; // wtf
+   int scrollback = 0;
    float outputDelay = 0.0f;
    float fadeoutTimer = 0.0f;
 };

@@ -54,7 +54,7 @@ Inventory::Inventory(Map &map, Player &player, std::vector<DroppedItem> &dropped
 
 // Update functions
 
-void Inventory::update() {
+void Inventory::update(bool canSwitchOnScroll) {
    toggleInventoryOpen();
 
    // Handle switching
@@ -72,7 +72,9 @@ void Inventory::update() {
    switchOnKeyPress(KEY_NINE,  8);
    switchOnKeyPress(KEY_ZERO,  9);
 
-   switchOnMouseWheel();
+   if (canSwitchOnScroll) {
+      switchOnMouseWheel();
+   }
 
    if (selectedX != lastSelectedX || selectedY != lastSelectedY) {
       playSound("hover");

@@ -31,7 +31,7 @@ struct Inventory {
 
    // Update functions
 
-   void update();
+   void update(bool canSwitchOnScroll);
 
    // Placement functions
 
