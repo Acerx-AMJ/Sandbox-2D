@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <vector>
 #undef assert
 
 // String conversion functions
@@ -51,5 +52,6 @@ void assert(bool condition, const char *base, const Args&...args) {
 // Wrap function
 
 void wrapText(std::string &string, float maxWidth, float fontSize, float spacing);
+void divideText(std::vector<std::string> &output, const std::string &string, float maxWidth, float fontSize, float spacing);
 
 #endif

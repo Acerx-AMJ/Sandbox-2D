@@ -90,17 +90,17 @@ void Input::render() const {
 
 
    if (texture) {
-      drawTexture(*texture, {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height});
+      drawTexture(*texture, {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height}, 0, Fade(WHITE, alpha));
    }
 
    if (wrapinput) {
       std::string wrapped = text.empty() ? fallback : text;
       wrapText(wrapped, rectangle.width - textWrapPadding, 35, 1);
-      drawText({rectangle.x, rectangle.y}, wrapped.c_str(), 35, Color{value, value, value, 255});
+      drawText({rectangle.x, rectangle.y}, wrapped.c_str(), 35, Fade(Color{value, value, value, 255}, alpha));
    } else {
-      drawTextByRight({rectangle.x, rectangle.y}, rectangle.width / 2.0f, (text.empty() ? fallback : text).c_str(), 35, Color{value, value, value, 255});
+      drawTextByRight({rectangle.x, rectangle.y}, rectangle.width / 2.0f, (text.empty() ? fallback : text).c_str(), 35, Fade(Color{value, value, value, 255}, alpha));
    }
-   drawKeybindIndicator(keybind, {rectangle.x + rectangle.width / 2.0f, rectangle.y - rectangle.height / 2.0f});
+   drawKeybindIndicator(keybind, {rectangle.x + rectangle.width / 2.0f, rectangle.y - rectangle.height / 2.0f}, Fade(WHITE, alpha));
 }
 
 // Normalize rect

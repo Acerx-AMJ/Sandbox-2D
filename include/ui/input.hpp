@@ -22,6 +22,7 @@ struct Input {
 
    int maxChars = 255;
    int counter = 0;
+   float alpha = 1.0f;
 };
 
 #endif
