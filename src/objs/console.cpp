@@ -16,10 +16,14 @@ using Command = std::function<bool(ArgsList)>;
 static inline const std::unordered_map<std::string, Command> commands {
    {"help", c_help},
    {"tp", c_tp},
+   {"sp", c_sp},
    {"crds", c_crds},
    {"clear", c_clear},
    {"exit", c_exit},
-   {"quine", c_quine},
+   {"hp", c_hp},
+   {"maxhp", c_maxhp},
+   {"br", c_br},
+   {"kill", c_kill},
 };
 
 static inline constexpr Color lineColors[(size_t)ConsoleColor::count] {
@@ -106,9 +110,12 @@ bool Console::handleCommand(const VArgs &args, Map &map, Player &player, Invento
 bool c_help(Console &console, const std::string&, const VArgs&, Map&, Player&, Inventory&) {
    console.output("Operators:", ConsoleColor::gray);
    console.output("Commands:", ConsoleColor::gray);
-   console.output("tp X Y - teleport player to the given coordinates.");
+   console.output("tp [X] [Y] - teleport player to the given coordinates.");
+   console.output("sp [X] [Y] - set player spawn point to the given coordinates.");
    console.output("crds - show current coordinates.");
-   console.output("quine - turing complete when?");
+   console.output("hp [HP] - set health.");
+   console.output("maxhp [HP] - set maximum health.");
+   console.output("kill - kill the player.");
    console.output("clear - clear the console.");
    console.output("exit - exit the console. Or simply press ESC!");
    console.output("Scroll back with the scroll wheel to see more commands.", ConsoleColor::gray);
@@ -144,6 +151,37 @@ bool c_tp(Console &console, const std::string&, const VArgs &args, Map &map, Pla
    return true;
 }
 
+bool c_sp(Console &console, const std::string&, const VArgs &args, Map &map, Player &player, Inventory&) {
+   if (args.size() != 1 && args.size() != 3) {
+      console.output("sp: expected 2 or no arguments.", ConsoleColor::red);
+      return false;
+   }
+   int x, y;
+
+   if (args.size() == 1) {
+      x = player.position.x;
+      y = player.position.y;
+   } else {
+      try {
+         x = stoi(args[1]);
+         y = stoi(args[2]);
+      } catch (...) {
+         console.output("sp: expected both arguments to be numbers.", ConsoleColor::red);
+         return false;
+      }
+   }
+
+   if (x < 0 || y < 0 || x >= map.sizeX || y >= map.sizeY) {
+      console.output("sp: coordinates are out of bounds.", ConsoleColor::red);
+      return false;
+   }
+
+   player.spawnPos.x = x;
+   player.spawnPos.y = y;
+   console.output(TextFormat("sp: spawn position set to (X %d; Y %d).", x, y));
+   return true;
+}
+
 bool c_crds(Console &console, const std::string&, const VArgs &args, Map&, Player &player, Inventory&) {
    if (args.size() != 1) {
       console.output("crds: expected no arguments. Executing anyway.", ConsoleColor::red);
@@ -169,5 +207,74 @@ bool c_exit(Console &console, const std::string&, const VArgs&, Map&, Player&, I
 
 bool c_quine(Console &console, const std::string &quine, const VArgs&, Map&, Player&, Inventory&) {
    console.output(quine);
+   return true;
+}
+
+bool c_hp(Console &console, const std::string&, const VArgs &args, Map&, Player &player, Inventory&) {
+   if (args.size() != 2) {
+      console.output("hp: expected 1 argument.", ConsoleColor::red);
+      return false;
+   }
+
+   int hp;
+   try {
+      hp = stoi(args[1]);
+   } catch (...) {
+      console.output("hp: expected first argument to be a number.", ConsoleColor::red);
+      return false;
+   }
+
+   player.timeSinceLastDamage = player.timeSpentRegenerating = 0.0f;
+   player.hearts = std::min(player.maxHearts, hp);
+   console.output(TextFormat("hp: set health to %d.", hp));
+   return true;
+}
+
+bool c_maxhp(Console &console, const std::string&, const VArgs &args, Map&, Player &player, Inventory&) {
+   if (args.size() != 2) {
+      console.output("maxhp: expected 1 argument.", ConsoleColor::red);
+      return false;
+   }
+
+   int hp;
+   try {
+      hp = stoi(args[1]);
+   } catch (...) {
+      console.output("maxhp: expected first argument to be a number.", ConsoleColor::red);
+      return false;
+   }
+
+   player.timeSinceLastDamage = player.timeSpentRegenerating = 0.0f;
+   player.maxHearts = hp;
+   player.hearts = std::min(player.maxHearts, player.hearts);
+   console.output(TextFormat("maxhp: set maximum health to %d.", hp));
+   return true;
+}
+
+bool c_br(Console &console, const std::string&, const VArgs &args, Map&, Player &player, Inventory&) {
+   if (args.size() != 2) {
+      console.output("br: expected 1 argument.", ConsoleColor::red);
+      return false;
+   }
+
+   int br;
+   try {
+      br = stoi(args[1]);
+   } catch (...) {
+      console.output("br: expected first argument to be a number.", ConsoleColor::red);
+      return false;
+   }
+
+   player.breath = br;
+   console.output(TextFormat("br: set health to %d.", br));
+   return true;
+}
+
+bool c_kill(Console &console, const std::string&, const VArgs &args, Map&, Player &player, Inventory&) {
+   if (args.size() != 1) {
+      console.output("kill: expected no arguments. Executing anyway.", ConsoleColor::red);
+   }
+   player.hearts = 0;
+   console.output("kill: killed player.");
    return true;
 }

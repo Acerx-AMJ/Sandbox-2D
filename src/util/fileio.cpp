@@ -138,15 +138,15 @@ void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, 
 
 // World loading functions
 
-void loadWorldData(const std::string &name, Vector2 &playerSpawnPosition, Player &player, float &zoom, Map &map, Inventory &inventory, std::vector<DroppedItem> &droppedItems) {
+void loadWorldData(const std::string &name, Player &player, float &zoom, Map &map, Inventory &inventory, std::vector<DroppedItem> &droppedItems) {
    std::ifstream file ("data/worlds/" + name + ".bin", std::ios::binary);
    assert(file.is_open(), "Failed to load world 'data/worlds/{}.bin'.", name);
 
    // Read basic data
    int versionOfFile = 0;
    file.read(reinterpret_cast<char*>(&versionOfFile), sizeof(versionOfFile));
-   file.read(reinterpret_cast<char*>(&playerSpawnPosition.x), sizeof(playerSpawnPosition.x));
-   file.read(reinterpret_cast<char*>(&playerSpawnPosition.y), sizeof(playerSpawnPosition.y));
+   file.read(reinterpret_cast<char*>(&player.spawnPos.x), sizeof(player.spawnPos.x));
+   file.read(reinterpret_cast<char*>(&player.spawnPos.y), sizeof(player.spawnPos.y));
    file.read(reinterpret_cast<char*>(&player.position.x), sizeof(player.position.x));
    file.read(reinterpret_cast<char*>(&player.position.y), sizeof(player.position.y));
    file.read(reinterpret_cast<char*>(&player.breath), sizeof(player.breath));

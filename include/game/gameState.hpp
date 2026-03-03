@@ -54,7 +54,6 @@ struct GameState: public State {
 
    Camera2D camera;
    Rectangle cameraBounds;
-   Vector2 playerSpawnPosition;
 
    Console console;
    Inventory inventory;

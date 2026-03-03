@@ -38,7 +38,7 @@ GameState::GameState(const std::string &worldName)
    const Vector2 center = getScreenCenter();
    
    // Init world and camera
-   loadWorldData(worldName, playerSpawnPosition, player, camera.zoom, map, inventory, droppedItems);
+   loadWorldData(worldName, player, camera.zoom, map, inventory, droppedItems);
 
    camera.zoom = clamp(camera.zoom, minCameraZoom, maxCameraZoom);
    camera.target = player.getCenter();
@@ -59,7 +59,7 @@ GameState::GameState(const std::string &worldName)
 
 GameState::~GameState() {
    inventory.discardItem();
-   saveWorldData(worldName, playerSpawnPosition, player.position, player.breath, player.hearts, player.maxHearts, camera.zoom, map, &inventory, &droppedItems);
+   saveWorldData(worldName, player.spawnPos, player.position, player.breath, player.hearts, player.maxHearts, camera.zoom, map, &inventory, &droppedItems);
    resetBackground();
 }
 
@@ -284,7 +284,7 @@ void GameState::updatePausing() {
 void GameState::updateDying() {
    deathTimer += realDt;
    if (deathTimer >= timeToRespawn) {
-      player.previousPosition = player.position = playerSpawnPosition;
+      player.previousPosition = player.position = player.spawnPos;
       player.hearts = player.lastHearts = player.displayHearts = player.maxHearts;
       player.displayBreath = player.breath = maxBreath;
       player.velocity = {0, 0};

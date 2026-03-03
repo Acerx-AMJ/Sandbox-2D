@@ -11,10 +11,14 @@
 
 bool c_help(ArgsList);
 bool c_tp(ArgsList);
+bool c_sp(ArgsList);
 bool c_crds(ArgsList);
 bool c_clear(ArgsList);
 bool c_exit(ArgsList);
-bool c_quine(ArgsList);
+bool c_hp(ArgsList);
+bool c_maxhp(ArgsList);
+bool c_br(ArgsList);
+bool c_kill(ArgsList);
 
 // Console
 
