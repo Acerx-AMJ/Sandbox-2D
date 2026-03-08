@@ -34,8 +34,11 @@ bool c_help(Console &console, const VArgs&, Map&, Player&, Inventory&) {
    console.output("chist - clear command history.");
    console.output("time [TIME] - set time of day.");
    console.output("stblk [ID/NAME] [X] [Y] - set block with the id/name at the given coordinates.");
+   console.output("flblk [ID/NAME] [SX] [SY] [DX] [DY] - fill blocks with the id/name from coordinates (SX; SY) to (DX; DY).");
    console.output("stwl [ID/NAME] [X] [Y] - set wall with the id/name at the given coordinates.");
-   console.output("rblk [X] [Y] - remove block at the given coordinates.");
+   console.output("flwl [ID/NAME] [SX] [SY] [DX] [DY] - fill walls with the id/name from coordinates (SX; SY) to (DX; DY).");
+   console.output("stlq [ID/NAME] [X] [Y] - set liquid with the id/name at the given coordinates.");
+   console.output("fllq [ID/NAME] [SX] [SY] [DX] [DY] - fill liquids with the id/name from coordinates (SX; SY) to (DX; DY).");
    console.output("tp [X] [Y] - teleport player to the given coordinates.");
    console.output("sp [X] [Y] - set player spawn point to the given coordinates.");
    console.output("crds - show current coordinates.");
@@ -294,29 +297,52 @@ bool c_stblk(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
    return true;
 }
 
-bool c_rblk(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
-   if (args.size() != 3) {
-      console.output("rblk: expected 2 argument.", ConsoleColor::red);
+bool c_flblk(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
+   if (args.size() != 6) {
+      console.output("flblk: expected 5 argument.", ConsoleColor::red);
       return false;
    }
 
-   int x, y;
+   int sx, sy, dx, dy, id;
    try {
-      x = stoi(args[2]);
-      y = stoi(args[3]);
+      id = stoi(args[1]);
+
+      if (!isBlockIdValid(id)) {
+         console.output("flblk: invalid block id.", ConsoleColor::red);
+         return false;
+      }
    } catch (...) {
-      console.output("rblk: expected all arguments to be numbers.", ConsoleColor::red);
+      if (!isBlockNameValid(args[1].c_str())) {
+         console.output("flblk: expected first argument to either be a valid block id or name.", ConsoleColor::red);
+         return false;
+      }
+      id = getBlockIdFromName(args[1].c_str());
+   }
+
+   try {
+      sx = stoi(args[2]);
+      sy = stoi(args[3]);
+      dx = stoi(args[4]);
+      dy = stoi(args[5]);
+   } catch (...) {
+      console.output("flblk: expected second, third, fourth and fifth arguments to be numbers.", ConsoleColor::red);
       return false;
    }
 
-   if (x < 0 || y < 0 || x >= map.sizeX || y >= map.sizeY) {
-      console.output("rblk: coordinates are out of bounds.", ConsoleColor::red);
+   if (sx < 0 || sy < 0 || sx >= map.sizeX || sy >= map.sizeY || dx < 0 || dy < 0 || dx >= map.sizeX || dy >= map.sizeY) {
+      console.output("flblk: coordinates are out of bounds.", ConsoleColor::red);
       return false;
    }
 
-   map.deleteBlockWithoutDeletingLiquids(x, y);
-   map.deleteBlockWithoutDeletingLiquids(x, y, true);
-   console.output(TextFormat("rblk: removed block at coordinates (X %d; Y %d).", x, y));
+   if (sy > dy) std::swap(sy, dy);
+   if (sx > dx) std::swap(sx, dx);
+
+   for (int y = sy; y < dy; ++y) {
+      for (int x = sx; x < dx; ++x) {
+         map.setBlock(x, y, id);
+      }
+   }
+   console.output(TextFormat("flblk: filled all blocks from coordinates (X %d; Y %d) to (X %d; Y %d) as %s.", sx, sy, dx, dy, getBlockNameFromId(id).c_str()));
    return true;
 }
 
@@ -331,12 +357,12 @@ bool c_stwl(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
       id = stoi(args[1]);
 
       if (!isBlockIdValid(id)) {
-         console.output("stwl: invalid block id.", ConsoleColor::red);
+         console.output("stwl: invalid wall id.", ConsoleColor::red);
          return false;
       }
    } catch (...) {
       if (!isBlockNameValid(args[1].c_str())) {
-         console.output("stwl: expected first argument to either be a valid block id or name.", ConsoleColor::red);
+         console.output("stwl: expected first argument to either be a valid wall id or name.", ConsoleColor::red);
          return false;
       }
       id = getBlockIdFromName(args[1].c_str());
@@ -356,7 +382,163 @@ bool c_stwl(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
    }
 
    map.setBlock(x, y, id, true);
-   console.output(TextFormat("stwl: set block at coordinates (X %d; Y %d) to '%s'.", x, y, getBlockNameFromId(id).c_str()));
+   console.output(TextFormat("stwl: set wall at coordinates (X %d; Y %d) to '%s'.", x, y, getBlockNameFromId(id).c_str()));
+   return true;
+}
+
+bool c_flwl(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
+   if (args.size() != 6) {
+      console.output("flwl: expected 5 argument.", ConsoleColor::red);
+      return false;
+   }
+
+   int sx, sy, dx, dy, id;
+   try {
+      id = stoi(args[1]);
+
+      if (!isBlockIdValid(id)) {
+         console.output("flwl: invalid wall id.", ConsoleColor::red);
+         return false;
+      }
+   } catch (...) {
+      if (!isBlockNameValid(args[1].c_str())) {
+         console.output("flwl: expected first argument to either be a valid wall id or name.", ConsoleColor::red);
+         return false;
+      }
+      id = getBlockIdFromName(args[1].c_str());
+   }
+
+   try {
+      sx = stoi(args[2]);
+      sy = stoi(args[3]);
+      dx = stoi(args[4]);
+      dy = stoi(args[5]);
+   } catch (...) {
+      console.output("flwl: expected second, third, fourth and fifth arguments to be numbers.", ConsoleColor::red);
+      return false;
+   }
+
+   if (sx < 0 || sy < 0 || sx >= map.sizeX || sy >= map.sizeY || dx < 0 || dy < 0 || dx >= map.sizeX || dy >= map.sizeY) {
+      console.output("flwl: coordinates are out of bounds.", ConsoleColor::red);
+      return false;
+   }
+
+   if (sy > dy) std::swap(sy, dy);
+   if (sx > dx) std::swap(sx, dx);
+
+   for (int y = sy; y < dy; ++y) {
+      for (int x = sx; x < dx; ++x) {
+         map.setBlock(x, y, id, true);
+      }
+   }
+   console.output(TextFormat("flwl: filled all walls from coordinates (X %d; Y %d) to (X %d; Y %d) as %s.", sx, sy, dx, dy, getBlockNameFromId(id).c_str()));
+   return true;
+}
+
+bool c_stlq(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
+   if (args.size() != 4) {
+      console.output("stlq: expected 3 argument.", ConsoleColor::red);
+      return false;
+   }
+
+   // 0 -> none
+   // 1 -> water
+   // 2 -> lava
+   // 3 -> honey
+   int x, y, id;
+
+   try {
+      id = stoi(args[1]);
+
+      if (id < 0 || id > 3) {
+         console.output("stlq: invalid liquid id.", ConsoleColor::red);
+         return false;
+      }
+   } catch (...) {
+      const static std::unordered_map<std::string, int> liquidIds {
+         {"none", 0}, {"water", 1}, {"lava", 2}, {"honey", 3}
+      };
+      
+      if (liquidIds.find(args[1]) == liquidIds.end()) {
+         console.output("stlq: expected first argument to either be a valid liquid id or name.", ConsoleColor::red);
+         return false;
+      }
+      id = liquidIds.at(args[1]);
+   }
+
+   try {
+      x = stoi(args[2]);
+      y = stoi(args[3]);
+   } catch (...) {
+      console.output("stlq: expected second and third arguments to be numbers.", ConsoleColor::red);
+      return false;
+   }
+
+   if (x < 0 || y < 0 || x >= map.sizeX || y >= map.sizeY) {
+      console.output("stlq: coordinates are out of bounds.", ConsoleColor::red);
+      return false;
+   }
+
+   map.liquidTypes[y][x] = (LiquidType)id;
+   map.liquidsHeights[y][x] = (id == 0 ? 0 : maxLiquidLayers);;
+
+   constexpr const char *liquidNames[] = {"none", "water", "lava", "honey"};
+   console.output(TextFormat("stlq: set liquid at coordinates (X %d; Y %d) to '%s'.", x, y, liquidNames[id]));
+   return true;
+}
+
+bool c_fllq(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
+   if (args.size() != 6) {
+      console.output("fllq: expected 5 argument.", ConsoleColor::red);
+      return false;
+   }
+
+   int sx, sy, dx, dy, id;
+   try {
+      id = stoi(args[1]);
+
+      if (id < 0 || id > 3) {
+         console.output("fllq: invalid liquid id.", ConsoleColor::red);
+         return false;
+      }
+   } catch (...) {
+      const static std::unordered_map<std::string, int> liquidIds {
+         {"none", 0}, {"water", 1}, {"lava", 2}, {"honey", 3}
+      };
+      
+      if (liquidIds.find(args[1]) == liquidIds.end()) {
+         console.output("fllq: expected first argument to either be a valid liquid id or name.", ConsoleColor::red);
+         return false;
+      }
+      id = liquidIds.at(args[1]);
+   }
+
+   try {
+      sx = stoi(args[2]);
+      sy = stoi(args[3]);
+      dx = stoi(args[4]);
+      dy = stoi(args[5]);
+   } catch (...) {
+      console.output("fllq: expected second, third, fourth and fifth arguments to be numbers.", ConsoleColor::red);
+      return false;
+   }
+
+   if (sx < 0 || sy < 0 || sx >= map.sizeX || sy >= map.sizeY || dx < 0 || dy < 0 || dx >= map.sizeX || dy >= map.sizeY) {
+      console.output("fllq: coordinates are out of bounds.", ConsoleColor::red);
+      return false;
+   }
+
+   if (sy > dy) std::swap(sy, dy);
+   if (sx > dx) std::swap(sx, dx);
+
+   for (int y = sy; y < dy; ++y) {
+      for (int x = sx; x < dx; ++x) {
+         map.liquidTypes[y][x] = (LiquidType)id;
+         map.liquidsHeights[y][x] = (id == 0 ? 0 : maxLiquidLayers);
+      }
+   }
+   constexpr const char *liquidNames[] = {"none", "water", "lava", "honey"};
+   console.output(TextFormat("fllq: filled all liquids from coordinates (X %d; Y %d) to (X %d; Y %d) as %s.", sx, sy, dx, dy, liquidNames[id]));
    return true;
 }
 
@@ -379,7 +561,11 @@ static inline const std::unordered_map<std::string, Command> commands {
    {"hist", c_hist},
    {"chist", c_chist},
    {"stblk", c_stblk},
+   {"flblk", c_flblk},
    {"stwl", c_stwl},
+   {"flwl", c_flwl},
+   {"stlq", c_stlq},
+   {"fllq", c_fllq},
 };
 
 // init

@@ -34,6 +34,7 @@
 
 ### Cheats
 - give command
+- variables $x $y $msx $msy and so on
 
 ### Other
 - World generation.
