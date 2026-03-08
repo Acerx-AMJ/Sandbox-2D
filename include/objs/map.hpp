@@ -2,7 +2,6 @@
 #define OBJS_MAP_HPP
 
 #include "objs/furniture.hpp"
-#include <string>
 
 // Constants
 
@@ -78,7 +77,7 @@ struct Block {
 // Block getter functions
 float getBlockBreakingTime(unsigned short id);
 int getBlockBreakingLevel(unsigned short id);
-unsigned short getBlockIdFromName(const std::string &name);
+unsigned short getBlockIdFromName(const char *name);
 std::string getBlockNameFromId(unsigned short id);
 struct Item getBlockDropId(unsigned short id, bool iswall);
 
@@ -110,12 +109,12 @@ struct Map {
 
    // Set block functions
 
-   void setRow(int y, const std::string &name, bool isWall = false);
+   void setRow(int y, const char *name, bool isWall = false);
    void setRow(int y, unsigned short *ids);
    void setWallRow(int y, unsigned short *ids);
-   void setColumnAndWalls(int x, int y, const std::string &name);
+   void setColumnAndWalls(int x, int y, const char *name);
    
-   void setBlock(int x, int y, const std::string &name, bool isWall = false);
+   void setBlock(int x, int y, const char *name, bool isWall = false);
    void setBlock(int x, int y, unsigned short id, bool isWall = false);
    void lightSetBlock(int x, int y, unsigned short id);
 

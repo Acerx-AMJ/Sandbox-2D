@@ -33,7 +33,6 @@
 - Maybe add localization settings? Probably not
 
 ### Cheats
-- Add history
 - give command
 
 ### Other

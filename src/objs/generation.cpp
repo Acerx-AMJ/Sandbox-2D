@@ -130,10 +130,10 @@ void MapGenerator::generateTerrain() {
 
       // Generate grass, dirt and stone
 
-      map.setBlock(x, y, (last != current && chance(50) ? lastData.top : data.top));
+      map.setBlock(x, y, (last != current && chance(50) ? lastData.top : data.top).c_str());
       for (int yy = y + 1; yy < map.sizeY; ++yy) {
          if (yy - y < rockOffset) {
-            const std::string &block = (last != current && chance(50) ? lastData.bottom : data.bottom);
+            const char *block = (last != current && chance(50) ? lastData.bottom : data.bottom).c_str();
             map.setBlock(x, yy, block);
 
             if (std::string(block) != "sand" && std::string(block) != "snow") {

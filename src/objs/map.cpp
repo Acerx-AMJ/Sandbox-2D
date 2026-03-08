@@ -8,244 +8,92 @@
 #include "util/parallax.hpp"
 #include "util/random.hpp"
 #include "util/render.hpp"
+#include "util/strarray.hpp"
 #include <array>
 #include <cmath>
 #include <raymath.h>
-#include <unordered_map>
 
 // Constants
 
 constexpr unsigned short blockCount = 30;
 
+struct BlockInfo {
+   const char *name;
+   BlockType attributes;
+   float breakTime;
+   int breakLevel;
+   Item drop;
+};
+
 // NOTE: due to logic in gameState.cpp, any grass blocks must be defined RIGHT
 // BEFORE the dirt block, for an example, you can see blocks 1 and 2
-static inline const std::unordered_map<std::string, unsigned short> blockIds {
-   {"air", 0},
-   {"grass", 1},
-   {"dirt", 2},
-   {"clay", 3},
-   {"stone", 4},
-   {"sand", 5},
-   {"sandstone", 6},
-   {"bricks", 7},
-   {"glass", 8},
-   {"planks", 9},
-   {"stone_bricks", 10},
-   {"tiles", 11},
-   {"obsidian", 12},
-   {"platform", 13},
-   {"snow", 14},
-   {"ice", 15},
-   {"jungle_grass", 16},
-   {"mud", 17},
-   {"lamp", 18},
-   {"torch", 19},
-   {"honey_block", 20},
-   {"crispy_honey_block", 21},
-   {"slime_block", 22},
-   {"bubble_block", 23},
-   {"slime_platform", 24},
-   {"cactus_block", 25},
-   {"coal_ore", 26},
-   {"iron_ore", 27},
-   {"gold_ore", 28},
-   {"mythril_ore", 29},
+constexpr static inline std::array<BlockInfo, blockCount> blockInfo {
+
+   //        texture name          attributes                                                                                                 break speed   break level   drop
+   //*************************************************************************************************************************************************************************
+   BlockInfo{"air",                BlockType::empty | BlockType::transparent | BlockType::flowable,                                           0.0f,         0,            Item{}},
+   BlockInfo{"grass",              BlockType::solid | BlockType::grass,                                                                       0.75f,        0,            Item{}},
+   BlockInfo{"dirt",               BlockType::solid | BlockType::dirt,                                                                        0.75f,        0,            Item{}},
+   BlockInfo{"clay",               BlockType::solid,                                                                                          1.0f,         0,            Item{}},
+   BlockInfo{"stone",              BlockType::solid,                                                                                          2.0f,         1,            Item{}},
+   BlockInfo{"sand",               BlockType::solid | BlockType::sand,                                                                        0.5f,         0,            Item{}},
+   BlockInfo{"sandstone",          BlockType::solid,                                                                                          1.5f,         1,            Item{}},
+   BlockInfo{"bricks",             BlockType::solid,                                                                                          2.5f,         2,            Item{}},
+   BlockInfo{"glass",              BlockType::solid | BlockType::transparent,                                                                 0.25f,        0,            Item{}},
+   BlockInfo{"planks",             BlockType::solid,                                                                                          1.5f,         0,            Item{}},
+   BlockInfo{"stone_bricks",       BlockType::solid,                                                                                          3.5f,         2,            Item{}},
+   BlockInfo{"tiles",              BlockType::solid,                                                                                          3.5f,         2,            Item{}},
+   BlockInfo{"obsidian",           BlockType::solid,                                                                                          2.5f,         3,            Item{}},
+   BlockInfo{"platform",           BlockType::solid | BlockType::platform | BlockType::transparent | BlockType::flowable,                     1.0f,         1,            Item{}},
+   BlockInfo{"snow",               BlockType::solid | BlockType::sand,                                                                        0.5f,         0,            Item{}},
+   BlockInfo{"ice",                BlockType::solid | BlockType::ice,                                                                         1.5f,         1,            Item{}},
+   BlockInfo{"jungle_grass",       BlockType::solid | BlockType::grass,                                                                       0.75f,        0,            Item{}},
+   BlockInfo{"mud",                BlockType::solid | BlockType::dirt,                                                                        0.75f,        0,            Item{}},
+   BlockInfo{"lamp",               BlockType::solid | BlockType::lightsource,                                                                 1.0f,         0,            Item{}},
+   BlockInfo{"torch",              BlockType::transparent | BlockType::lightsource | BlockType::torch | BlockType::flowable,                  0.25f,        0,            Item{}},
+   BlockInfo{"honey_block",        BlockType::solid | BlockType::sticky,                                                                      1.5f,         0,            Item{}},
+   BlockInfo{"crispy_honey_block", BlockType::solid,                                                                                          2.0f,         0,            Item{}},
+   BlockInfo{"slime_block",        BlockType::solid | BlockType::bouncy | BlockType::transparent,                                             1.0f,         0,            Item{}},
+   BlockInfo{"bubble_block",       BlockType::transparent,                                                                                    0.25f,        0,            Item{}},
+   BlockInfo{"slime_platform",     BlockType::platform | BlockType::transparent | BlockType::solid | BlockType::flowable | BlockType::bouncy, 0.75f,        0,            Item{}},
+   BlockInfo{"cactus_block",       BlockType::solid,                                                                                          0.75f,        0,            Item{}},
+   BlockInfo{"coal_ore",           BlockType::solid,                                                                                          2.5f,         1,            Item{ItemType::item, 1, 1}},
+   BlockInfo{"iron_ore",           BlockType::solid,                                                                                          2.5f,         2,            Item{ItemType::item, 2, 1}},
+   BlockInfo{"gold_ore",           BlockType::solid,                                                                                          3.0f,         3,            Item{ItemType::item, 3, 1}},
+   BlockInfo{"mythril_ore",        BlockType::solid,                                                                                          3.25f,        3,            Item{ItemType::item, 4, 1}},
 };
 
-constexpr static inline std::array<const char*, blockCount> blockNames {
-   "air",
-   "grass",
-   "dirt",
-   "clay",
-   "stone",
-   "sand",
-   "sandstone",
-   "bricks",
-   "glass",
-   "planks",
-   "stone_bricks",
-   "tiles",
-   "obsidian",
-   "platform",
-   "snow",
-   "ice",
-   "jungle_grass",
-   "mud",
-   "lamp",
-   "torch",
-   "honey_block",
-   "crispy_honey_block",
-   "slime_block",
-   "bubble_block",
-   "slime_platform",
-   "cactus_block",
-   "coal_ore",
-   "iron_ore",
-   "gold_ore",
-   "mythril_ore",
+const static inline StrArray<const char *> blockIds {
+   "air", "grass", "dirt", "clay", "stone", "sand", "sandstone", "bricks", "glass", "planks", "stone_bricks", "tiles", "obsidian", "platform", "snow", "ice", "jungle_grass", "mud", "lamp", "torch",
+   "honey_block", "crispy_honey_block", "slime_block", "bubble_block", "slime_platform", "cactus_block", "coal_ore", "iron_ore", "gold_ore", "mythril_ore"
 };
-
-// This is a nightmare to edit, but at least makes other code easier!
-constexpr static inline const std::array<BlockType, blockCount> blockAttributes {{
-   BlockType::empty | BlockType::transparent | BlockType::flowable, // air
-   BlockType::solid | BlockType::grass, // grass
-   BlockType::solid | BlockType::dirt, // dirt
-   BlockType::solid, // clay
-   BlockType::solid, // stone
-   BlockType::solid | BlockType::sand, // sand
-   BlockType::solid, // sandstone
-   BlockType::solid, // bricks
-   BlockType::solid | BlockType::transparent, // glass
-   BlockType::solid, // planks
-   BlockType::solid, // stone bricks
-   BlockType::solid, // tiles
-   BlockType::solid, // obsidian
-   BlockType::platform | BlockType::transparent | BlockType::solid | BlockType::flowable, // platform
-   BlockType::sand | BlockType::solid, // snow
-   BlockType::ice | BlockType::solid, // ice
-   BlockType::solid | BlockType::grass, // jungle grass
-   BlockType::solid | BlockType::dirt, // mud
-   BlockType::lightsource | BlockType::solid, // lamp
-   BlockType::transparent | BlockType::lightsource | BlockType::torch | BlockType::flowable, // torch
-   BlockType::solid | BlockType::sticky, // honey block
-   BlockType::solid, // crispy honey block
-   BlockType::solid | BlockType::bouncy | BlockType::transparent, // slime block
-   BlockType::transparent, // bubble block
-   BlockType::platform | BlockType::transparent | BlockType::solid | BlockType::flowable | BlockType::bouncy, // Slime platform
-   BlockType::solid, // cactus
-   BlockType::solid, // coal ore
-   BlockType::solid, // iron ore
-   BlockType::solid, // gold ore
-   BlockType::solid, // mythril ore
-}};
-
-// Block breaking times
-constexpr static inline const std::array<float, blockCount> blockBreakingTimes {{
-   0.0f, // air
-   0.75f, // dirt
-   0.75f, // grass
-   1.0f, // clay
-   2.0f, // stone
-   0.5f, // sand
-   3.0f, // sandstone
-   2.5f, // bricks
-   0.25f, // glass
-   1.5f, // planks
-   3.5f, // stone bricks
-   3.5f, // tiles
-   2.5f, // obsidian
-   1.0f, // platform
-   0.5f, // snow
-   3.5f, // ice
-   0.75f, // jungle grass
-   0.75f, // mud
-   1.0f, // lamp
-   0.25f, // torch
-   1.5f, // honey block
-   2.5f, // crispy honey block
-   1.0f, // slime block
-   0.25f, // bubble block
-   0.75f, // slime platform
-   0.75f, // cactus
-   2.5f, // coal ore
-   2.5f, // iron ore
-   3.0f, // gold ore
-   3.25f, // mythril ore
-}};
-
-// Block breaking level
-constexpr static inline const std::array<int, blockCount> blockBreakingLevels {{
-   0, // air
-   0, // dirt
-   0, // grass
-   0, // clay
-   1, // stone
-   0, // sand
-   1, // sandstone
-   2, // bricks
-   0, // glass
-   0, // planks
-   2, // stone bricks
-   2, // tiles
-   3, // obsidian
-   0, // platform
-   0, // snow
-   1, // ice
-   0, // jungle grass
-   0, // mud
-   0, // lamp
-   0, // torch
-   0, // honey block
-   0, // crispy honey block
-   0, // slime block
-   0, // bubble block
-   0, // slime platform
-   0, // cactus
-   1, // coal ore
-   2, // iron ore
-   3, // gold ore
-   3, // mythril ore
-}};
-
-// Block drops
-constexpr static inline const std::array<Item, blockCount> blockDrops {{
-   Item{}, // air
-   Item{}, // dirt
-   Item{}, // grass
-   Item{}, // clay
-   Item{}, // stone
-   Item{}, // sand
-   Item{}, // sandstone
-   Item{}, // bricks
-   Item{}, // glass
-   Item{}, // planks
-   Item{}, // stone bricks
-   Item{}, // tiles
-   Item{}, // obsidian
-   Item{}, // platform
-   Item{}, // snow
-   Item{}, // ice
-   Item{}, // jungle grass
-   Item{}, // mud
-   Item{}, // lamp
-   Item{}, // torch
-   Item{}, // honey block
-   Item{}, // crispy honey block
-   Item{}, // slime block
-   Item{}, // bubble block
-   Item{}, // slime platform
-   Item{}, // cactus
-   Item{ItemType::item, 1, 1, false, false, false}, // coal ore
-   Item{ItemType::item, 2, 1, false, false, false}, // iron ore
-   Item{ItemType::item, 3, 1, false, false, false}, // gold ore
-   Item{ItemType::item, 4, 1, false, false, false}, // mythril ore
-}};
 
 // Block getter functions
 
 float getBlockBreakingTime(unsigned short id) {
-   // Too lazy for an assert here right now
-   return blockBreakingTimes.at(id);
+   assertDebug(id < blockCount, "DEBUG: Block with the id '{}' does not exist. Block count is {}.", id, blockCount);
+   return blockInfo[id].breakTime;
 }
 
 int getBlockBreakingLevel(unsigned short id) {
-   return blockBreakingLevels.at(id);
+   assertDebug(id < blockCount, "DEBUG: Block with the id '{}' does not exist. Block count is {}.", id, blockCount);
+   return blockInfo[id].breakLevel;
 }
 
 // Asserts in these two functions would be too slow, as they're called often (especially in
 // world generation code), that's why debug asserts are used instead
-unsigned short getBlockIdFromName(const std::string &name) {
+unsigned short getBlockIdFromName(const char *name) {
    assertDebug(blockIds.count(name), "DEBUG: Block with the name '{}' does not exist!", name);
    return blockIds.at(name);
 }
 
 std::string getBlockNameFromId(unsigned short id) {
-   assertDebug(id < blockCount, "DEBUG: Block with the id '{}' does not exist. Valid IDs are in range {} to {}.", (int)id, 0, (int)blockCount - 1);
-   return blockNames.at(id);
+   assertDebug(id < blockCount, "DEBUG: Block with the id '{}' does not exist. Block count is {}.", id, blockCount);
+   return blockInfo[id].name;
 }
 
 Item getBlockDropId(unsigned short id, bool iswall) {
-   return blockDrops.at(id).id == 0 ? Item{ItemType::block, id, 1, false, iswall, false} : blockDrops.at(id);
+   return blockInfo[id].drop.id == 0 ? Item{ItemType::block, id, 1, false, iswall, false} : blockInfo.at(id).drop;
 }
 
 // Map constructors
@@ -327,9 +175,9 @@ void Map::addDamageIndicator(const Vector2 &position, int damage, bool critical)
 
 // Set block functions
 
-void Map::setRow(int y, const std::string &name, bool isWall) {
+void Map::setRow(int y, const char *name, bool isWall) {
    unsigned short id = getBlockIdFromName(name);
-   BlockType type = blockAttributes[id];
+   BlockType type = blockInfo[id].attributes;
 
    (isWall ? walls : blocks)[y] = std::vector<Block>(sizeX, Block{&getTexture(name), type, id});
 }
@@ -338,10 +186,10 @@ void Map::setRow(int y, unsigned short *ids) {
    for (int x = 0; x < sizeX; ++x) {
       Block &block = blocks[y][x];
       block.id = ids[x];
-      block.type = blockAttributes[block.id];
+      block.type = blockInfo[block.id].attributes;
 
       if (block.id != 0) {
-         block.texture = &getTexture(blockNames[block.id]);
+         block.texture = &getTexture(blockInfo[block.id].name);
       }
    }
 }
@@ -350,17 +198,17 @@ void Map::setWallRow(int y, unsigned short *ids) {
    for (int x = 0; x < sizeX; ++x) {
       Block &block = walls[y][x];
       block.id = ids[x];
-      block.type = blockAttributes[block.id];
+      block.type = blockInfo[block.id].attributes;
 
       if (block.id != 0) {
-         block.texture = &getTexture(blockNames[block.id]);
+         block.texture = &getTexture(blockInfo[block.id].name);
       }
    }
 }
 
-void Map::setColumnAndWalls(int x, int y, const std::string &name) {
+void Map::setColumnAndWalls(int x, int y, const char *name) {
    unsigned short id = getBlockIdFromName(name);
-   BlockType type = blockAttributes[id];
+   BlockType type = blockInfo[id].attributes;
    Texture *texture = &getTexture(name);
    
    for (int yy = y; yy < sizeY; ++yy) {
@@ -375,11 +223,11 @@ void Map::setColumnAndWalls(int x, int y, const std::string &name) {
    }
 }
 
-void Map::setBlock(int x, int y, const std::string &name, bool isWall) {
+void Map::setBlock(int x, int y, const char *name, bool isWall) {
    Block &block = (isWall ? walls : blocks)[y][x];
    block.id = getBlockIdFromName(name);
    block.value = block.value2 = 0;
-   block.type = blockAttributes[block.id] | (block.type % (BlockType::furniture | BlockType::furnitureTop));
+   block.type = blockInfo[block.id].attributes | (block.type % (BlockType::furniture | BlockType::furnitureTop));
 
    if (!isWall && !(block.type & BlockType::flowable)) {
       liquidsHeights[y][x] = 0;
@@ -392,14 +240,26 @@ void Map::setBlock(int x, int y, const std::string &name, bool isWall) {
 }
 
 void Map::setBlock(int x, int y, unsigned short id, bool isWall) {
-   setBlock(x, y, getBlockNameFromId(id), isWall);
+   Block &block = (isWall ? walls : blocks)[y][x];
+   block.id = id;
+   block.value = block.value2 = 0;
+   block.type = blockInfo[block.id].attributes | (block.type % (BlockType::furniture | BlockType::furnitureTop));
+
+   if (!isWall && !(block.type & BlockType::flowable)) {
+      liquidsHeights[y][x] = 0;
+      liquidTypes[y][x] = LiquidType::none;
+   }
+
+   if (block.id != 0) {
+      block.texture = &getTexture(blockInfo[id].name);
+   }
 }
 
 void Map::lightSetBlock(int x, int y, unsigned short id) {
    Block &block = blocks[y][x];
    block.id = id;
-   block.type = blockAttributes[id];
-   block.texture = &getTexture(blockNames[id]);
+   block.type = blockInfo[id].attributes;
+   block.texture = &getTexture(blockInfo[id].name);
 }
 
 // Fuck furniture logic, rewrite it one day
@@ -414,7 +274,7 @@ void Map::deleteBlock(int x, int y, bool wall) {
 void Map::deleteBlockWithoutDeletingLiquids(int x, int y, bool wall) {
    Block &block = (wall ? walls : blocks)[y][x];
    block.texture = nullptr;
-   block.type = blockAttributes[0] | (block.type % (BlockType::furniture | BlockType::furnitureTop));
+   block.type = blockInfo[0].attributes | (block.type % (BlockType::furniture | BlockType::furnitureTop));
    block.id = block.value = block.value2 = 0;
 }
 
