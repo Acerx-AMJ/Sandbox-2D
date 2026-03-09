@@ -54,7 +54,7 @@ GameState::GameState(const std::string &worldName)
    pauseButton.rectangle = {GetScreenWidth() - buttonWidth / 2.f + 10.0f, GetScreenHeight() - buttonHeight / 2.f, buttonWidth, buttonHeight};
    pauseButton.text = "Pause";
    continueButton.texture = menuButton.texture = &getTexture("button");
-   console.init();
+   console.init(map, player, inventory);
 }
 
 GameState::~GameState() {

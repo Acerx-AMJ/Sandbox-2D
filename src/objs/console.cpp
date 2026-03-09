@@ -40,6 +40,9 @@ bool c_help(Console &console, const VArgs&, Map&, Player&, Inventory&) {
    console.output("stlq [ID/NAME] [X] [Y] - set liquid with the id/name at the given coordinates.");
    console.output("fllq [ID/NAME] [SX] [SY] [DX] [DY] - fill liquids with the id/name from coordinates (SX; SY) to (DX; DY).");
    console.output("gv [i/b/e/p] [ID] [COUNT] - give item of specified id and quantity to the player.");
+   console.output("stv [VAR] [VALUE] - set VAR to VALUE.");
+   console.output("nv [VAR] - allocate a new variable.");
+   console.output("lv - list all variables.");
    console.output("clinv - clear the inventory.");
    console.output("tp [X] [Y] - teleport player to the given coordinates.");
    console.output("sp [X] [Y] - set player spawn point to the given coordinates.");
@@ -630,6 +633,67 @@ bool c_clinv(Console &console, const VArgs &args, Map&, Player&, Inventory &inve
    return true;
 }
 
+bool c_stv(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
+   if (args.size() != 3) {
+      console.output("stv: expected 2 arguments.", ConsoleColor::red);
+      return false;
+   }
+   
+   if (console.vars.find(args[1]) == console.vars.end()) {
+      console.output(TextFormat("stv: unknown variable '%s'.", args[1].c_str()), ConsoleColor::red);
+      return false;
+   }
+
+   float value;
+   try {
+      value = stof(args[2]);
+   } catch (...) {
+      console.output("stv: expected second argument to be a number.", ConsoleColor::red);
+      return false;
+   }
+
+   if (auto *b = std::get_if<bool*>(&console.vars[args[1]])) {
+      **b = value != 0.0f;
+   } else if (auto *i = std::get_if<int*>(&console.vars[args[1]])) {
+      **i = (int)value;
+   } else if (auto *f = std::get_if<float*>(&console.vars[args[1]])) {
+      **f = value;
+   }
+   console.output(TextFormat("stv: set variable '%s' to '%0.f'.", args[1].c_str(), value));
+   return true;
+}
+
+bool c_nv(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
+   if (args.size() != 2) {
+      console.output("nv: expected 1 argument.", ConsoleColor::red);
+      return false;
+   }
+   
+   console.vars[args[1]] = Variable(new float(0.0f));
+   console.output(TextFormat("nv: allocated variable '%s' to '0'.", args[1].c_str()));
+   return true;
+}
+
+bool c_lv(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
+   if (args.size() != 1) {
+      console.output("lv: expected no arguments. Executing anyway.", ConsoleColor::red);
+   }
+
+   console.output("Variables:", ConsoleColor::gray);
+   for (auto &[key, value] : console.vars) {
+      std::string msg = key + ": ";
+      if (auto *b = std::get_if<bool*>(&value)) {
+         msg += std::to_string(**b);
+      } else if (auto *i = std::get_if<int*>(&value)) {
+         msg += std::to_string(**i);
+      } else if (auto *f = std::get_if<float*>(&value)) {
+         msg += std::to_string(**f);
+      }
+      console.output(msg);
+   }
+   return true;
+}
+
 // COMMAND MAP
 
 using Command = std::function<bool(Console&, const VArgs&, Map&, Player&, Inventory&)>;
@@ -656,15 +720,82 @@ static inline const std::unordered_map<std::string, Command> commands {
    {"stlq", c_stlq},
    {"fllq", c_fllq},
    {"gv", c_gv},
+   {"stv", c_stv},
+   {"nv", c_nv},
+   {"lv", c_lv},
 };
 
 // init
 
-void Console::init() {
+void Console::init(Map &map, Player &player, Inventory &inventory) {
    input.rectangle = {500.0f, GetScreenHeight() - 25.0f, 1000.0f, 50.0f};
    input.fallback = "'help' for a list of commands.";
    input.wrapinput = false;
    input.maxChars = 512;
+
+   // I might be crazy
+   // Player
+   vars["position.x"] = Variable(&player.position.x);
+   vars["position.y"] = Variable(&player.position.y);
+   vars["spawnPos.x"] = Variable(&player.spawnPos.x);
+   vars["spawnPos.y"] = Variable(&player.spawnPos.y);
+   vars["velocity.x"] = Variable(&player.velocity.x);
+   vars["velocity.y"] = Variable(&player.velocity.y);
+   vars["previousPosition.x"] = Variable(&player.previousPosition.x);
+   vars["previousPosition.y"] = Variable(&player.previousPosition.y);
+   vars["delta.x"] = Variable(&player.delta.x);
+   vars["delta.y"] = Variable(&player.delta.y);
+   vars["blockInput"] = Variable(&player.blockInput);
+   vars["feetCollision"] = Variable(&player.feetCollision);
+   vars["torsoCollision"] = Variable(&player.torsoCollision);
+   vars["feetCollisionY"] = Variable(&player.feetCollisionY);
+   vars["onGround"] = Variable(&player.onGround);
+   vars["shouldBounce"] = Variable(&player.shouldBounce);
+   vars["coyoteTimer"] = Variable(&player.coyoteTimer);
+   vars["foxTimer"] = Variable(&player.foxTimer);
+   vars["maximumY"] = Variable(&player.maximumY);
+   vars["waterMultiplier"] = Variable(&player.waterMultiplier);
+   vars["iceMultiplier"] = Variable(&player.iceMultiplier);
+   vars["fallTimer"] = Variable(&player.fallTimer);
+   vars["walkTimer"] = Variable(&player.walkTimer);
+   vars["jumpTimer"] = Variable(&player.jumpTimer);
+   vars["walkFrame"] = Variable(&player.walkFrame);
+   vars["frameX"] = Variable(&player.frameX);
+   vars["flipX"] = Variable(&player.flipX);
+   vars["sitting"] = Variable(&player.sitting);
+   vars["ignoreCollision"] = Variable(&player.ignoreCollision);
+   vars["breathFrameCounter"] = Variable(&player.breathFrameCounter);
+   vars["breath"] = Variable(&player.breath);
+   vars["lastHearts"] = Variable(&player.lastHearts);
+   vars["hearts"] = Variable(&player.hearts);
+   vars["maxHearts"] = Variable(&player.maxHearts);
+   vars["regenerationFrameCounter"] = Variable(&player.regenerationFrameCounter);
+   vars["immunityFrame"] = Variable(&player.immunityFrame);
+   vars["timeSinceLastDamage"] = Variable(&player.timeSinceLastDamage);
+   vars["timeSpentRegenerating"] = Variable(&player.timeSpentRegenerating);
+   vars["regenSpeedMultiplier"] = Variable(&player.regenSpeedMultiplier);
+   vars["regeneration"] = Variable(&player.regeneration);
+   vars["displayHearts"] = Variable(&player.displayHearts);
+   vars["displayBreath"] = Variable(&player.displayBreath);
+   vars["breakAnimation"] = Variable(&player.breakAnimation);
+   vars["lastBreakingX"] = Variable(&player.lastBreakingX);
+   vars["lastBreakingY"] = Variable(&player.lastBreakingY);
+   vars["breakingWall"] = Variable(&player.breakingWall);
+   vars["breakingFurniture"] = Variable(&player.breakingFurniture);
+   vars["placedBlock"] = Variable(&player.placedBlock);
+   vars["breakingBlock"] = Variable(&player.breakingBlock);
+   vars["breakTime"] = Variable(&player.breakTime);
+   vars["breakAnimationTimer"] = Variable(&player.breakAnimationTimer);
+
+   // Map
+   vars["map.size.x"] = Variable(&map.sizeX);
+   vars["map.size.y"] = Variable(&map.sizeY);
+
+   // Inventory
+   vars["inventory.selected.x"] = Variable(&inventory.selectedX);
+   vars["inventory.selected.y"] = Variable(&inventory.selectedY);
+   vars["inventory.open"] = Variable(&inventory.open);
+   vars["inventory.anySelected"] = Variable(&inventory.anySelected);
 }
 
 void Console::output(const std::string &string, ConsoleColor color) {
@@ -762,6 +893,33 @@ void Console::lex(Map &map, Player &player, Inventory &inventory) {
 
          if (handleCommand(args, map, player, inventory)) goto QUIT_LEXING;
          args.clear();
+      } else if (ch == '$') {
+         std::string var;
+         index += 1;
+         if (index >= input.text.size()) {
+            output("operator '$': no variable present.", ConsoleColor::red);
+            goto QUIT_LEXING;
+         }
+
+         for (ch = input.text[index]; index < input.text.size() && (std::isalnum(ch) || ch == '.'); ch = input.text[++index])
+            var.push_back(ch);
+
+         if (vars.find(var) == vars.end()) {
+            output(TextFormat("operator '$': no such variable '%s'.", var.c_str()), ConsoleColor::red);
+            goto QUIT_LEXING;
+         }
+         
+         // Classic c++ boilerplate
+         std::string str;
+         if (auto *b = std::get_if<bool*>(&vars[var])) {
+            str = std::to_string(**b);
+         } else if (auto *i = std::get_if<int*>(&vars[var])) {
+            str = std::to_string(**i);
+         } else if (auto *f = std::get_if<float*>(&vars[var])) {
+            str = std::to_string(**f);
+         }
+         args.push_back(str);
+         index -= 1;
       } else if (ch == '"') {
          std::string str;
          index += 1;
@@ -784,7 +942,7 @@ void Console::lex(Map &map, Player &player, Inventory &inventory) {
          std::string arg;
 
          for (ch = input.text[index]; index < input.text.size() && !std::isspace(ch); ch = input.text[++index]) {
-            if (ch == '&' || ch == '|' || ch == ';') {
+            if (ch == '&' || ch == '|' || ch == ';' || ch == '$') {
                index -= 1;
                break;
             }

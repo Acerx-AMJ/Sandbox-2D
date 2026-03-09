@@ -2,15 +2,18 @@
 #define OBJS_CONSOLE_HPP
 
 #include "ui/input.hpp"
+#include <unordered_map>
+#include <variant>
 #include <vector>
 
 // Console
 
 enum class ConsoleColor: char {white, gray, yellow, red, green, blue, orange, purple, pink, count};
 using VArgs = std::vector<std::string>;
+using Variable = std::variant<bool*, int*, float*>;
 
 struct Console {
-   void init();   
+   void init(struct Map & map, struct Player &player, struct Inventory &inventory);
    void update(struct Map &map, struct Player &player, struct Inventory &inventory);
    void render();
 
@@ -20,6 +23,7 @@ struct Console {
 
    // Members
 
+   std::unordered_map<std::string, Variable> vars;
    std::vector<std::string> text, history;
    std::vector<ConsoleColor> textColors;
 
