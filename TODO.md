@@ -32,10 +32,7 @@
 - Music, sound settings
 - Maybe add localization settings? Probably not
 
-### Cheats
-- variables $x $y $msx $msy and so on
-
 ### Other
 - World generation.
-- Make it so blocks get loaded automatically from a file
 - Add more sounds for sitting, opening doors, swimming, drowning, stepping on sticky and bouncy blocks. And fix existing sounds.
+- Fix gravity in liquids being too fast

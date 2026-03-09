@@ -84,6 +84,8 @@ struct Player {
    bool breakingBlock = false;
    float breakTime = 0.0f;
    float breakAnimationTimer = 0.0f;
+
+   bool creative = false;
 };
 
 #endif

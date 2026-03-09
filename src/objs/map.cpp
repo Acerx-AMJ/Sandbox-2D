@@ -479,12 +479,14 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
    }
 
    // Render fluids
-   Shader &waterShader = getShader("water");
-   float time = GetTime();
-   SetShaderValue(waterShader, timeShaderLocation, &time, SHADER_UNIFORM_FLOAT);
+   if (waterShaderEnabled) {
+      Shader &waterShader = getShader("water");
+      float time = GetTime();
+      SetShaderValue(waterShader, timeShaderLocation, &time, SHADER_UNIFORM_FLOAT);
+      BeginShaderMode(waterShader);
+   }
 
    // Render fluids
-   BeginShaderMode(waterShader);
    for (int y = cameraBounds.y; y <= cameraBounds.height; ++y) {
       for (int x = cameraBounds.x; x <= cameraBounds.width; ++x) {
          if (!isLiquid(x, y)) {
@@ -493,15 +495,26 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
          
          float height = (float)getLiquidHeight(x, y) / (float)maxLiquidLayers;
          Color liquidFlags;
-         liquidFlags.r = (is(x, y - 1, BlockType::solid) && !is(x, y - 1, BlockType::platform) ? 255 : 0);
-         liquidFlags.g = (!isLiquidAtAll(x, y + 1) || !isLiquidOfType(x, y + 1, liquidTypes[y][x]) ? 255 : 0);
 
+         if (waterShaderEnabled) {
+            liquidFlags.r = (is(x, y - 1, BlockType::solid) && !is(x, y - 1, BlockType::platform) ? 255 : 0);
+            liquidFlags.g = (!isLiquidAtAll(x, y + 1) || !isLiquidOfType(x, y + 1, liquidTypes[y][x]) ? 255 : 0);
+         } else {
+            liquidFlags = WHITE;
+         }
          drawFluidBlock(getLiquidTexture(x, y), {(float)x, (float)y + (1 - height), 1, height}, Fade(liquidFlags, height));
       }
    }
-   EndShaderMode();
+
+   if (waterShaderEnabled) {
+      EndShaderMode();
+   }
 
    // Render lights
+   if (!lightingEnabled) {
+      return;
+   }
+
    BeginTextureMode(lightmap);
    ClearBackground(BLACK);
    BeginBlendMode(BLEND_ADDITIVE);

@@ -173,6 +173,9 @@ struct Map {
    int sizeX = 0;
    int sizeY = 0;
    int timeShaderLocation = 0;
+
+   bool lightingEnabled = true;
+   bool waterShaderEnabled = true;
 };
 
 #endif

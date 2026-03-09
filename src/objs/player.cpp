@@ -17,6 +17,8 @@ constexpr float playerFrameSizeX = 16;
 constexpr float playerFrameSizeY = 24;
 
 constexpr float playerSpeed   = 0.364f;
+constexpr float flySpeed      = 0.6f;
+constexpr float fastFlySpeed  = 1.2f;
 constexpr float airMultiplier = 0.600f;
 constexpr float jumpSpeed     = 0.950f;
 constexpr float gravity       = 0.028f;
@@ -71,6 +73,38 @@ void Player::updatePlayer(Map &map) {
 }
 
 void Player::updateMovement() {
+   // We do not sit while flying
+   if (creative) {
+      sitting = false;
+
+      float dirx = (!blockInput && IsKeyDown(KEY_D)) - (!blockInput && IsKeyDown(KEY_A));
+      float diry = (!blockInput && IsKeyDown(KEY_S)) - (!blockInput && IsKeyDown(KEY_W));
+      float speed = (IsKeyDown(KEY_LEFT_SHIFT) ? fastFlySpeed : flySpeed);
+      Vector2 normalized = Vector2Normalize({dirx, diry});
+
+      // Do not give a fuck about ice while flying
+      if (dirx != 0) {
+         velocity.x = lerp(velocity.x, normalized.x * speed, acceleration);
+      } else {
+         velocity.x = lerp(velocity.x, 0.0f, deceleration);
+      }
+
+      if (diry != 0) {
+         velocity.y = lerp(velocity.y, normalized.y * speed, acceleration);
+      } else {
+         velocity.y = lerp(velocity.y, 0.0f, deceleration);
+      }
+
+      // Do everything else
+      velocity.x *= waterMultiplier;
+      velocity.y *= waterMultiplier;
+
+      if (dirx != 0) {
+         flipX = (dirx == 1);
+      }
+      return;
+   }
+
    int directionX = (!blockInput && IsKeyDown(KEY_D)) - (!blockInput && IsKeyDown(KEY_A));
 
    if (sitting) {
@@ -283,12 +317,12 @@ void Player::updateCollisions(Map &map) {
 
    // Ignore fall damage if player is touching liquids or didn't fall
    // from that great of a height
-   if (!wasOnGround && onGround && !shouldBounce && honeyTileCount + lavaTileCount + waterTileCount == 0 && position.y - maximumY >= minimumFallHeight) {
+   if (!creative && !wasOnGround && onGround && !shouldBounce && honeyTileCount + lavaTileCount + waterTileCount == 0 && position.y - maximumY >= minimumFallHeight) {
       takeDamage(map, min(1.0f, ((position.y - maximumY) - minimumFallHeight) / (maximumFallHeight - minimumFallHeight)) * maximumFallDamage, 0, 0.0f);
    }
 
    breathFrameCounter = (breathFrameCounter + 1) % framesToUpdateBreath;
-   if (breathFrameCounter == 0) {
+   if (!creative && breathFrameCounter == 0) {
       if (liquidsAboveHead || (blocksInHeadX1 && blocksInHeadX2)) {
          breath = max(0, breath - 2);
       } else {
@@ -310,7 +344,7 @@ void Player::updateCollisions(Map &map) {
       waterMultiplier = 1.f;
    }
 
-   if (lavaTileCount > 0) {
+   if (!creative && lavaTileCount > 0) {
       takeDamage(map, random(20, 30), 25, 1.2f);
    }
 
@@ -331,6 +365,11 @@ void Player::updateCollisions(Map &map) {
 }
 
 void Player::updateAnimation() {
+   if (creative) {
+      frameX = 1;
+      return;
+   }
+
    if (breakingBlock || placedBlock) {
       breakAnimationTimer += fixedUpdateDT;
       if (breakAnimationTimer >= 0.1f) {

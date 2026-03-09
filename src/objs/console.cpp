@@ -41,7 +41,6 @@ bool c_help(Console &console, const VArgs&, Map&, Player&, Inventory&) {
    console.output("fllq [ID/NAME] [SX] [SY] [DX] [DY] - fill liquids with the id/name from coordinates (SX; SY) to (DX; DY).");
    console.output("gv [i/b/e/p] [ID] [COUNT] - give item of specified id and quantity to the player.");
    console.output("stv [VAR] [VALUE] - set VAR to VALUE.");
-   console.output("nv [VAR] - allocate a new variable.");
    console.output("lv - list all variables.");
    console.output("clinv - clear the inventory.");
    console.output("tp [X] [Y] - teleport player to the given coordinates.");
@@ -484,8 +483,9 @@ bool c_stlq(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
       return false;
    }
 
+   map.deleteBlock(x, y);
    map.liquidTypes[y][x] = (LiquidType)id;
-   map.liquidsHeights[y][x] = (id == 0 ? 0 : maxLiquidLayers);;
+   map.liquidsHeights[y][x] = (id == 0 ? 0 : maxLiquidLayers);
 
    constexpr const char *liquidNames[] = {"none", "water", "lava", "honey"};
    console.output(TextFormat("stlq: set liquid at coordinates (X %d; Y %d) to '%s'.", x, y, liquidNames[id]));
@@ -538,6 +538,7 @@ bool c_fllq(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
 
    for (int y = sy; y < dy; ++y) {
       for (int x = sx; x < dx; ++x) {
+         map.deleteBlock(x, y);
          map.liquidTypes[y][x] = (LiquidType)id;
          map.liquidsHeights[y][x] = (id == 0 ? 0 : maxLiquidLayers);
       }
@@ -663,17 +664,6 @@ bool c_stv(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
    return true;
 }
 
-bool c_nv(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
-   if (args.size() != 2) {
-      console.output("nv: expected 1 argument.", ConsoleColor::red);
-      return false;
-   }
-   
-   console.vars[args[1]] = Variable(new float(0.0f));
-   console.output(TextFormat("nv: allocated variable '%s' to '0'.", args[1].c_str()));
-   return true;
-}
-
 bool c_lv(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
    if (args.size() != 1) {
       console.output("lv: expected no arguments. Executing anyway.", ConsoleColor::red);
@@ -721,7 +711,6 @@ static inline const std::unordered_map<std::string, Command> commands {
    {"fllq", c_fllq},
    {"gv", c_gv},
    {"stv", c_stv},
-   {"nv", c_nv},
    {"lv", c_lv},
 };
 
@@ -786,10 +775,13 @@ void Console::init(Map &map, Player &player, Inventory &inventory) {
    vars["breakingBlock"] = Variable(&player.breakingBlock);
    vars["breakTime"] = Variable(&player.breakTime);
    vars["breakAnimationTimer"] = Variable(&player.breakAnimationTimer);
+   vars["creative"] = Variable(&player.creative);
 
    // Map
    vars["map.size.x"] = Variable(&map.sizeX);
    vars["map.size.y"] = Variable(&map.sizeY);
+   vars["lightingEnabled"] = Variable(&map.lightingEnabled);
+   vars["waterShaderEnabled"] = Variable(&map.waterShaderEnabled);
 
    // Inventory
    vars["inventory.selected.x"] = Variable(&inventory.selectedX);
@@ -862,6 +854,10 @@ void Console::render() {
 // Lexing/command logic
 
 void Console::lex(Map &map, Player &player, Inventory &inventory) {
+   if (input.text.empty()) {
+      return;
+   }
+   
    history.push_back(input.text);
    size_t index = 0;
    VArgs args;
@@ -960,6 +956,10 @@ QUIT_LEXING:
 }
 
 bool Console::handleCommand(VArgs &args, Map &map, Player &player, Inventory &inventory) {
+   if (args.empty()) {
+      return false;
+   }
+   
    if (auto it = commands.find(args[0]); it != commands.end()) {
       return it->second(*this, args, map, player, inventory);
    } else {

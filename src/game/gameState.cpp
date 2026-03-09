@@ -88,7 +88,7 @@ void GameState::fixedUpdate() {
       return;
    }
 
-   if (player.hearts == 0) {
+   if (!player.creative && player.hearts == 0) {
       Phase lastPhase = phase;
       phase = Phase::died;
 
@@ -501,7 +501,7 @@ void GameState::render() {
    }
 
    // Render effects
-   if (player.hearts != player.maxHearts) {
+   if (!player.creative && player.hearts != player.maxHearts) {
       drawTextureNoOrigin(getTexture("vignette"), {0, 0}, getScreenSize(), Fade(WHITE, 1.0f - float(player.hearts) / player.maxHearts));
    }
 
@@ -548,7 +548,7 @@ void GameState::render() {
    }
 
    // Render breath dynamically
-   if (player.breath != maxBreath) {
+   if (!player.creative && player.breath != maxBreath) {
       Texture2D &bubbleIcon = getTexture("bubble_icon");
       
       float size = 1.25f;
@@ -571,29 +571,31 @@ void GameState::render() {
    EndMode2D();
 
    // Render all of the hearts dynamically
-   Texture2D &heartIcon = getTexture("heart_icon");
-   Shader &grayscaleShader = getShader("grayscale");
-   
-   float size = 25;
-   float padding = size + 5;
-   int heartValue = 20;
-   int counter = player.maxHearts / heartValue;
-   int heartsPerRow = 10;
-   float startingY = 40;
-   float startingX = GetScreenWidth() - size * heartsPerRow - 5 * (heartsPerRow - 1) - 15;
+   if (!player.creative) {
+      Texture2D &heartIcon = getTexture("heart_icon");
+      Shader &grayscaleShader = getShader("grayscale");
+      
+      float size = 25;
+      float padding = size + 5;
+      int heartValue = 20;
+      int counter = player.maxHearts / heartValue;
+      int heartsPerRow = 10;
+      float startingY = 40;
+      float startingX = GetScreenWidth() - size * heartsPerRow - 5 * (heartsPerRow - 1) - 15;
 
-   float static sineCounter = 0.0f;
-   sineCounter += 1.0f - float(player.hearts) / player.maxHearts;
-   float sine = std::sin(sineCounter * 0.5f);
-   float halfSine = sine / 2.0f;
+      float static sineCounter = 0.0f;
+      sineCounter += 1.0f - float(player.hearts) / player.maxHearts;
+      float sine = std::sin(sineCounter * 0.5f);
+      float halfSine = sine / 2.0f;
 
-   BeginShaderMode(grayscaleShader);
-   for (int i = 0; i < counter; ++i) {
-      float a = 1.0f - min(1.0f, float((i + 1) * heartValue - player.displayHearts) / heartValue);
-      drawTextureNoOrigin(heartIcon, {startingX + padding * (i % heartsPerRow) - halfSine, startingY + padding * int(i / heartsPerRow) - halfSine}, {size + sine, size + sine}, Fade(WHITE, a));
+      BeginShaderMode(grayscaleShader);
+      for (int i = 0; i < counter; ++i) {
+         float a = 1.0f - min(1.0f, float((i + 1) * heartValue - player.displayHearts) / heartValue);
+         drawTextureNoOrigin(heartIcon, {startingX + padding * (i % heartsPerRow) - halfSine, startingY + padding * int(i / heartsPerRow) - halfSine}, {size + sine, size + sine}, Fade(WHITE, a));
+      }
+      EndShaderMode();
+      drawText({startingX + (GetScreenWidth() - startingX) / 2.0f, startingY / 2.0f}, format("HP: {}/{}", player.hearts, player.maxHearts).c_str(), 20);
    }
-   EndShaderMode();
-   drawText({startingX + (GetScreenWidth() - startingX) / 2.0f, startingY / 2.0f}, format("HP: {}/{}", player.hearts, player.maxHearts).c_str(), 20);
 
    // Render other game UI
    if (phase != Phase::died) {
