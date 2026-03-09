@@ -33,19 +33,19 @@ bool c_help(Console &console, const VArgs&, Map&, Player&, Inventory&) {
    console.output("hist - output command history.");
    console.output("chist - clear command history.");
    console.output("time [TIME] - set time of day.");
-   console.output("stblk [ID/NAME] [X] [Y] - set block with the id/name at the given coordinates.");
-   console.output("flblk [ID/NAME] [SX] [SY] [DX] [DY] - fill blocks with the id/name from coordinates (SX; SY) to (DX; DY).");
-   console.output("stwl [ID/NAME] [X] [Y] - set wall with the id/name at the given coordinates.");
-   console.output("flwl [ID/NAME] [SX] [SY] [DX] [DY] - fill walls with the id/name from coordinates (SX; SY) to (DX; DY).");
-   console.output("stlq [ID/NAME] [X] [Y] - set liquid with the id/name at the given coordinates.");
-   console.output("fllq [ID/NAME] [SX] [SY] [DX] [DY] - fill liquids with the id/name from coordinates (SX; SY) to (DX; DY).");
-   console.output("gv [i/b/e/p] [ID] [COUNT] - give item of specified id and quantity to the player.");
-   console.output("stv [VAR] [VALUE] - set VAR to VALUE.");
-   console.output("lv - list all variables.");
-   console.output("clinv - clear the inventory.");
+   console.output("place [ID/NAME] [X] [Y] - set block with the id/name at the given coordinates.");
+   console.output("fill [ID/NAME] [SX] [SY] [DX] [DY] - fill blocks with the id/name from coordinates (SX; SY) to (DX; DY).");
+   console.output("placew [ID/NAME] [X] [Y] - set wall with the id/name at the given coordinates.");
+   console.output("fillw [ID/NAME] [SX] [SY] [DX] [DY] - fill walls with the id/name from coordinates (SX; SY) to (DX; DY).");
+   console.output("placeq [ID/NAME] [X] [Y] - set liquid with the id/name at the given coordinates.");
+   console.output("fillq [ID/NAME] [SX] [SY] [DX] [DY] - fill liquids with the id/name from coordinates (SX; SY) to (DX; DY).");
+   console.output("give [i/b/e/p] [ID] [COUNT] - give item of specified id and quantity to the player.");
+   console.output("set [VAR] [VALUE] - set VAR to VALUE.");
+   console.output("list - list all variables.");
+   console.output("cinv - clear the inventory.");
    console.output("tp [X] [Y] - teleport player to the given coordinates.");
-   console.output("sp [X] [Y] - set player spawn point to the given coordinates.");
-   console.output("crds - show current coordinates.");
+   console.output("spawnpoint [X] [Y] - set player spawn point to the given coordinates.");
+   console.output("pos - show current coordinates.");
    console.output("hp [HP] - set health.");
    console.output("maxhp [HP] - set maximum health.");
    console.output("kill - kill the player.");
@@ -93,9 +93,9 @@ bool c_tp(Console &console, const VArgs &args, Map &map, Player &player, Invento
    return true;
 }
 
-bool c_sp(Console &console, const VArgs &args, Map &map, Player &player, Inventory&) {
+bool c_spawnpoint(Console &console, const VArgs &args, Map &map, Player &player, Inventory&) {
    if (args.size() != 1 && args.size() != 3) {
-      console.output("sp: expected 2 or no arguments.", ConsoleColor::red);
+      console.output("spawnpoint: expected 2 or no arguments.", ConsoleColor::red);
       return false;
    }
    int x, y;
@@ -108,27 +108,27 @@ bool c_sp(Console &console, const VArgs &args, Map &map, Player &player, Invento
          x = stoi(args[1]);
          y = stoi(args[2]);
       } catch (...) {
-         console.output("sp: expected both arguments to be numbers.", ConsoleColor::red);
+         console.output("spawnpoint: expected both arguments to be numbers.", ConsoleColor::red);
          return false;
       }
    }
 
    if (x < 0 || y < 0 || x >= map.sizeX || y >= map.sizeY) {
-      console.output("sp: coordinates are out of bounds.", ConsoleColor::red);
+      console.output("spawnpoint: coordinates are out of bounds.", ConsoleColor::red);
       return false;
    }
 
    player.spawnPos.x = x;
    player.spawnPos.y = y;
-   console.output(TextFormat("sp: spawn position set to (X %d; Y %d).", x, y));
+   console.output(TextFormat("spawnpoint: spawn position set to (X %d; Y %d).", x, y));
    return true;
 }
 
-bool c_crds(Console &console, const VArgs &args, Map&, Player &player, Inventory&) {
+bool c_pos(Console &console, const VArgs &args, Map&, Player &player, Inventory&) {
    if (args.size() != 1) {
-      console.output("crds: expected no arguments. Executing anyway.", ConsoleColor::red);
+      console.output("pos: expected no arguments. Executing anyway.", ConsoleColor::red);
    }
-   console.output(TextFormat("crds: your position is (X %d; Y %d).", (int)player.position.x, (int)player.position.y));
+   console.output(TextFormat("pos: your position is (X %d; Y %d).", (int)player.position.x, (int)player.position.y));
    return true;
 }
 
@@ -144,11 +144,6 @@ bool c_clear(Console &console, const VArgs&, Map&, Player&, Inventory&) {
 
 bool c_exit(Console &console, const VArgs&, Map&, Player&, Inventory&) {
    console.input.typing = false;
-   return true;
-}
-
-bool c_quine(Console &console, const std::string &quine, const VArgs&, Map&, Player&, Inventory&) {
-   console.output(quine);
    return true;
 }
 
@@ -190,25 +185,6 @@ bool c_maxhp(Console &console, const VArgs &args, Map&, Player &player, Inventor
    player.maxHearts = hp;
    player.hearts = std::min(player.maxHearts, player.hearts);
    console.output(TextFormat("maxhp: set maximum health to %d.", hp));
-   return true;
-}
-
-bool c_br(Console &console, const VArgs &args, Map&, Player &player, Inventory&) {
-   if (args.size() != 2) {
-      console.output("br: expected 1 argument.", ConsoleColor::red);
-      return false;
-   }
-
-   int br;
-   try {
-      br = stoi(args[1]);
-   } catch (...) {
-      console.output("br: expected first argument to be a number.", ConsoleColor::red);
-      return false;
-   }
-
-   player.breath = br;
-   console.output(TextFormat("br: set health to %d.", br));
    return true;
 }
 
@@ -261,9 +237,9 @@ bool c_chist(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
    return true;
 }
 
-bool c_stblk(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
+bool c_place(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
    if (args.size() != 4) {
-      console.output("stblk: expected 3 arguments.", ConsoleColor::red);
+      console.output("place: expected 3 arguments.", ConsoleColor::red);
       return false;
    }
 
@@ -272,12 +248,12 @@ bool c_stblk(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
       id = stoi(args[1]);
 
       if (!isBlockIdValid(id)) {
-         console.output("stblk: invalid block id.", ConsoleColor::red);
+         console.output("place: invalid block id.", ConsoleColor::red);
          return false;
       }
    } catch (...) {
       if (!isBlockNameValid(args[1].c_str())) {
-         console.output("stblk: expected first argument to either be a valid block id or name.", ConsoleColor::red);
+         console.output("place: expected first argument to either be a valid block id or name.", ConsoleColor::red);
          return false;
       }
       id = getBlockIdFromName(args[1].c_str());
@@ -287,23 +263,23 @@ bool c_stblk(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
       x = stoi(args[2]);
       y = stoi(args[3]);
    } catch (...) {
-      console.output("stblk: expected second and third arguments to be numbers.", ConsoleColor::red);
+      console.output("place: expected second and third arguments to be numbers.", ConsoleColor::red);
       return false;
    }
 
    if (x < 0 || y < 0 || x >= map.sizeX || y >= map.sizeY) {
-      console.output("stblk: coordinates are out of bounds.", ConsoleColor::red);
+      console.output("place: coordinates are out of bounds.", ConsoleColor::red);
       return false;
    }
 
    map.setBlock(x, y, id);
-   console.output(TextFormat("stblk: set block at coordinates (X %d; Y %d) to '%s'.", x, y, getBlockNameFromId(id).c_str()));
+   console.output(TextFormat("place: set block at coordinates (X %d; Y %d) to '%s'.", x, y, getBlockNameFromId(id).c_str()));
    return true;
 }
 
-bool c_flblk(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
+bool c_fill(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
    if (args.size() != 6) {
-      console.output("flblk: expected 5 arguments.", ConsoleColor::red);
+      console.output("fill: expected 5 arguments.", ConsoleColor::red);
       return false;
    }
 
@@ -312,12 +288,12 @@ bool c_flblk(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
       id = stoi(args[1]);
 
       if (!isBlockIdValid(id)) {
-         console.output("flblk: invalid block id.", ConsoleColor::red);
+         console.output("fill: invalid block id.", ConsoleColor::red);
          return false;
       }
    } catch (...) {
       if (!isBlockNameValid(args[1].c_str())) {
-         console.output("flblk: expected first argument to either be a valid block id or name.", ConsoleColor::red);
+         console.output("fill: expected first argument to either be a valid block id or name.", ConsoleColor::red);
          return false;
       }
       id = getBlockIdFromName(args[1].c_str());
@@ -329,12 +305,12 @@ bool c_flblk(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
       dx = stoi(args[4]);
       dy = stoi(args[5]);
    } catch (...) {
-      console.output("flblk: expected second, third, fourth and fifth arguments to be numbers.", ConsoleColor::red);
+      console.output("fill: expected second, third, fourth and fifth arguments to be numbers.", ConsoleColor::red);
       return false;
    }
 
    if (sx < 0 || sy < 0 || sx >= map.sizeX || sy >= map.sizeY || dx < 0 || dy < 0 || dx >= map.sizeX || dy >= map.sizeY) {
-      console.output("flblk: coordinates are out of bounds.", ConsoleColor::red);
+      console.output("fill: coordinates are out of bounds.", ConsoleColor::red);
       return false;
    }
 
@@ -346,13 +322,13 @@ bool c_flblk(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
          map.setBlock(x, y, id);
       }
    }
-   console.output(TextFormat("flblk: filled all blocks from coordinates (X %d; Y %d) to (X %d; Y %d) as %s.", sx, sy, dx, dy, getBlockNameFromId(id).c_str()));
+   console.output(TextFormat("fill: filled all blocks from coordinates (X %d; Y %d) to (X %d; Y %d) as %s.", sx, sy, dx, dy, getBlockNameFromId(id).c_str()));
    return true;
 }
 
-bool c_stwl(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
+bool c_placew(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
    if (args.size() != 4) {
-      console.output("stwl: expected 3 arguments.", ConsoleColor::red);
+      console.output("placew: expected 3 arguments.", ConsoleColor::red);
       return false;
    }
 
@@ -361,12 +337,12 @@ bool c_stwl(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
       id = stoi(args[1]);
 
       if (!isBlockIdValid(id)) {
-         console.output("stwl: invalid wall id.", ConsoleColor::red);
+         console.output("placew: invalid wall id.", ConsoleColor::red);
          return false;
       }
    } catch (...) {
       if (!isBlockNameValid(args[1].c_str())) {
-         console.output("stwl: expected first argument to either be a valid wall id or name.", ConsoleColor::red);
+         console.output("placew: expected first argument to either be a valid wall id or name.", ConsoleColor::red);
          return false;
       }
       id = getBlockIdFromName(args[1].c_str());
@@ -376,23 +352,23 @@ bool c_stwl(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
       x = stoi(args[2]);
       y = stoi(args[3]);
    } catch (...) {
-      console.output("stwl: expected second and third arguments to be numbers.", ConsoleColor::red);
+      console.output("placew: expected second and third arguments to be numbers.", ConsoleColor::red);
       return false;
    }
 
    if (x < 0 || y < 0 || x >= map.sizeX || y >= map.sizeY) {
-      console.output("stwl: coordinates are out of bounds.", ConsoleColor::red);
+      console.output("placew: coordinates are out of bounds.", ConsoleColor::red);
       return false;
    }
 
    map.setBlock(x, y, id, true);
-   console.output(TextFormat("stwl: set wall at coordinates (X %d; Y %d) to '%s'.", x, y, getBlockNameFromId(id).c_str()));
+   console.output(TextFormat("placew: set wall at coordinates (X %d; Y %d) to '%s'.", x, y, getBlockNameFromId(id).c_str()));
    return true;
 }
 
-bool c_flwl(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
+bool c_fillw(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
    if (args.size() != 6) {
-      console.output("flwl: expected 5 arguments.", ConsoleColor::red);
+      console.output("fillw: expected 5 arguments.", ConsoleColor::red);
       return false;
    }
 
@@ -401,12 +377,12 @@ bool c_flwl(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
       id = stoi(args[1]);
 
       if (!isBlockIdValid(id)) {
-         console.output("flwl: invalid wall id.", ConsoleColor::red);
+         console.output("fillw: invalid wall id.", ConsoleColor::red);
          return false;
       }
    } catch (...) {
       if (!isBlockNameValid(args[1].c_str())) {
-         console.output("flwl: expected first argument to either be a valid wall id or name.", ConsoleColor::red);
+         console.output("fillw: expected first argument to either be a valid wall id or name.", ConsoleColor::red);
          return false;
       }
       id = getBlockIdFromName(args[1].c_str());
@@ -418,12 +394,12 @@ bool c_flwl(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
       dx = stoi(args[4]);
       dy = stoi(args[5]);
    } catch (...) {
-      console.output("flwl: expected second, third, fourth and fifth arguments to be numbers.", ConsoleColor::red);
+      console.output("fillw: expected second, third, fourth and fifth arguments to be numbers.", ConsoleColor::red);
       return false;
    }
 
    if (sx < 0 || sy < 0 || sx >= map.sizeX || sy >= map.sizeY || dx < 0 || dy < 0 || dx >= map.sizeX || dy >= map.sizeY) {
-      console.output("flwl: coordinates are out of bounds.", ConsoleColor::red);
+      console.output("fillw: coordinates are out of bounds.", ConsoleColor::red);
       return false;
    }
 
@@ -435,13 +411,13 @@ bool c_flwl(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
          map.setBlock(x, y, id, true);
       }
    }
-   console.output(TextFormat("flwl: filled all walls from coordinates (X %d; Y %d) to (X %d; Y %d) as %s.", sx, sy, dx, dy, getBlockNameFromId(id).c_str()));
+   console.output(TextFormat("fillw: filled all walls from coordinates (X %d; Y %d) to (X %d; Y %d) as %s.", sx, sy, dx, dy, getBlockNameFromId(id).c_str()));
    return true;
 }
 
-bool c_stlq(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
+bool c_placeq(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
    if (args.size() != 4) {
-      console.output("stlq: expected 3 arguments.", ConsoleColor::red);
+      console.output("placeq: expected 3 arguments.", ConsoleColor::red);
       return false;
    }
 
@@ -455,7 +431,7 @@ bool c_stlq(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
       id = stoi(args[1]);
 
       if (id < 0 || id > 3) {
-         console.output("stlq: invalid liquid id.", ConsoleColor::red);
+         console.output("placeq: invalid liquid id.", ConsoleColor::red);
          return false;
       }
    } catch (...) {
@@ -464,7 +440,7 @@ bool c_stlq(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
       };
       
       if (liquidIds.find(args[1]) == liquidIds.end()) {
-         console.output("stlq: expected first argument to either be a valid liquid id or name.", ConsoleColor::red);
+         console.output("placeq: expected first argument to either be a valid liquid id or name.", ConsoleColor::red);
          return false;
       }
       id = liquidIds.at(args[1]);
@@ -474,12 +450,12 @@ bool c_stlq(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
       x = stoi(args[2]);
       y = stoi(args[3]);
    } catch (...) {
-      console.output("stlq: expected second and third arguments to be numbers.", ConsoleColor::red);
+      console.output("placeq: expected second and third arguments to be numbers.", ConsoleColor::red);
       return false;
    }
 
    if (x < 0 || y < 0 || x >= map.sizeX || y >= map.sizeY) {
-      console.output("stlq: coordinates are out of bounds.", ConsoleColor::red);
+      console.output("placeq: coordinates are out of bounds.", ConsoleColor::red);
       return false;
    }
 
@@ -488,13 +464,13 @@ bool c_stlq(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
    map.liquidsHeights[y][x] = (id == 0 ? 0 : maxLiquidLayers);
 
    constexpr const char *liquidNames[] = {"none", "water", "lava", "honey"};
-   console.output(TextFormat("stlq: set liquid at coordinates (X %d; Y %d) to '%s'.", x, y, liquidNames[id]));
+   console.output(TextFormat("placeq: set liquid at coordinates (X %d; Y %d) to '%s'.", x, y, liquidNames[id]));
    return true;
 }
 
-bool c_fllq(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
+bool c_fillq(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
    if (args.size() != 6) {
-      console.output("fllq: expected 5 arguments.", ConsoleColor::red);
+      console.output("fillq: expected 5 arguments.", ConsoleColor::red);
       return false;
    }
 
@@ -503,7 +479,7 @@ bool c_fllq(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
       id = stoi(args[1]);
 
       if (id < 0 || id > 3) {
-         console.output("fllq: invalid liquid id.", ConsoleColor::red);
+         console.output("fillq: invalid liquid id.", ConsoleColor::red);
          return false;
       }
    } catch (...) {
@@ -512,7 +488,7 @@ bool c_fllq(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
       };
       
       if (liquidIds.find(args[1]) == liquidIds.end()) {
-         console.output("fllq: expected first argument to either be a valid liquid id or name.", ConsoleColor::red);
+         console.output("fillq: expected first argument to either be a valid liquid id or name.", ConsoleColor::red);
          return false;
       }
       id = liquidIds.at(args[1]);
@@ -524,12 +500,12 @@ bool c_fllq(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
       dx = stoi(args[4]);
       dy = stoi(args[5]);
    } catch (...) {
-      console.output("fllq: expected second, third, fourth and fifth arguments to be numbers.", ConsoleColor::red);
+      console.output("fillq: expected second, third, fourth and fifth arguments to be numbers.", ConsoleColor::red);
       return false;
    }
 
    if (sx < 0 || sy < 0 || sx >= map.sizeX || sy >= map.sizeY || dx < 0 || dy < 0 || dx >= map.sizeX || dy >= map.sizeY) {
-      console.output("fllq: coordinates are out of bounds.", ConsoleColor::red);
+      console.output("fillq: coordinates are out of bounds.", ConsoleColor::red);
       return false;
    }
 
@@ -544,13 +520,13 @@ bool c_fllq(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
       }
    }
    constexpr const char *liquidNames[] = {"none", "water", "lava", "honey"};
-   console.output(TextFormat("fllq: filled all liquids from coordinates (X %d; Y %d) to (X %d; Y %d) as %s.", sx, sy, dx, dy, liquidNames[id]));
+   console.output(TextFormat("fillq: filled all liquids from coordinates (X %d; Y %d) to (X %d; Y %d) as %s.", sx, sy, dx, dy, liquidNames[id]));
    return true;
 }
 
-bool c_gv(Console &console, const VArgs &args, Map&, Player &player, Inventory &inventory) {
+bool c_give(Console &console, const VArgs &args, Map&, Player &player, Inventory &inventory) {
    if (args.size() != 4 && args.size() != 3) {
-      console.output("gv: expected 2 or 3 arguments.", ConsoleColor::red);
+      console.output("give: expected 2 or 3 arguments.", ConsoleColor::red);
       return false;
    }
 
@@ -559,7 +535,7 @@ bool c_gv(Console &console, const VArgs &args, Map&, Player &player, Inventory &
 
    try {
       if (args[1].size() != 1) {
-         console.output("gv: invalid first argument, expected item type - b/i/e/p.", ConsoleColor::red);
+         console.output("give: invalid first argument, expected item type - b/i/e/p.", ConsoleColor::red);
          return false;
       }
 
@@ -569,59 +545,59 @@ bool c_gv(Console &console, const VArgs &args, Map&, Player &player, Inventory &
       }
 
       if (count < 0 || count > 9999) {
-         console.output("gv: invalid item count.", ConsoleColor::red);
+         console.output("give: invalid item count.", ConsoleColor::red);
          return false;
       }
 
       switch (args[1][0]) {
       case 'b':
          if (id < 0 || id >= getBlockCount()) {
-            console.output("gv: invalid block id.", ConsoleColor::red);
+            console.output("give: invalid block id.", ConsoleColor::red);
             return false;
          }
          item.type = ItemType::block;
          break;
       case 'i':
          if (id < 0 || id >= (int)getItemCount()) {
-            console.output("gv: invalid item id.", ConsoleColor::red);
+            console.output("give: invalid item id.", ConsoleColor::red);
             return false;
          }
          item.type = ItemType::item;
          break;
       case 'e':
          if (id < 0 || id >= (int)getToolCount()) {
-            console.output("gv: invalid equipment id.", ConsoleColor::red);
+            console.output("give: invalid equipment id.", ConsoleColor::red);
             return false;
          }
          item.type = ItemType::equipment;
          break;
       case 'p':
          if (id < 0 || id >= (int)getPotionCount()) {
-            console.output("gv: invalid potion id.", ConsoleColor::red);
+            console.output("give: invalid potion id.", ConsoleColor::red);
             return false;
          }
          item.type = ItemType::potion;
          break;
       default:
-         console.output("gv: invalid first argument, expected item type - b/i/e/p.", ConsoleColor::red);
+         console.output("give: invalid first argument, expected item type - b/i/e/p.", ConsoleColor::red);
          return false;
       }
 
       item.count = count;
       item.id = id;
    } catch (...) {
-      console.output("gv: expected second and third arguments to be numbers.", ConsoleColor::red);
+      console.output("give: expected second and third arguments to be numbers.", ConsoleColor::red);
       return false;
    }
 
    inventory.tryToPlaceItemOrDropAtCoordinates(item, player.position.x, player.position.y);
-   console.output(TextFormat("gv: gave %d of item id %d.", count, id));
+   console.output(TextFormat("give: gave %d of item id %d.", count, id));
    return true;
 }
 
-bool c_clinv(Console &console, const VArgs &args, Map&, Player&, Inventory &inventory) {
+bool c_cinv(Console &console, const VArgs &args, Map&, Player&, Inventory &inventory) {
    if (args.size() != 1) {
-      console.output("clinv: expected no arguments. Executing anyway.", ConsoleColor::red);
+      console.output("cinv: expected no arguments. Executing anyway.", ConsoleColor::red);
    }
    for (int y = 0; y < inventoryHeight; ++y) {
       for (int x = 0; x < inventoryWidth; ++x) {
@@ -634,14 +610,14 @@ bool c_clinv(Console &console, const VArgs &args, Map&, Player&, Inventory &inve
    return true;
 }
 
-bool c_stv(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
+bool c_set(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
    if (args.size() != 3) {
-      console.output("stv: expected 2 arguments.", ConsoleColor::red);
+      console.output("set: expected 2 arguments.", ConsoleColor::red);
       return false;
    }
    
    if (console.vars.find(args[1]) == console.vars.end()) {
-      console.output(TextFormat("stv: unknown variable '%s'.", args[1].c_str()), ConsoleColor::red);
+      console.output(TextFormat("set: unknown variable '%s'.", args[1].c_str()), ConsoleColor::red);
       return false;
    }
 
@@ -649,7 +625,7 @@ bool c_stv(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
    try {
       value = stof(args[2]);
    } catch (...) {
-      console.output("stv: expected second argument to be a number.", ConsoleColor::red);
+      console.output("set: expected second argument to be a number.", ConsoleColor::red);
       return false;
    }
 
@@ -660,13 +636,13 @@ bool c_stv(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
    } else if (auto *f = std::get_if<float*>(&console.vars[args[1]])) {
       **f = value;
    }
-   console.output(TextFormat("stv: set variable '%s' to '%0.f'.", args[1].c_str(), value));
+   console.output(TextFormat("set: set variable '%s' to '%0.f'.", args[1].c_str(), value));
    return true;
 }
 
-bool c_lv(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
+bool c_list(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
    if (args.size() != 1) {
-      console.output("lv: expected no arguments. Executing anyway.", ConsoleColor::red);
+      console.output("list: expected no arguments. Executing anyway.", ConsoleColor::red);
    }
 
    console.output("Variables:", ConsoleColor::gray);
@@ -691,27 +667,26 @@ static inline const std::unordered_map<std::string, Command> commands {
    {"help", c_help},
    {"echo", c_echo},
    {"tp", c_tp},
-   {"sp", c_sp},
-   {"crds", c_crds},
+   {"spawnpoint", c_spawnpoint},
+   {"pos", c_pos},
    {"clear", c_clear},
-   {"clinv", c_clinv},
+   {"cinv", c_cinv},
    {"exit", c_exit},
    {"hp", c_hp},
    {"maxhp", c_maxhp},
-   {"br", c_br},
    {"kill", c_kill},
    {"time", c_time},
    {"hist", c_hist},
    {"chist", c_chist},
-   {"stblk", c_stblk},
-   {"flblk", c_flblk},
-   {"stwl", c_stwl},
-   {"flwl", c_flwl},
-   {"stlq", c_stlq},
-   {"fllq", c_fllq},
-   {"gv", c_gv},
-   {"stv", c_stv},
-   {"lv", c_lv},
+   {"place", c_place},
+   {"fill", c_fill},
+   {"placew", c_placew},
+   {"fillw", c_fillw},
+   {"placeq", c_placeq},
+   {"fillq", c_fillq},
+   {"give", c_give},
+   {"set", c_set},
+   {"list", c_list},
 };
 
 // init
