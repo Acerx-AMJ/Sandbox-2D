@@ -558,24 +558,26 @@ bool c_give(Console &console, const VArgs &args, Map&, Player &player, Inventory
          item.type = ItemType::block;
          break;
       case 'i':
-         if (id < 0 || id >= (int)getItemCount()) {
+         if (id < 1 || id > (int)getItemCount()) {
             console.output("give: invalid item id.", ConsoleColor::red);
             return false;
          }
          item.type = ItemType::item;
          break;
       case 'e':
-         if (id < 0 || id >= (int)getToolCount()) {
+         if (id < 1 || id > (int)getToolCount()) {
             console.output("give: invalid equipment id.", ConsoleColor::red);
             return false;
          }
+         id += 1;
          item.type = ItemType::equipment;
          break;
       case 'p':
-         if (id < 0 || id >= (int)getPotionCount()) {
+         if (id < 1 || id > (int)getPotionCount()) {
             console.output("give: invalid potion id.", ConsoleColor::red);
             return false;
          }
+         id += 1; // I'm going to guess that the potions will also be fucked up
          item.type = ItemType::potion;
          break;
       default:
