@@ -156,6 +156,10 @@ void GameState::fixedUpdate() {
    }
 }
 
+void GameState::updateResponsiveness() {
+   
+}
+
 // Update playing
 
 void GameState::updatePlaying() {

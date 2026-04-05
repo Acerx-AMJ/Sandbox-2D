@@ -59,14 +59,9 @@ void fadeIn(float dt) {
 // Init functions
 
 void initPopups() {
-   confirmationButton.rectangle = {getScreenCenter().x + 120.0f, getScreenCenter().y + 110.0f, buttonWidth, buttonHeight};
    confirmationButton.text = "YES";
-   denialButton.rectangle = {getScreenCenter().x - 120.0f, getScreenCenter().y + 110.0f, buttonWidth, buttonHeight};
    denialButton.text = "NO";
-   
-   okayButton.rectangle = {getScreenCenter().x, getScreenCenter().y + 110.0f, buttonWidth, buttonHeight};
    okayButton.text = "OKAY";
-
    confirmationButton.texture = denialButton.texture = okayButton.texture = &getTexture("button");
 }
 
@@ -102,6 +97,13 @@ void updatePopups(float dt) {
       return;
    }
 
+   float wr = getWidthRatio();
+   float hr = getHeightRatio();
+
+   denialButton.rectangle = {getScreenCenter().x - 120.0f * wr, getScreenCenter().y + 110.0f * hr, buttonWidth * wr, buttonHeight * hr};
+   confirmationButton.rectangle = {getScreenCenter().x + 120.0f * wr, getScreenCenter().y + 110.0f * hr, buttonWidth * wr, buttonHeight * hr};
+   okayButton.rectangle = {getScreenCenter().x, getScreenCenter().y + 110.0f * hr, buttonWidth * wr, buttonHeight * hr};
+
    fadeIn(dt);
    Popup &popup = popups.back();
 
@@ -136,12 +138,16 @@ void renderPopups() {
       return;
    }
 
-   Popup &popup = popups.back();
-   drawTexture(getTexture("popup_frame"), getScreenCenter(), popupSize);
-   drawText(getScreenCenter({0.0f, -125.0f}), popup.header.c_str(), 50.0f);
+   float wr = getWidthRatio();
+   float hr = getHeightRatio();
 
-   wrapText(popup.body, popupSize.x - 30.0f, 25.0f, 1.0f);
-   drawText(getScreenCenter({0.0f, -40.0f}), popup.body.c_str(), 25.0f);
+   Popup &popup = popups.back();
+   drawTexture(getTexture("popup_frame"), getScreenCenter(), applyResponsiveness(popupSize));
+   drawText(getScreenCenter({0.0f, hr * -125.0f}), popup.header.c_str(), getFontSize(50.0f));
+
+   std::string wrappedBody = popup.body;
+   wrapText(wrappedBody, (popupSize.x - 30.0f) * wr, getFontSize(25.0f), getFontSize(1.0f));
+   drawText(getScreenCenter({0.0f, hr * -40.0f}), wrappedBody.c_str(), getFontSize(25.0f), WHITE, getFontSize(1.0f));
 
    if (popup.type == PopupType::confirmation) {
       confirmationButton.render();

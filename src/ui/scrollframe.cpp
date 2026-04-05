@@ -2,6 +2,7 @@
 #include "mngr/resource.hpp"
 #include "ui/scrollframe.hpp"
 #include "util/math.hpp"
+#include "util/position.hpp"
 #include "util/render.hpp"
 #include <cmath>
 
@@ -35,7 +36,7 @@ void Scrollframe::update(float dt) {
 
 void Scrollframe::render() const {
    drawTextureNoOrigin(getTexture("scrollframe"), {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height});
-   drawTextureNoOrigin(getTexture("scrollbar"), {rectangle.x + rectangle.width - scrollBarWidth, scrollbarY}, {scrollBarWidth, scrollbarHeight});
+   drawTextureNoOrigin(getTexture("scrollbar"), {rectangle.x + rectangle.width - scrollBarWidth * getWidthRatio(), scrollbarY}, {scrollBarWidth * getWidthRatio(), scrollbarHeight});
 }
 
 // Helper functions

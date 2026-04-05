@@ -34,7 +34,7 @@
 ### Other
 - World generation.
 - Add more sounds for sitting, opening doors, swimming, drowning, stepping on sticky and bouncy blocks. And fix existing sounds.
-- finally update README.md
+- make backgrounds fade
 
 ### Bugs
 - fix only some inputs having visible cursor

@@ -18,6 +18,7 @@ struct LoadingState: public State {
 
    void update() override;
    void fixedUpdate() override;
+   void updateResponsiveness() override;
 
    void render() override;
    State* change() override;

@@ -80,7 +80,7 @@ void MapGenerator::generate() {
    saveWorldData(name, spawnLocation, spawnLocation, false, 100, 100, 100, 50.f, map, nullptr, nullptr, nullptr);
 
    setInfo("Generating Completed!", 1.0f);
-   playSound("load");
+   playSound("success");
    std::this_thread::sleep_for(std::chrono::milliseconds(500));
    isCompleted = true;
 }

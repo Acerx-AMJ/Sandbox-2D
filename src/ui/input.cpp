@@ -2,7 +2,6 @@
 #include "mngr/resource.hpp"
 #include "mngr/sound.hpp"
 #include "ui/input.hpp"
-#include "ui/keybindIndicator.hpp"
 #include "util/format.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
@@ -119,7 +118,10 @@ void Input::update(float dt) {
 // Render function
 
 void Input::render() {
+   float fontsize = getFontSize(35.0f);
+   float spacing = getFontSize(1.0f);
    unsigned char value = 255;
+
    if (typing) {
       value = std::sin(counter * fadeSpeed) * fadeRange + fadeMin;
    }
@@ -134,21 +136,21 @@ void Input::render() {
 
    std::string selected = text.empty() ? fallback : text;
    if (wrapinput) {
-      wrapText(selected, rectangle.width - textWrapPadding, 35, 1);
-      drawText({rectangle.x, rectangle.y}, selected.c_str(), 35, Color{value, value, value, 255});
+      wrapText(selected, rectangle.width - textWrapPadding, fontsize, spacing);
+      drawText({rectangle.x, rectangle.y}, selected.c_str(), fontsize, Color{value, value, value, 255}, spacing);
    } else {
-      Vector2 origin = getOrigin(selected.c_str(), 35.0f, 1.0f);
+      Vector2 origin = getOrigin(selected.c_str(), fontsize, spacing);
       Vector2 position = {rectangle.x - (origin.x - rectangle.width / 2.0f), rectangle.y};
-      DrawTextPro(getFont("andy"), selected.c_str(), position, origin, 0, 35.0f, 1.0f, Color{value, value, value, 255});
+      DrawTextPro(getFont("andy"), selected.c_str(), position, origin, 0, fontsize, spacing, Color{value, value, value, 255});
 
       if (rendercursor && !text.empty()) {
          std::string substr = selected.substr(0, cursor);
-         Vector2 cursorPosition = MeasureTextEx(getFont("andy"), (substr.empty() ? "X" : substr.c_str()), 35, 1.0f);
+         Vector2 cursorPosition = MeasureTextEx(getFont("andy"), (substr.empty() ? "X" : substr.c_str()), fontsize, spacing);
          if (substr.empty()) {
             cursorPosition.x = 0.0f;
          }
 
-         DrawRectangleV(Vector2Add({cursorPosition.x, 0}, Vector2Subtract(position, origin)), {15.0f, 35.0f}, Fade(WHITE, 0.75f));
+         DrawRectangleV(Vector2Add({cursorPosition.x, 0}, Vector2Subtract(position, origin)), {fontsize * (15.0f / 35.0f), fontsize}, Fade(WHITE, 0.75f));
       }
    }
 }

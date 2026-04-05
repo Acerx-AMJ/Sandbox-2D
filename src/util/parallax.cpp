@@ -70,11 +70,6 @@ static Texture *fgTexture = nullptr;
 
 // Color helper functions
 
-inline Color fadeColor(const Color &a, const Color &b, float t) {
-   float i = 1.0f - t;
-   return {(unsigned char)((a.r * i) + (b.r * t)), (unsigned char)((a.g * i) + (b.g * t)), (unsigned char)((a.b * i) + (b.b * t)), 255};
-}
-
 float getFadeStrengthBasedOnTime() {
    if (currentTime >= 45.0f && currentTime <= 135.0f) {
       return 1.0f;
@@ -136,7 +131,7 @@ void drawBackground(float bgSpeed, float fgSpeed, float daySpeed) {
    float t = getFadeStrengthBasedOnTime();
 
    // Draw the sky
-   DrawTexturePro(getTexture("sky"), getBox(getTexture("sky")), {0, 0, getScreenSize().x, getScreenSize().y}, {0, 0}, 0, fadeColor(skyColorNight, skyColorDay, t));
+   DrawTexturePro(getTexture("sky"), getBox(getTexture("sky")), {0, 0, getScreenSize().x, getScreenSize().y}, {0, 0}, 0, lerp(skyColorDay, skyColorNight, t));
 
    // Draw the stars
    if (prevMoonPhase != moonPhase) {
@@ -145,7 +140,7 @@ void drawBackground(float bgSpeed, float fgSpeed, float daySpeed) {
          Star &star = stars[i];
          star.size.x = star.size.y = random(starSizeMin.x, starSizeMax.x);
          
-         star.position = {random(0.0f, (float)GetScreenWidth()), random(0.0f, GetScreenHeight() / 2.f)};
+         star.position = {random(0.0f, 1.0f), random(0.0f, 0.5f)};
          star.frameX = random(0, 3);
       }
    }
@@ -153,32 +148,34 @@ void drawBackground(float bgSpeed, float fgSpeed, float daySpeed) {
    Texture &starTexture = getTexture("stars");
    for (int i = 0; i < starCount; ++i) {
       Star &star = stars[i];
-      DrawTexturePro(starTexture, {(float)star.frameX * starTexture.height, 0.0f, (float)starTexture.height, (float)starTexture.height}, {star.position.x, star.position.y, star.size.x, star.size.y}, {0, 0}, 0, Fade(WHITE, 0.5f - t));
+      DrawTexturePro(starTexture, {(float)star.frameX * starTexture.height, 0.0f, (float)starTexture.height, (float)starTexture.height}, {star.position.x * getScreenSize().x, star.position.y * getScreenSize().y, star.size.x, star.size.y}, {0, 0}, 0, Fade(WHITE, 0.5f - t));
    }
 
    // Draw either moon or sun based on the time
+   float cr = getMinRatio();
+
    if (isNight) {
       Texture &texture = getTexture("moon");
       Vector2 position = {origin.x, screenSize.y};
 
-      DrawTexturePro(texture, {(float)moonPhase * texture.height, 0.0f, (float)texture.height, (float)texture.height}, {position.x, position.y, moonSize.x, moonSize.y}, origin, currentTime - 180.0f, WHITE);
+      DrawTexturePro(texture, {(float)moonPhase * texture.height, 0.0f, (float)texture.height, (float)texture.height}, {position.x, position.y, moonSize.x * cr, moonSize.y * cr}, origin, currentTime - 180.0f, WHITE);
    } else {
       Texture &texture = getTexture("sun");
       Vector2 position = {origin.x, screenSize.y};
 
-      DrawTexturePro(texture, getBox(texture), {position.x, position.y, sunSize.x, sunSize.y}, origin, currentTime, WHITE);
+      DrawTexturePro(texture, getBox(texture), {position.x, position.y, sunSize.x * cr, sunSize.y * cr}, origin, currentTime, WHITE);
    }
 
    // Draw backgrounds
 
    if (bgTexture) {
-      Color bgColor = fadeColor(backgroundTintNight, backgroundTintDay, t);
+      Color bgColor = lerp(backgroundTintDay, backgroundTintNight, t);
       drawTextureNoOrigin(*bgTexture, {bgProgress, 0}, screenSize, bgColor);
       drawTextureNoOrigin(*bgTexture, {screenSize.x + bgProgress, 0}, screenSize, bgColor);
    }
 
    if (fgTexture) {
-      Color fgColor = fadeColor(foregroundTintNight, foregroundTintDay, t);
+      Color fgColor = lerp(foregroundTintDay, foregroundTintNight, t);
       drawTextureNoOrigin(*fgTexture, {fgProgress, 0}, screenSize, fgColor);
       drawTextureNoOrigin(*fgTexture, {screenSize.x + fgProgress, 0}, screenSize, fgColor);
    }
@@ -206,7 +203,7 @@ void setMoonPhase(int moonPhase) {
 // Texture functions
 
 Color getLightBasedOnTime() {
-   return fadeColor({15, 15, 15, 255}, WHITE, getFadeStrengthBasedOnTime());
+   return lerp(WHITE, {15, 15, 15, 255}, getFadeStrengthBasedOnTime());
 }
 
 void setCurrentBackgroundBiome(MapGenerator::Biome biome) {

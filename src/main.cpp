@@ -6,10 +6,14 @@
 #include <cstdlib>
 #include <ctime>
 
+constexpr int minWindowWidth  = 800;
+constexpr int minWindowHeight = 600;
+
 int main() {
    srand(time(nullptr));
-   SetConfigFlags(FLAG_VSYNC_HINT);
-   InitWindow(GetMonitorWidth(GetCurrentMonitor()), GetMonitorHeight(GetCurrentMonitor()), "Sandbox-2D");
+   SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_MAXIMIZED);
+   InitWindow(minWindowWidth, minWindowHeight, "Sandbox-2D");
+   SetWindowMinSize(minWindowWidth, minWindowHeight);
 
    InitAudioDevice();
    SetExitKey(KEY_NULL);
@@ -29,10 +33,7 @@ int main() {
 
       updateInput();
       updatePopups(current->realDt);
-
-      if (!anyPopups()) {
-         current->updateStateLogic();
-      }
+      current->updateStateLogic();
 
       BeginDrawing();
          ClearBackground(BLACK);

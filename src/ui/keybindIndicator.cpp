@@ -6,9 +6,7 @@
 
 // Constants
 
-constexpr float fontSize  = 25.0f;
-constexpr Color textColor = {36, 37, 77, 255};
-
+constexpr float fontSize      = 27.5f;
 constexpr Vector2 offset      = {10.0f, -10.0f};
 constexpr Vector2 keybindSize = {30.0f, 30.0f};
 
@@ -19,7 +17,7 @@ void drawKeybindIndicator(const std::string &keybind, const Vector2 &center, con
       return;
    }
 
-   const Vector2 position = Vector2Subtract(center, offset);
-   drawTexture(getTexture("keybind"), position, keybindSize, 0.0f, tint);
-   DrawTextPro(getFont("RobotoMono"), keybind.c_str(), position, getOrigin(MeasureTextEx(getFont("RobotoMono"), keybind.c_str(), fontSize, 1.0f)), 0.0f, fontSize, 1.0f, textColor);
+   const Vector2 position = Vector2Subtract(center, {offset.x * getWidthRatio(), offset.y * getHeightRatio()});
+   drawTexture(getTexture("keybind"), position, {keybindSize.x * getWidthRatio(), keybindSize.y * getHeightRatio()}, 0.0f, tint);
+   DrawTextPro(getFont("RobotoMono"), keybind.c_str(), position, getOrigin(MeasureTextEx(getFont("RobotoMono"), keybind.c_str(), getFontSize(fontSize), getFontSize(1.0f))), 0.0f, getFontSize(fontSize), getFontSize(1.0f), BLACK);
 }

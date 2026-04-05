@@ -21,6 +21,7 @@ struct GameState: public State {
 
    void update() override;
    void fixedUpdate() override;
+   void updateResponsiveness() override;
 
    void updatePlaying();
    void updatePausing();

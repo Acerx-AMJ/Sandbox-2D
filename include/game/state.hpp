@@ -15,6 +15,8 @@ struct State {
 
    virtual void update() = 0;
    virtual void fixedUpdate() = 0;
+   virtual void updateResponsiveness() = 0; // udpate UI element sizes based on window size
+
    virtual void render() = 0;
    virtual State* change() = 0;
 
@@ -25,6 +27,9 @@ struct State {
    void updateFadingOut();
 
    // Members
+
+   int lastWidth = 0;
+   int lastHeight = 0;
 
    bool quitState = false;
    bool fadingIn = true;

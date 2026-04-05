@@ -1,5 +1,6 @@
 #include "game/state.hpp"
 #include "mngr/particle.hpp"
+#include "ui/popup.hpp"
 #include <algorithm>
 #include <raylib.h>
 
@@ -11,6 +12,19 @@ constexpr float fadeTime = 0.4f;
 // Update functions
 
 void State::updateStateLogic() {
+   int width = GetScreenWidth();
+   int height = GetScreenHeight();
+
+   if (width != lastWidth || height != lastHeight) {
+      lastWidth = width;
+      lastHeight = height;
+      updateResponsiveness();
+   }
+
+   if (anyPopups()) {
+      return;
+   }
+
    realDt = GetFrameTime();
    dt = std::min(maxDT, realDt);
 

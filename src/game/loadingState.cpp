@@ -14,7 +14,7 @@ LoadingState::LoadingState() {
    loadFont("andy", "assets/fonts/andy.ttf");
    loadTexture("loading", "assets/sprites/ui/loading.png");
    splashText = getRandomLineFromFile("assets/splash.txt");
-   wrapText(splashText, GetScreenWidth() - 50.0f, 40, 1.f);
+   wrapText(splashText, GetScreenWidth() - 50.0f * getWidthRatio(), getFontSize(40), getFontSize(1));
 }
 
 void LoadingState::update() {
@@ -59,15 +59,19 @@ void LoadingState::fixedUpdate() {
    // Loading state does not require any physics
 }
 
+void LoadingState::updateResponsiveness() {
+   // Loading state handles its responsiveness straight in render
+}
+
 void LoadingState::render() {
    std::string finalLoadingText = loadingText;
    if (loadPhase != Load::count) {
       finalLoadingText = format("{}{}/{}", loadingText, (int)loadPhase, (int)Load::count);
    }
 
-   drawText(getScreenCenter({0.0f, -175.0f}), finalLoadingText.c_str(), 80);
-   drawText(getScreenCenter({0.0f, 100.0f}), splashText.c_str(), 40);
-   drawTexture(getTexture("loading"), getScreenCenter(), {70.0f, 70.0f}, iconRotation);
+   drawText(getScreenCenter({0.0f, getHeightRatio() * -175.0f}), finalLoadingText.c_str(), getFontSize(80));
+   drawText(getScreenCenter({0.0f, getHeightRatio() * 100.0f}), splashText.c_str(), getFontSize(40));
+   drawTexture(getTexture("loading"), getScreenCenter(), applyCubicResponsiveness({70.0f, 70.0f}), iconRotation);
 }
 
 State* LoadingState::change() {
