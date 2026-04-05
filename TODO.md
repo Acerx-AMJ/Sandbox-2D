@@ -30,7 +30,6 @@
 - Add keybind settings
 - Add misc. settings
 - Music, sound settings
-- Maybe add localization settings? Probably not
 
 ### Other
 - World generation.
@@ -40,3 +39,4 @@
 ### Bugs
 - fix only some inputs having visible cursor
 - fix inventory right click. inventory also doesn't feel as good as it should
+- fix UI scale on different screen sizes

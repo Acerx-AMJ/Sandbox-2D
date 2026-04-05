@@ -487,7 +487,7 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
       }
    }
 
-   mountainCount /= 3; // to equilize given that stone is in abundance underground
+   mountainCount /= 6; // to equilize given that stone is in abundance underground
    size_t maximum = max(sandCount, max(forestCount, max(jungleCount, max(mountainCount, tundraCount))));
 
    if (maximum >= 20) {

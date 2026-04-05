@@ -29,23 +29,23 @@ constexpr Color foregroundTintDay   = {210, 210, 190, 255};
 
 using s = std::vector<std::string>;
 static inline const std::array<s, (size_t)MapGenerator::Biome::count> biomeBackgroundTextures {
-   s{"mountains1", "mountains2", "mountains3", "mountains4", "mountains5"}, // plains
-   s{"mountains1", "mountains2", "mountains3", "mountains4", "mountains5"}, // forest
-   s{"mountains1", "mountains2", "mountains3", "mountains4", "mountains5"}, // mountains
-   s{"mountains_sand1", "mountains_sand2", "mountains_sand3"},              // oasis
-   s{"mountains_sand1", "mountains_sand2", "mountains_sand3"},              // desert
-   s{"mountains1", "mountains2", "mountains3", "mountains4", "mountains5"}, // tundra
-   s{"mountains1", "mountains2", "mountains3", "mountains4", "mountains5"}, // jungle
+   s{"mountains1", "mountains2", "mountains3", "mountains4", "mountains5"},       // plains
+   s{"mountains1", "mountains2", "mountains3", "mountains4", "mountains5"},       // forest
+   s{"mountains_m1", "mountains_m2", "mountains_m3"},                             // mountains
+   s{"mountains_sand1", "mountains_sand2", "mountains_sand3", "mountains_sand4"}, // oasis
+   s{"mountains_sand1", "mountains_sand2", "mountains_sand3", "mountains_sand4"}, // desert
+   s{"mountains1", "mountains2", "mountains3", "mountains4", "mountains5"},       // tundra
+   s{"mountains1", "mountains2", "mountains3", "mountains4", "mountains5"},       // jungle
 };
 
 static inline const std::array<s, (size_t)MapGenerator::Biome::count> biomeForegroundTextures {
-   s{"bg_trees1", "bg_trees2", "bg_trees3", "bg_trees4"}, // plains
-   s{"bg_trees1", "bg_trees2", "bg_trees3", "bg_trees4"}, // forest
-   s{"bg_trees1", "bg_trees2", "bg_trees3", "bg_trees4"}, // mountains
-   s{"bg_trees_sand1", "bg_trees_sand2"},                 // oasis
-   s{"bg_trees_sand1", "bg_trees_sand2"},                 // desert
-   s{"bg_trees1", "bg_trees2", "bg_trees3", "bg_trees4"}, // tundra
-   s{"bg_trees1", "bg_trees2", "bg_trees3", "bg_trees4"}, // jungle
+   s{"bg_trees1", "bg_trees2", "bg_trees3", "bg_trees4"},   // plains
+   s{"bg_trees1", "bg_trees2", "bg_trees3", "bg_trees4"},   // forest
+   s{"bg_trees1", "bg_trees2"},                             // mountains
+   s{"bg_trees_sand1", "bg_trees_sand2", "bg_trees_sand3"}, // oasis
+   s{"bg_trees_sand1", "bg_trees_sand2", "bg_trees_sand3"}, // desert
+   s{"bg_trees1", "bg_trees2", "bg_trees3", "bg_trees4"},   // tundra
+   s{"bg_trees1", "bg_trees2", "bg_trees3", "bg_trees4"},   // jungle
 };
 
 struct Star {
