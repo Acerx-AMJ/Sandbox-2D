@@ -33,7 +33,7 @@ constexpr static inline std::array<BlockInfo, blockCount> blockInfo {
    //       texture name                    attributes                                                                                                 break speed   break level   drop
    //**********************************************************************************************************************************************************************************
    /*  0 */ BlockInfo{"air",                BlockType::empty | BlockType::transparent | BlockType::flowable,                                           0.0f,         0,            Item{}},
-   /*  1 */ BlockInfo{"grass",              BlockType::solid | BlockType::grass,                                                                       0.75f,        0,            Item{ItemType::item, 2, 1}},
+   /*  1 */ BlockInfo{"grass",              BlockType::solid | BlockType::grass,                                                                       0.75f,        0,            Item{ItemType::block, 2, 1}},
    /*  2 */ BlockInfo{"dirt",               BlockType::solid | BlockType::dirt,                                                                        0.75f,        0,            Item{}},
    /*  3 */ BlockInfo{"clay",               BlockType::solid,                                                                                          1.0f,         0,            Item{}},
    /*  4 */ BlockInfo{"stone",              BlockType::solid,                                                                                          2.0f,         1,            Item{}},
@@ -48,7 +48,7 @@ constexpr static inline std::array<BlockInfo, blockCount> blockInfo {
    /* 13 */ BlockInfo{"platform",           BlockType::solid | BlockType::platform | BlockType::transparent | BlockType::flowable,                     1.0f,         1,            Item{}},
    /* 14 */ BlockInfo{"snow",               BlockType::solid | BlockType::sand,                                                                        0.5f,         0,            Item{}},
    /* 15 */ BlockInfo{"ice",                BlockType::solid | BlockType::ice,                                                                         1.5f,         1,            Item{}},
-   /* 16 */ BlockInfo{"jungle_grass",       BlockType::solid | BlockType::grass,                                                                       0.75f,        0,            Item{ItemType::item, 17, 1}},
+   /* 16 */ BlockInfo{"jungle_grass",       BlockType::solid | BlockType::grass,                                                                       0.75f,        0,            Item{ItemType::block, 17, 1}},
    /* 17 */ BlockInfo{"mud",                BlockType::solid | BlockType::dirt,                                                                        0.75f,        0,            Item{}},
    /* 18 */ BlockInfo{"lamp",               BlockType::solid | BlockType::lightsource,                                                                 1.0f,         0,            Item{}},
    /* 19 */ BlockInfo{"torch",              BlockType::transparent | BlockType::lightsource | BlockType::torch | BlockType::flowable,                  0.25f,        0,            Item{}},
@@ -64,6 +64,7 @@ constexpr static inline std::array<BlockInfo, blockCount> blockInfo {
    /* 29 */ BlockInfo{"mythril_ore",        BlockType::solid,                                                                                          3.25f,        3,            Item{ItemType::item, 4, 1}},
 };
 
+// just copy-paste the names of the blocks in the correct order.
 const static inline StrArray<std::string> blockIds {
    "air", "grass", "dirt", "clay", "stone", "sand", "sandstone", "bricks", "glass", "planks", "stone_bricks", "tiles", "obsidian", "platform", "snow", "ice", "jungle_grass", "mud", "lamp", "torch",
    "honey_block", "crispy_honey_block", "slime_block", "bubble_block", "slime_platform", "cactus_block", "coal_ore", "iron_ore", "gold_ore", "mythril_ore"

@@ -47,14 +47,13 @@ GameState::GameState(const std::string &worldName)
    calculateCameraBounds();
 
    // Init UI
-   continueButton.rectangle = {center.x, center.y, buttonWidth, buttonHeight};
    continueButton.text = "Continue";
-   menuButton.rectangle = {continueButton.rectangle.x, continueButton.rectangle.y + buttonPaddingY, buttonWidth, buttonHeight};
    menuButton.text = "Save & Quit";
-   pauseButton.rectangle = {GetScreenWidth() - buttonWidth / 2.f + 10.0f, GetScreenHeight() - buttonHeight / 2.f, buttonWidth, buttonHeight};
    pauseButton.text = "Pause";
    continueButton.texture = menuButton.texture = &getTexture("button");
+
    console.init(map, player, inventory);
+   updateResponsiveness();
 }
 
 GameState::~GameState() {
@@ -157,7 +156,25 @@ void GameState::fixedUpdate() {
 }
 
 void GameState::updateResponsiveness() {
+   const Vector2 center = getScreenCenter();
+
+   float wr = getWidthRatio();
+   float hr = getHeightRatio();
+   float btnWidth = buttonWidth * wr;
+   float btnHeight = buttonHeight * hr;
    
+   camera.offset = center;
+   continueButton.rectangle = {center.x, center.y, btnWidth, btnHeight};
+   menuButton.rectangle = {continueButton.rectangle.x, continueButton.rectangle.y + buttonPaddingY * hr, btnWidth, btnHeight};
+   pauseButton.rectangle = {GetScreenWidth() - btnWidth / 2.f + 10.0f * wr, GetScreenHeight() - btnHeight / 2.f, btnWidth, btnHeight};
+
+   console.updateResponsiveness();
+
+   // must update map's lightmap due to the render texture being fixed to the screen size
+   if (map.lightmap.id != 0) {
+      UnloadRenderTexture(map.lightmap);
+   }
+   map.lightmap = LoadRenderTexture(GetScreenWidth() / 2, GetScreenHeight() / 2);
 }
 
 // Update playing
@@ -574,18 +591,22 @@ void GameState::render() {
    }
    EndMode2D();
 
+   float wr = getWidthRatio();
+   float hr = getHeightRatio();
+   float cr = getMinRatio();
+
    // Render all of the hearts dynamically
    if (!player.creative) {
       Texture2D &heartIcon = getTexture("heart_icon");
       Shader &grayscaleShader = getShader("grayscale");
       
-      float size = 25;
-      float padding = size + 5;
+      float size = 25 * cr;
+      float padding = size + 5 * cr;
       int heartValue = 20;
       int counter = player.maxHearts / heartValue;
       int heartsPerRow = 10;
-      float startingY = 40;
-      float startingX = GetScreenWidth() - size * heartsPerRow - 5 * (heartsPerRow - 1) - 15;
+      float startingY = 40 * hr;
+      float startingX = GetScreenWidth() - size * heartsPerRow - 5 * (heartsPerRow - 1) * wr - 15 * wr;
 
       float static sineCounter = 0.0f;
       sineCounter += 1.0f - float(player.hearts) / player.maxHearts;
@@ -598,7 +619,7 @@ void GameState::render() {
          drawTextureNoOrigin(heartIcon, {startingX + padding * (i % heartsPerRow) - halfSine, startingY + padding * int(i / heartsPerRow) - halfSine}, {size + sine, size + sine}, Fade(WHITE, a));
       }
       EndShaderMode();
-      drawText({startingX + (GetScreenWidth() - startingX) / 2.0f, startingY / 2.0f}, format("HP: {}/{}", player.hearts, player.maxHearts).c_str(), 20);
+      drawText({startingX + (GetScreenWidth() - startingX) / 2.0f, startingY / 2.0f}, format("HP: {}/{}", player.hearts, player.maxHearts).c_str(), getFontSize(20), WHITE, getFontSize(1));
    }
 
    // Render other game UI

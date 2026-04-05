@@ -442,16 +442,16 @@ void Inventory::discardItem() {
 // Frame functions
 
 Vector2 Inventory::getFramePosition(float x, float y, bool isSelected) const {
-   Vector2 position = Vector2Add(Vector2Multiply(itemframePadding, {x, y}), itemframeTopLeft);
+   Vector2 position = Vector2Add(Vector2Multiply(applyCubicResponsiveness(itemframePadding), {x, y}), applyCubicResponsiveness(itemframeTopLeft));
 
    if (isSelected) {
-      return Vector2Subtract(position, selectedItemFrameOffset);
+      return Vector2Subtract(position, applyCubicResponsiveness(selectedItemFrameOffset));
    }
    return position;
 }
 
 Vector2 Inventory::getFrameSize(bool isSelected) const {
-   return (isSelected ? selectedItemFrameSize : itemframeSize);
+   return applyCubicResponsiveness(isSelected ? selectedItemFrameSize : itemframeSize);
 }
 
 bool Inventory::mouseOnFrame(const Vector2 &position, const Vector2 &size) {
@@ -584,12 +584,12 @@ void Inventory::render() const {
 
          drawTextureNoOrigin(getFrameTexture(isSelected, isFavorite), position, size);
          if (item.id != 0 && (!anySelected || !selectedItem.fullSelect || selectedItem.address != &item)) {
-            drawItem(item.type, item.id, item.count, item.isFurniture, item.isWall, Vector2Add(position, getOrigin(size)), itemframeItemSize, false);
+            drawItem(item.type, item.id, item.count, item.isFurniture, item.isWall, Vector2Add(position, getOrigin(size)), applyCubicResponsiveness(itemframeItemSize), false);
          }
 
          if (y == 0) {
-            Vector2 textPosition = Vector2Add(position, itemframeIndexOffset);
-            drawText(textPosition, std::to_string(x + 1).c_str(), 25);
+            Vector2 textPosition = Vector2Add(position, applyCubicResponsiveness(itemframeIndexOffset));
+            drawText(textPosition, std::to_string(x + 1).c_str(), getFontSize(25));
          }
       }
    }
@@ -599,15 +599,15 @@ void Inventory::render() const {
       Vector2 position = getFramePosition(10, 0, true);
       Vector2 size = getFrameSize(true);
       drawTextureNoOrigin(getFrameTexture(true, selectedItem.address->favorite),position, size);
-      drawItem(selectedItem.item.type, selectedItem.item.id, selectedItem.item.count, selectedItem.item.isFurniture, selectedItem.item.isWall, Vector2Add(position, getOrigin(size)), itemframeItemSize, true);
+      drawItem(selectedItem.item.type, selectedItem.item.id, selectedItem.item.count, selectedItem.item.isFurniture, selectedItem.item.isWall, Vector2Add(position, getOrigin(size)), applyCubicResponsiveness(itemframeItemSize), true);
 
-      Vector2 textPosition = Vector2Add(position, itemframeIndexOffset);
+      Vector2 textPosition = Vector2Add(position, applyCubicResponsiveness(itemframeIndexOffset));
       if (selectedItem.fromTrash) {
-         drawText(textPosition, "BIN", 25);
+         drawText(textPosition, "BIN", getFontSize(25));
       } else {
          // Pointer arithmetic
          int index = (reinterpret_cast<unsigned long long>(selectedItem.address) - reinterpret_cast<unsigned long long>(items)) / sizeof(Item);
-         drawText(textPosition, std::to_string(index + 1).c_str(), 25);
+         drawText(textPosition, std::to_string(index + 1).c_str(), getFontSize(25));
       }
    }
 
@@ -619,13 +619,13 @@ void Inventory::render() const {
 
       drawTextureNoOrigin(getTrashTexture(trashOccupied), position, size);
       if (trashOccupied) {
-         drawItem(trashedItem.type, trashedItem.id, trashedItem.count, trashedItem.isFurniture, trashedItem.isWall, Vector2Add(position, getOrigin(size)), itemframeItemSize, false);
+         drawItem(trashedItem.type, trashedItem.id, trashedItem.count, trashedItem.isFurniture, trashedItem.isWall, Vector2Add(position, getOrigin(size)), applyCubicResponsiveness(itemframeItemSize), false);
       }
    }
 
    // Render selected item
    if (anySelected && !externalSlot) {
-      drawItem(selectedItem.item.type, selectedItem.item.id, selectedItem.item.count, selectedItem.item.isFurniture, selectedItem.item.isWall, GetMousePosition(), itemframeItemSize, true);
+      drawItem(selectedItem.item.type, selectedItem.item.id, selectedItem.item.count, selectedItem.item.isFurniture, selectedItem.item.isWall, GetMousePosition(), applyCubicResponsiveness(itemframeItemSize), true);
    }
 }
 
@@ -653,8 +653,8 @@ void drawItem(ItemType type, unsigned short id, unsigned short count, bool isFur
       // fuck dry
       if (count != 1) {
          Color textColor = (isSelected ? Fade(WHITE, 0.75f) : WHITE);
-         Vector2 textPosition = Vector2Subtract(position, (isworldspace ? Vector2{0.0f, -0.7f} : itemFrameCountOffset));
-         drawText(textPosition, std::to_string(count).c_str(), (isworldspace ? 0.75f : 25.0f), textColor, (isworldspace ? 0.1f : 1.0f));
+         Vector2 textPosition = Vector2Subtract(position, (isworldspace ? Vector2{0.0f, -0.7f} : applyCubicResponsiveness(itemFrameCountOffset)));
+         drawText(textPosition, std::to_string(count).c_str(), (isworldspace ? 0.75f : getFontSize(25.0f)), textColor, (isworldspace ? 0.1f : getFontSize(1.0f)));
       }
       return;
    }
@@ -685,7 +685,7 @@ void drawItem(ItemType type, unsigned short id, unsigned short count, bool isFur
 
    if (count != 1) {
       Color textColor = (isSelected ? Fade(WHITE, 0.75f) : WHITE);
-      Vector2 textPosition = Vector2Subtract(position, (isworldspace ? Vector2{0.0f, -0.7f} : itemFrameCountOffset));
-      drawText(textPosition, std::to_string(count).c_str(), (isworldspace ? 0.75f : 25.0f), textColor, (isworldspace ? 0.1f : 1.0f));
+      Vector2 textPosition = Vector2Subtract(position, (isworldspace ? Vector2{0.0f, -0.7f} : applyCubicResponsiveness(itemFrameCountOffset)));
+      drawText(textPosition, std::to_string(count).c_str(), (isworldspace ? 0.75f : getFontSize(25.0f)), textColor, (isworldspace ? 0.1f : getFontSize(1.0f)));
    }
 }

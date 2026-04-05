@@ -3,6 +3,7 @@
 #include "objs/inventory.hpp"
 #include "util/format.hpp"
 #include "util/parallax.hpp"
+#include "util/position.hpp"
 #include "util/render.hpp"
 #include <functional>
 #include <unordered_map>
@@ -692,7 +693,7 @@ static inline const std::unordered_map<std::string, Command> commands {
 // init
 
 void Console::init(Map &map, Player &player, Inventory &inventory) {
-   input.rectangle = {500.0f, GetScreenHeight() - 25.0f, 1000.0f, 50.0f};
+   updateResponsiveness();
    input.fallback = "'help' for a list of commands.";
    input.wrapinput = false;
    input.maxChars = 512;
@@ -767,7 +768,7 @@ void Console::init(Map &map, Player &player, Inventory &inventory) {
 
 void Console::output(const std::string &string, ConsoleColor color) {
    size_t last = text.size();
-   divideText(text, string, input.rectangle.width - 10.0f, 35, 1.0f);
+   divideText(text, string, input.rectangle.width - 10.0f * getMinRatio(), getFontSize(consoleFontSize), getFontSize(1.0f));
 
    for (size_t i = last; i < text.size(); ++i) {
       textColors.push_back(color);
@@ -807,6 +808,11 @@ void Console::update(float dt, Map &map, Player &player, Inventory &inventory) {
    }
 }
 
+void Console::updateResponsiveness() {
+   float cr = getMinRatio();
+   input.rectangle = {500.0f * cr, GetScreenHeight() - 25.0f * cr, 1000.0f * cr, 50.0f * cr};
+}
+
 // Render
 
 void Console::render() {
@@ -815,14 +821,15 @@ void Console::render() {
    input.render();
 
    Font &font = getFont("andy");
-   float ym125 = input.rectangle.y - 125.0f;
-   float hp250 = input.rectangle.height + 250.0f;
-   float xconst = input.rectangle.x - input.rectangle.width / 2.0f + 5.0f;
+   float cr = getMinRatio();
+   float ym125 = input.rectangle.y - 125.0f * cr;
+   float hp250 = input.rectangle.height + 250.0f * cr;
+   float xconst = input.rectangle.x - input.rectangle.width / 2.0f + 5.0f * cr;
    float yconst = ym125 - hp250 / 2.0f;
 
    drawRect({input.rectangle.x, ym125 - input.rectangle.height, input.rectangle.width, hp250}, Fade(BLACK, 0.75f));
    for (int i = scrollback; i < scrollback + maxLines && (size_t)i < text.size(); ++i) {
-      DrawTextPro(font, text[i].c_str(), {xconst, yconst + (i - scrollback - 1) * 40.0f}, {0, 0}, 0, consoleFontSize, 1, lineColors[(size_t)textColors[i]]);
+      DrawTextPro(font, text[i].c_str(), {xconst, yconst + (i - scrollback - 1) * 40.0f * cr}, {0, 0}, 0, getFontSize(consoleFontSize), getFontSize(1), lineColors[(size_t)textColors[i]]);
    }
 }
 
