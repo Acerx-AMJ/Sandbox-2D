@@ -426,6 +426,7 @@ void Player::takeDamage(Map &map, int damage, int critChance, float critDamage) 
    if (immunityFrame > 0.0f) {
       return;
    }
+   playSound("hurt");
    bool critical = chance(critChance);
    int damageApplied = damage * (critical ? critDamage : 1.0f);
 

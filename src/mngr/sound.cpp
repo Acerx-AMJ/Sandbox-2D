@@ -53,10 +53,12 @@ void loadSavedSounds() {
    saveSound("click", {"click1", "click2"});
    saveSound("hover", {"hover1", "hover2"});
    saveSound("trash", {"trash1", "trash2"});
-   saveSound("footstep", {"footstep1", "footstep2", "footstep3", "footstep4"});
+   saveSound("footstep", {"footstep1", "footstep2", "footstep3"});
    saveSound("pickup", {"pickup1", "pickup2", "pickup3", "pickup4"});
    saveSound("failure", {"failure1", "failure2"});
    saveSound("typing", {"typing1", "typing2", "typing3", "typing4", "typing5"});
+   saveSound("jump", {"jump1", "jump2", "jump3"});
+   saveSound("hurt", {"hurt1", "hurt2", "hurt3"});
 }
 
 // Play functions
