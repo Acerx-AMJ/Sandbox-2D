@@ -3,12 +3,12 @@
 #include "mngr/sound.hpp"
 #include "objs/inventory.hpp"
 #include "objs/map.hpp"
-#include "util/math.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
 #include "util/strarray.hpp"
 #include <raymath.h>
 #include <array>
+#include <algorithm>
 
 // Constants
 
@@ -496,7 +496,7 @@ const Texture& Inventory::getTrashTexture(bool trashOccupied) const {
 void Inventory::dropSelectedItem() {
    Vector2 playerCenter = player.getCenter();
    playerCenter.x += (player.flipX ? 3 : -3);
-   playerCenter.x = clamp<int>(playerCenter.x, 0, map.sizeX - 1);
+   playerCenter.x = std::clamp<int>(playerCenter.x, 0, map.sizeX - 1);
 
    DroppedItem droppedItem (selectedItem.item, playerCenter.x, playerCenter.y);
    droppedItems.push_back(droppedItem);
@@ -547,7 +547,7 @@ int Inventory::addItemCount(Item &item1, Item &item2) {
    int total = item1.count + item2.count;
    int last = item1.count;
 
-   item1.count = min(total, maximum);
+   item1.count = std::min(total, maximum);
    int leftover = total - maximum;
 
    item2.count -= item1.count - last;

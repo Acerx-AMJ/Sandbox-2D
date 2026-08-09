@@ -1,10 +1,10 @@
 #include "ui/bar.hpp"
 #include "mngr/resource.hpp"
-#include "util/math.hpp"
 #include "util/render.hpp"
+#include <raymath.h>
 
 void Bar::update(float alpha) {
-   progressInterpolation = lerp(progressInterpolation, progress, alpha * 10.0f);
+   progressInterpolation = Lerp(progressInterpolation, progress, alpha * 10.0f);
 }
 
 void Bar::render() const {

@@ -1,10 +1,9 @@
 #include "mngr/input.hpp"
 #include "mngr/resource.hpp"
 #include "ui/scrollframe.hpp"
-#include "util/math.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
-#include <cmath>
+#include <raymath.h>
 
 // Update
 
@@ -13,7 +12,7 @@ void Scrollframe::update(float dt) {
    scrollbarHeight = rectangle.height * (rectangle.height / scrollHeight);
 
    if (CheckCollisionPointRec(GetMousePosition(), rectangle) && scrollFactor != 0.f) {
-      progress = clamp(progress + scrollFactor * 15.0f * dt * (rectangle.height / scrollHeight), 0.f, 1.f);
+      progress = Clamp(progress + scrollFactor * 15.0f * dt * (rectangle.height / scrollHeight), 0.f, 1.f);
    } else if (CheckCollisionPointRec(GetMousePosition(), {rectangle.x + rectangle.width - scrollBarWidth, rectangle.y, scrollBarWidth, rectangle.height})) {
       setMouseOnUI(true);
       moving = isMouseDownUI(MOUSE_BUTTON_LEFT);
@@ -25,7 +24,7 @@ void Scrollframe::update(float dt) {
    }
 
    if (moving && scrollbarHeight < rectangle.height) {
-      scrollbarY = clamp<float>(GetMouseY(), rectangle.y, rectangle.y + rectangle.height - scrollbarHeight);
+      scrollbarY = Clamp(GetMouseY(), rectangle.y, rectangle.y + rectangle.height - scrollbarHeight);
       progress = (scrollbarY - rectangle.y) / (rectangle.height - scrollbarHeight);
    } else {
       scrollbarY = rectangle.y + (rectangle.height - scrollbarHeight) * progress;
@@ -42,8 +41,8 @@ void Scrollframe::render() const {
 // Helper functions
 
 void Scrollframe::setProgressBasedOnPosition(float positionY) {
-   const float maxScroll = max(0.0f, scrollHeight - rectangle.height);
-   progress = (maxScroll > 0.0f ? clamp(positionY - rectangle.y, 0.0f, maxScroll) / maxScroll : 0.0f);
+   const float maxScroll = std::max(0.0f, scrollHeight - rectangle.height);
+   progress = (maxScroll > 0.0f ? Clamp(positionY - rectangle.y, 0.0f, maxScroll) / maxScroll : 0.0f);
    scrollbarY = rectangle.y + (rectangle.height - scrollbarHeight) * progress;
 }
 

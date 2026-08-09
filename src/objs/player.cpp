@@ -2,7 +2,6 @@
 #include "mngr/resource.hpp"
 #include "objs/player.hpp"
 #include "mngr/sound.hpp"
-#include "util/math.hpp"
 #include "util/position.hpp"
 #include "util/random.hpp"
 #include <raymath.h>
@@ -68,8 +67,8 @@ void Player::updatePlayer(Map &map) {
    immunityFrame -= fixedUpdateDT;
    timeSinceLastDamage += fixedUpdateDT * regenSpeedMultiplier;
 
-   displayHearts = lerp(displayHearts, float(hearts), 0.3f);
-   displayBreath = lerp(displayBreath, float(breath), 0.3f);
+   displayHearts = Lerp(displayHearts, float(hearts), 0.3f);
+   displayBreath = Lerp(displayBreath, float(breath), 0.3f);
 }
 
 void Player::updateMovement() {
@@ -85,15 +84,15 @@ void Player::updateMovement() {
 
       // Do not give a fuck about ice while flying
       if (dirx != 0) {
-         velocity.x = lerp(velocity.x, normalized.x * speed, acceleration);
+         velocity.x = Lerp(velocity.x, normalized.x * speed, acceleration);
       } else {
-         velocity.x = lerp(velocity.x, 0.0f, deceleration);
+         velocity.x = Lerp(velocity.x, 0.0f, deceleration);
       }
 
       if (diry != 0) {
-         velocity.y = lerp(velocity.y, normalized.y * speed, acceleration);
+         velocity.y = Lerp(velocity.y, normalized.y * speed, acceleration);
       } else {
-         velocity.y = lerp(velocity.y, 0.0f, deceleration);
+         velocity.y = Lerp(velocity.y, 0.0f, deceleration);
       }
 
       // Do everything else
@@ -115,7 +114,7 @@ void Player::updateMovement() {
       }
       return;
    }
-notSittingAnymore:
+notSittingAnymore: // Whatever the fuck this logic is. Too scared to change it now
 
    // Handle gravity
    if (!onGround) {
@@ -126,15 +125,15 @@ notSittingAnymore:
          velocity.y = maxGravity * maxWaterMultiplier;
       }
    } else if (!shouldBounce) {
-      velocity.y = 0.001f; // Needed
+      velocity.y = 0.001f; // Needed. Why?
    }
 
    // Handle movement
    if (directionX != 0) {
       float speedX = (onGround ? playerSpeed : playerSpeed * airMultiplier);
-      velocity.x = lerp(velocity.x, directionX * speedX, acceleration * iceMultiplier);
+      velocity.x = Lerp(velocity.x, directionX * speedX, acceleration * iceMultiplier);
    } else {
-      velocity.x = lerp(velocity.x, 0.f, deceleration * iceMultiplier);
+      velocity.x = Lerp(velocity.x, 0.f, deceleration * iceMultiplier);
    }
 
    // Handle jumping
@@ -200,7 +199,7 @@ void Player::updateCollisions(Map &map) {
    int iceTileCount = 0;
 
    if (position.y < 0) {
-      velocity.y = max(0.f, velocity.y);
+      velocity.y = std::max(0.f, velocity.y);
       position.y = 0;
       canGoUpSlopes = onGround = false;
       collisionY = true;
@@ -209,11 +208,11 @@ void Player::updateCollisions(Map &map) {
       onGround = collisionY = true;
    }
 
-   int maxX = min(map.sizeX, int(position.x + playerSize.x) + 1);
-   int maxY = min(map.sizeY, int(position.y + playerSize.y) + 1);
+   int maxX = std::min(map.sizeX, int(position.x + playerSize.x) + 1);
+   int maxY = std::min(map.sizeY, int(position.y + playerSize.y) + 1);
 
-   for (int y = max(0, (int)position.y); y < maxY; ++y) {
-      for (int x = max(0, (int)position.x); x < maxX; ++x) {
+   for (int y = std::max(0, (int)position.y); y < maxY; ++y) {
+      for (int x = std::max(0, (int)position.x); x < maxX; ++x) {
          if (map.isLiquidAtAll(x, y) && map.getLiquidHeight(x, y) > playerLiquidThreshold) {
             waterTileCount += map.isLiquidOfType(x, y, LiquidType::water);
             lavaTileCount  += map.isLiquidOfType(x, y, LiquidType::lava);
@@ -235,7 +234,7 @@ void Player::updateCollisions(Map &map) {
          }
 
          if (previousPosition.y >= y + 1.f && !map.isu(x, y, BlockType::platform)) {
-            velocity.y = max(0.f, velocity.y);
+            velocity.y = std::max(0.f, velocity.y);
             position.y = y + 1.f;
             collisionY = true;
             onGround = false;
@@ -263,12 +262,12 @@ void Player::updateCollisions(Map &map) {
    torsoCollision = feetCollision = false;
    feetCollisionY = 0;
 
-   position.x = clamp(position.x, 0.f, map.sizeX - playerSize.x);
-   maxX = min(map.sizeX, int(position.x + playerSize.x) + 1);
-   maxY = min(map.sizeY, int(position.y + playerSize.y) + 1);
+   position.x = Clamp(position.x, 0.f, map.sizeX - playerSize.x);
+   maxX = std::min(map.sizeX, int(position.x + playerSize.x) + 1);
+   maxY = std::min(map.sizeY, int(position.y + playerSize.y) + 1);
 
-   for (int y = max(0, (int)position.y - 1); y < maxY; ++y) {
-      for (int x = max(0, (int)position.x); x < maxX; ++x) {
+   for (int y = std::max(0, (int)position.y - 1); y < maxY; ++y) {
+      for (int x = std::max(0, (int)position.x); x < maxX; ++x) {
          // Necessary to count in both loops for making the player stick to sticky walls
          if (map.isLiquidAtAll(x, y) && map.getLiquidHeight(x, y) > playerLiquidThreshold) {
             waterTileCount += map.isLiquidOfType(x, y, LiquidType::water);
@@ -309,27 +308,27 @@ void Player::updateCollisions(Map &map) {
       }
    }
 
-   position.x = clamp(position.x, 0.f, map.sizeX - playerSize.x);
-   position.y = clamp(position.y, 0.f, map.sizeY - playerSize.y);
+   position.x = Clamp(position.x, 0.f, map.sizeX - playerSize.x);
+   position.y = Clamp(position.y, 0.f, map.sizeY - playerSize.y);
 
    // Apply damage to the player
 
    if (honeyTileCount > 0 && !onGround) {
-      maximumY = min(maximumY, position.y);
+      maximumY = std::min(maximumY, position.y);
    }
 
    // Ignore fall damage if player is touching liquids or didn't fall
    // from that great of a height
    if (!creative && !wasOnGround && onGround && !shouldBounce && honeyTileCount + lavaTileCount + waterTileCount == 0 && position.y - maximumY >= minimumFallHeight) {
-      takeDamage(map, min(1.0f, ((position.y - maximumY) - minimumFallHeight) / (maximumFallHeight - minimumFallHeight)) * maximumFallDamage, 0, 0.0f);
+      takeDamage(map, std::min(1.0f, ((position.y - maximumY) - minimumFallHeight) / (maximumFallHeight - minimumFallHeight)) * maximumFallDamage, 0, 0.0f);
    }
 
    breathFrameCounter = (breathFrameCounter + 1) % framesToUpdateBreath;
    if (!creative && breathFrameCounter == 0) {
       if (liquidsAboveHead || (blocksInHeadX1 && blocksInHeadX2)) {
-         breath = max(0, breath - 2);
+         breath = std::max(0, breath - 2);
       } else {
-         breath = min(maxBreath, breath + 1);
+         breath = std::min(maxBreath, breath + 1);
       }
 
       if (breath == 0) {
@@ -362,7 +361,7 @@ void Player::updateCollisions(Map &map) {
       iceMultiplier = (iceTileCount > 0 ? 0.2f : 1.0f);
       maximumY = std::numeric_limits<float>::max();
    } else {
-      maximumY = min(maximumY, position.y);
+      maximumY = std::min(maximumY, position.y);
       iceMultiplier = 1.0f;
    }
 }
@@ -403,7 +402,7 @@ void Player::updateAnimation() {
       return;
    }
 
-   walkTimer += clamp(abs(velocity.x) / playerSpeed, 0.1f, 1.5f) * fixedUpdateDT;
+   walkTimer += Clamp(abs(velocity.x) / playerSpeed, 0.1f, 1.5f) * fixedUpdateDT;
    if (walkTimer >= .04f) {
       int lastFrameX = frameX;
       frameX = (frameX + 1) % 13;
@@ -430,7 +429,7 @@ void Player::takeDamage(Map &map, int damage, int critChance, float critDamage) 
    bool critical = chance(critChance);
    int damageApplied = damage * (critical ? critDamage : 1.0f);
 
-   hearts = max(0, hearts - damage);
+   hearts = std::max(0, hearts - damage);
    immunityFrame = immunityTime;
    timeSinceLastDamage = timeSpentRegenerating = 0.0f;
    map.addDamageIndicator(getCenter(), damageApplied, critical);
@@ -451,7 +450,7 @@ void Player::handleRegeneration() {
       return;
    }
 
-   hearts = min<int>(maxHearts, hearts + regeneration * min(1.0f, timeSpentRegenerating / timeToRampUpRegeneration));
+   hearts = std::min<int>(maxHearts, hearts + regeneration * std::min(1.0f, timeSpentRegenerating / timeToRampUpRegeneration));
 }
 
 // Render functions

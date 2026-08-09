@@ -6,7 +6,6 @@
 #include "mngr/sound.hpp"
 #include "util/fileio.hpp"
 #include "util/format.hpp"
-#include "util/math.hpp"
 #include "util/parallax.hpp"
 #include "util/position.hpp"
 #include "util/random.hpp"
@@ -39,7 +38,7 @@ GameState::GameState(const std::string &worldName)
    // Init world and camera
    loadWorldData(worldName, player, camera.zoom, map, console, inventory, droppedItems);
 
-   camera.zoom = clamp(camera.zoom, minCameraZoom, maxCameraZoom);
+   camera.zoom = std::clamp(camera.zoom, minCameraZoom, maxCameraZoom);
    camera.target = player.getCenter();
    camera.offset = center;
    camera.rotation = 0.0f;
@@ -123,10 +122,10 @@ void GameState::fixedUpdate() {
 
    Rectangle physicsBounds = cameraBounds;
    Vector2 halfSize = {(cameraBounds.width - cameraBounds.x) / 2.0f, (cameraBounds.height - cameraBounds.y) / 2.0f};
-   physicsBounds.x = max<int>(0, cameraBounds.x - halfSize.x);
-   physicsBounds.y = max<int>(0, cameraBounds.y - halfSize.y);
-   physicsBounds.width = min<int>(map.sizeX - 1, cameraBounds.width + halfSize.x);
-   physicsBounds.height = min<int>(map.sizeY - 1, cameraBounds.height + halfSize.y);
+   physicsBounds.x = std::max<int>(0, cameraBounds.x - halfSize.x);
+   physicsBounds.y = std::max<int>(0, cameraBounds.y - halfSize.y);
+   physicsBounds.width = std::min<int>(map.sizeX - 1, cameraBounds.width + halfSize.x);
+   physicsBounds.height = std::min<int>(map.sizeY - 1, cameraBounds.height + halfSize.y);
 
    // Loop backwards to avoid updating most of the moving blocks twice
    for (int y = physicsBounds.height; y >= physicsBounds.y; --y) {
@@ -182,7 +181,7 @@ void GameState::updateResponsiveness() {
 void GameState::updatePlaying() {
    const float zoomFactor = isKeyPressed(KEY_EQUAL) - isKeyPressed(KEY_MINUS);
    if (zoomFactor != 0.f) {
-      camera.zoom = /* std:: */clamp<float>(std::exp(std::log(camera.zoom) + zoomFactor * 0.2f), minCameraZoom, maxCameraZoom);
+      camera.zoom = std::clamp(std::exp(std::log(camera.zoom) + zoomFactor * 0.2f), minCameraZoom, maxCameraZoom);
    }
 
    // Console
@@ -322,7 +321,7 @@ void GameState::updateDying() {
 
 static constexpr unsigned char calculateFlowDown(unsigned char flow1, unsigned char flow2) {
    unsigned char availableSpace = maxLiquidLayers - flow2;
-   return min(availableSpace, flow1);
+   return std::min(availableSpace, flow1);
 }
 
 static void applyFlowDown(unsigned char &flow1, unsigned char &flow2) {
@@ -585,7 +584,7 @@ void GameState::render() {
       float halfSine = sine / 2.0f;
 
       for (int i = 0; i < bubbles; ++i) {
-         float a = 1.0f - min(1.0f, float((i + 1) * breathValue - player.displayBreath) / breathValue);
+         float a = 1.0f - std::min(1.0f, float((i + 1) * breathValue - player.displayBreath) / breathValue);
          drawTextureNoOrigin(bubbleIcon, {startingX + padding * i - halfSine, startingY - halfSine}, {size + sine, size + sine}, Fade(WHITE, a));
       }
    }
@@ -615,7 +614,7 @@ void GameState::render() {
 
       BeginShaderMode(grayscaleShader);
       for (int i = 0; i < counter; ++i) {
-         float a = 1.0f - min(1.0f, float((i + 1) * heartValue - player.displayHearts) / heartValue);
+         float a = 1.0f - std::min(1.0f, float((i + 1) * heartValue - player.displayHearts) / heartValue);
          drawTextureNoOrigin(heartIcon, {startingX + padding * (i % heartsPerRow) - halfSine, startingY + padding * int(i / heartsPerRow) - halfSine}, {size + sine, size + sine}, Fade(WHITE, a));
       }
       EndShaderMode();
@@ -650,12 +649,12 @@ State* GameState::change() {
 
 void GameState::calculateCameraBounds() {
    // formula I pulled out my ass that magically works
-   camera.target.x = clamp(camera.target.x * camera.zoom, camera.offset.x, map.sizeX * camera.zoom - camera.offset.x) / camera.zoom;
-   camera.target.y = clamp(camera.target.y * camera.zoom, camera.offset.y, map.sizeY * camera.zoom - camera.offset.y) / camera.zoom;
+   camera.target.x = std::clamp(camera.target.x * camera.zoom, camera.offset.x, map.sizeX * camera.zoom - camera.offset.x) / camera.zoom;
+   camera.target.y = std::clamp(camera.target.y * camera.zoom, camera.offset.y, map.sizeY * camera.zoom - camera.offset.y) / camera.zoom;
 
    cameraBounds = getCameraBounds(camera);
-   cameraBounds.x = max(0, int(cameraBounds.x));
-   cameraBounds.y = max(0, int(cameraBounds.y));
-   cameraBounds.width = min(map.sizeX - 1, int(cameraBounds.x + cameraBounds.width) + 1);
-   cameraBounds.height = min(map.sizeY - 1, int(cameraBounds.y + cameraBounds.height) + 1);
+   cameraBounds.x = std::max(0, int(cameraBounds.x));
+   cameraBounds.y = std::max(0, int(cameraBounds.y));
+   cameraBounds.width = std::min(map.sizeX - 1, int(cameraBounds.x + cameraBounds.width) + 1);
+   cameraBounds.height = std::min(map.sizeY - 1, int(cameraBounds.y + cameraBounds.height) + 1);
 }

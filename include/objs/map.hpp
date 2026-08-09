@@ -1,21 +1,27 @@
-#ifndef OBJS_MAP_HPP
-#define OBJS_MAP_HPP
-
+#pragma once
 #include "objs/furniture.hpp"
 
-// Constants
+// types
+
+using blockid_t = unsigned char;
+using liquidlayer_t = unsigned char;
+
+// constants
 
 constexpr inline Color wallTint = {120, 120, 120, 255};
+constexpr inline liquidlayer_t maxLiquidLayers = 32;
+constexpr inline liquidlayer_t minLiquidLayers = maxLiquidLayers / 8;
+constexpr inline liquidlayer_t liquidToBlockThreshold = maxLiquidLayers / 4;
+constexpr inline liquidlayer_t playerLiquidThreshold = maxLiquidLayers / 2;
 
-constexpr inline unsigned char maxLiquidLayers         = 32;
-constexpr inline unsigned char minLiquidLayers         = maxLiquidLayers / 8;
-constexpr inline unsigned char liquidToBlockThreshold  = maxLiquidLayers / 4;
-constexpr inline unsigned char playerLiquidThreshold   = maxLiquidLayers / 2;
-constexpr inline float         damageIndicatorLifetime = 1.0f;
+// block
 
-// Block
+enum class TileType: unsigned char {
+   root,
+   ghost,
+   none
+};
 
-// Liquid enum
 enum class LiquidType: unsigned char {
    none,
    water,
@@ -23,8 +29,6 @@ enum class LiquidType: unsigned char {
    honey,
 };
 
-// Bad practice to make enums unsigned, but as blocks attributes will grow, it'll be
-// increasingly useful, also makes bitwise operations slightly easier (probably).
 enum class BlockType: unsigned short {
    empty        = 1 <<  0,
    grass        = 1 <<  1,
@@ -43,143 +47,95 @@ enum class BlockType: unsigned short {
    bouncy       = 1 << 14,
 };
 
-// Block type operators
-constexpr inline BlockType operator|(BlockType lhs, BlockType rhs) {
+constexpr inline BlockType operator | (BlockType lhs, BlockType rhs) {
    return static_cast<BlockType>(static_cast<unsigned short>(lhs) | static_cast<unsigned short>(rhs));
 }
 
-constexpr inline bool operator&(BlockType lhs, BlockType rhs) {
-   return (static_cast<unsigned short>(lhs) & static_cast<unsigned short>(rhs)) != 0;
-}
-
-// Instead of retrieving a boolean like the previous function, return the result as
-// a block type. DOES NOT ACT LIKE A MODULUS OPERATOR! 
-constexpr inline BlockType operator%(BlockType lhs, BlockType rhs) {
+constexpr inline BlockType operator & (BlockType lhs, BlockType rhs) {
    return static_cast<BlockType>(static_cast<unsigned short>(lhs) & static_cast<unsigned short>(rhs));
 }
 
-constexpr inline BlockType operator~(BlockType bt) {
-   return static_cast<BlockType>(~static_cast<unsigned short>(bt));
+constexpr inline bool BlockTypeHas(BlockType lhs, BlockType rhs) {
+   return (static_cast<unsigned short>(lhs) & static_cast<unsigned short>(rhs)) != 0;
 }
 
-// Currently has 2 free bytes due to struct padding, meaning one short or two chars
-// can be safely added without expanding memory usage
 struct Block {
    Texture *texture = nullptr;
+   blockid_t id = 0;
+   TileType tile = TileType::none;
    BlockType type = BlockType::empty | BlockType::transparent | BlockType::flowable; // air
-   unsigned short id = 0;
 
    // Values used by physics updates, specific to the block type
-   unsigned char value = 0;
-   unsigned char value2 = 0;
+   unsigned short value = 0;
+   unsigned short value2 = 0;
 };
 
 // Block getter functions
 
-float getBlockBreakingTime(unsigned short id);
-int getBlockBreakingLevel(unsigned short id);
-struct Item getBlockDropId(unsigned short id, bool iswall);
-
-unsigned short getBlockIdFromName(const std::string &name);
-std::string getBlockNameFromId(unsigned short id);
-
-unsigned short getBlockCount();
 bool isBlockNameValid(const std::string &name);
-bool isBlockIdValid(unsigned short id);
-
-// Damage indicator
-
-struct DamageIndicator {
-   Vector2 position, velocity;
-   float lifetime = 0.0f;
-   int damage = 0;
-   bool critical = false;
-};
+bool isBlockIdValid(blockid_t id);
+blockid_t getBlockIdFromName(const std::string &name);
+std::string getBlockNameFromId(blockid_t id);
+size_t getBlockCount();
 
 // Map
 
 struct Map {   
-   // Constructors
-
-   void init(bool thread = false);
+   void init();
+   void initThreadSafe();
    void initContainers();
    ~Map();
 
-   // Collision checks
+   // setters
 
-   bool raycast(const Vector2 &start, const Vector2 &end);
+   void setRow(int y, const std::string &name);
+   void setWallRow(int y, const std::string &name);
+   void setRow(int y, blockid_t *ids);
+   void setWallRow(int y, blockid_t *ids);
+   void setColumnFromPoint(int x, int y, const std::string &name);
 
-   // Add damage indicator
+   void setBlock(int x, int y, const std::string &name);
+   void setBlock(int x, int y, blockid_t id);
+   void setWall(int x, int y, const std::string &name);
+   void setWall(int x, int y, blockid_t id);
 
-   void addDamageIndicator(const Vector2 &position, int damage, bool critical);
+   void deleteBlock(int x, int y);
+   void deleteWall(int x, int y);
+   void deleteBlockWithoutDeletingLiquids(int x, int y);
+   void swapBlocks(int oldX, int oldY, int newX, int newY);
 
-   // Set block functions
-
-   void setRow(int y, const std::string &name, bool isWall = false);
-   void setRow(int y, unsigned short *ids);
-   void setWallRow(int y, unsigned short *ids);
-   void setColumnAndWalls(int x, int y, const std::string &name);
-   
-   void setBlock(int x, int y, const std::string &name, bool isWall = false);
-   void setBlock(int x, int y, unsigned short id, bool isWall = false);
-   void lightSetBlock(int x, int y, unsigned short id);
-
-   void deleteBlock(int x, int y, bool isWall = false);
-   void deleteBlockWithoutDeletingLiquids(int x, int y, bool isWall = false);
-   void moveBlock(int oldX, int oldY, int newX, int newY);
-
-   // Set furniture functions
-
-   Furniture &getFurnitureAtPosition(int x, int y);
    void addFurniture(Furniture &object);
    void removeFurniture(Furniture &object);
 
-   // Get block functions
+   // getters
 
    bool isPositionValid(int x, int y) const;
-   bool is(int x, int y, BlockType type) const;
-   bool isu(int x, int y, BlockType type) const; // Unsafe is variant
+   bool isPositionValid(Vector2 position) const;
 
+   bool is(int x, int y, BlockType type) const;
    bool isSoil(int x, int y) const;
    bool isEmpty(int x, int y) const;
-   bool isNotSolid(int x, int y) const; // Is either empty or a full liquid
-   bool isStable(int x, int y) const; // Is solid or furniture and not platform
-   bool isPlatformedFurniture(int x, int y) const;
-
-   // Liquid functions
+   bool isNotSolid(int x, int y) const;
+   bool isStable(int x, int y) const;
 
    bool isLiquid(int x, int y) const;
-   bool isLiquidAtAll(int x, int y) const;
-   unsigned char getLiquidHeight(int x, int y) const;
-   unsigned char isLiquidOfType(int x, int y, LiquidType type) const;
-   Texture &getLiquidTexture(int x, int y) const;
+   bool isAnyLiquid(int x, int y) const;
+   liquidlayer_t getLiquidHeight(int x, int y) const;
+   bool isLiquidOfType(int x, int y, LiquidType type) const;
 
-   // Render map
+   // render
 
-   void renderLight(const Camera2D &camera, Texture2D &texture, float x, float y, const Vector2 &size, const Color &color);
    void render(const std::vector<struct DroppedItem> &droppedItems, const struct Player &player, float accumulator, const Rectangle &cameraBounds, const Camera2D &camera, const Inventory &inventory);
 
    // Members
 
    RenderTexture lightmap;
-   std::vector<std::vector<Block>> blocks, walls;
+   std::vector<Block> blocks, walls;
+   std::vector<liquidlayer_t> liquidHeights;
+   std::vector<LiquidType> liquidTypes;
    std::vector<Furniture> furniture;
-
-   std::vector<std::vector<unsigned char>> liquidsHeights;
-   std::vector<std::vector<LiquidType>>    liquidTypes;
-
-   std::vector<DamageIndicator> damageIndicators;
 
    int sizeX = 0;
    int sizeY = 0;
-   int timeShaderLocation = 0;
-
-   // Config
-
-   float timeToRespawn = 10.0f;
-   bool lightingEnabled = true;
-   bool waterShaderEnabled = true;
-   bool fpsEnabled = false;
+   int waterTimeShaderLocation = 0;
 };
-
-#endif

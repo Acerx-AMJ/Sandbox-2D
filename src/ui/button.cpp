@@ -2,7 +2,6 @@
 #include "mngr/sound.hpp"
 #include "ui/button.hpp"
 #include "ui/keybindIndicator.hpp"
-#include "util/math.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
 #include <raymath.h>
@@ -33,13 +32,13 @@ void Button::update(float dt, float offsetY) {
    }
 
    if (down) {
-      scale = max(scale - dt, buttonScaleMin);
+      scale = std::max(scale - dt, buttonScaleMin);
    } else if (hovering) {
-      scale = min(scale + dt, buttonScaleMax);
+      scale = std::min(scale + dt, buttonScaleMax);
    } else if (scale < 1.0f) {
-      scale = min(scale + dt, 1.0f);
+      scale = std::min(scale + dt, 1.0f);
    } else if (scale > 1.0f) {
-      scale = max(scale - dt, 1.0f);
+      scale = std::max(scale - dt, 1.0f);
    }
 
    if (!wasHovering && hovering) {
