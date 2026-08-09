@@ -1,12 +1,13 @@
 #include "game/loadingState.hpp"
 #include "game/menuState.hpp"
-#include "mngr/resource.hpp"
-#include "mngr/sound.hpp"
+#include "mngr/data.hpp"
 #include "ui/popup.hpp"
-#include "util/fileio.hpp"
-#include "util/format.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
+#include "SRU/audio.hpp"
+#include "SRU/assets.hpp"
+#include "SRU/file.hpp"
+#include "SRU/text.hpp"
 
 // Constructors
 
@@ -14,7 +15,9 @@ LoadingState::LoadingState() {
    loadFont("andy", "assets/fonts/andy.ttf");
    loadTexture("loading", "assets/sprites/ui/loading.png");
    splashText = getRandomLineFromFile("assets/splash.txt");
-   wrapText(splashText, GetScreenWidth() - 50.0f * getWidthRatio(), getFontSize(40), getFontSize(1));
+
+   float fontSize = getFontSizeScaled(40.0f);
+   wrapInPlace(splashText, getFont("andy"), GetScreenWidth() - 50.0f * getWidthRatio(), fontSize, fitSpacing(fontSize));
 }
 
 void LoadingState::update() {
@@ -22,29 +25,31 @@ void LoadingState::update() {
 
    // Sometimes brute-forcing is better than over-engineering an automatic way to do everything
    if (loadPhase == Load::fonts) {
-      loadFonts();
+      loadFonts("assets/fonts/");
 
       loadingText = "Loading Textures... ";
       loadPhase = Load::textures;
    } else if (loadPhase == Load::textures) {
-      loadTextures();
+      loadTextures("assets/textures/");
       initPopups();
 
       loadingText = "Loading Shaders... ";
       loadPhase = Load::shaders;
    } else if (loadPhase == Load::shaders) {
-      loadShaders();
+      loadShaders("assets/shaders/");
 
       loadingText = "Loading Sounds... ";
       loadPhase = Load::sounds;
    } else if (loadPhase == Load::sounds) {
-      loadSounds();
-      loadSavedSounds();
+      loadSounds("assets/sounds/");
 
       loadingText = "Loading Music... ";
       loadPhase = Load::music;
    } else if (loadPhase == Load::music) {
-      loadMusic();
+      loadingText = "Loading Game Data... ";
+      loadPhase = Load::data;
+   } else if (loadPhase == Load::data) {
+      loadData();
       playSound("success");
 
       loadingText = "Loading Done!";
@@ -66,7 +71,7 @@ void LoadingState::updateResponsiveness() {
 void LoadingState::render() {
    std::string finalLoadingText = loadingText;
    if (loadPhase != Load::count) {
-      finalLoadingText = format("{}{}/{}", loadingText, (int)loadPhase, (int)Load::count);
+      finalLoadingText = TextFormat("%s%d/%d", loadingText.c_str(), (int)loadPhase, (int)Load::count);
    }
 
    drawText(getScreenCenter({0.0f, getHeightRatio() * -175.0f}), finalLoadingText.c_str(), getFontSize(80));

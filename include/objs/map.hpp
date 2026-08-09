@@ -37,14 +37,12 @@ enum class BlockType: unsigned short {
    ice          = 1 <<  4,
    solid        = 1 <<  5,
    platform     = 1 <<  6,
-   transparent  = 1 <<  7,
+   translucent  = 1 <<  7,
    lightsource  = 1 <<  8,
    torch        = 1 <<  9,
-   furniture    = 1 << 10,
-   furnitureTop = 1 << 11,
-   flowable     = 1 << 12,
-   sticky       = 1 << 13,
-   bouncy       = 1 << 14,
+   flowable     = 1 << 10,
+   sticky       = 1 << 11,
+   bouncy       = 1 << 12,
 };
 
 constexpr inline BlockType operator | (BlockType lhs, BlockType rhs) {
@@ -63,7 +61,6 @@ struct Block {
    Texture *texture = nullptr;
    blockid_t id = 0;
    TileType tile = TileType::none;
-   BlockType type = BlockType::empty | BlockType::transparent | BlockType::flowable; // air
 
    // Values used by physics updates, specific to the block type
    unsigned short value = 0;
@@ -72,11 +69,17 @@ struct Block {
 
 // Block getter functions
 
+bool isBlockTypeValid(const std::string &name);
+BlockType getBlockTypeFromString(const std::string &name);
+
 bool isBlockNameValid(const std::string &name);
 bool isBlockIdValid(blockid_t id);
 blockid_t getBlockIdFromName(const std::string &name);
 std::string getBlockNameFromId(blockid_t id);
 size_t getBlockCount();
+
+void reserveBlockContainers(size_t estimate);
+size_t pushBlock(const std::string &name, BlockType attributes, Texture texture);
 
 // Map
 

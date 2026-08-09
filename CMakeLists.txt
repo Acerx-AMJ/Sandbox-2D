@@ -10,8 +10,11 @@ include(FetchContent)
 FetchContent_Declare(raylib GIT_REPOSITORY https://github.com/raysan5/raylib.git GIT_TAG 5.5 GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(raylib)
 
+FetchContent_Declare(srulib GIT_REPOSITORY https://github.com/Acerx-AMJ/SRU-Library.git GIT_TAG main GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(srulib)
+
 include_directories(${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/lib)
 file(GLOB SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/src/*/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE raylib)
+target_link_libraries(${PROJECT_NAME} PRIVATE raylib srulib)

@@ -1,18 +1,38 @@
 #include "objs/map.hpp"
 #include "mngr/resource.hpp"
-#include "util/strarray.hpp"
+#include <unordered_map>
+
+// constants
+
+static const std::unordered_map<std::string, BlockType> blockAttributeStrings {{
+   {"empty", BlockType::empty}, {"grass", BlockType::grass}, {"dirt", BlockType::dirt}, {"sand", BlockType::sand},
+   {"ice", BlockType::ice}, {"solid", BlockType::solid}, {"platform", BlockType::platform}, {"translucent", BlockType::translucent},
+   {"lightsource", BlockType::lightsource}, {"torch", BlockType::torch}, {"flowable", BlockType::flowable}, {"sticky", BlockType::sticky},
+   {"bouncy", BlockType::bouncy},
+}};
 
 // block info
 
-constexpr size_t blockCount = 30;
-constexpr static inline const char* blockNames[blockCount] {};
-constexpr static inline BlockType blockAttributes[blockCount] {};
-const static inline StrArray<std::string> blockIds {};
+static size_t blockCount = 0;
+static std::vector<std::string> blockNames;
+static std::vector<BlockType> blockAttributes;
+static std::unordered_map<std::string, size_t> blockIds;
 
 // Block getter functions
 
+bool isBlockTypeValid(const std::string &name) {
+   return blockAttributeStrings.find(name) != blockAttributeStrings.end();
+}
+
+BlockType getBlockTypeFromString(const std::string &name) {
+   if (auto it = blockAttributeStrings.find(name); it != blockAttributeStrings.end()) {
+      return it->second;
+   }
+   return BlockType::empty;
+}
+
 bool isBlockNameValid(const std::string &name) {
-   return blockIds.map.find(name) != blockIds.map.end();
+   return blockIds.find(name) != blockIds.end();
 }
 
 bool isBlockIdValid(blockid_t id) {
@@ -20,7 +40,7 @@ bool isBlockIdValid(blockid_t id) {
 }
 
 blockid_t getBlockIdFromName(const std::string &name) {
-   return blockIds.map.at(name);
+   return blockIds.at(name);
 }
 
 std::string getBlockNameFromId(blockid_t id) {
@@ -29,6 +49,20 @@ std::string getBlockNameFromId(blockid_t id) {
 
 size_t getBlockCount() {
    return blockCount;
+}
+
+void reserveBlockContainers(size_t estimate) {
+   blockNames.reserve(estimate);
+   blockAttributes.reserve(estimate);
+   blockIds.reserve(estimate);
+}
+
+size_t pushBlock(const std::string &name, BlockType attributes) {
+   blockNames.push_back(name);
+   blockAttributes.push_back(attributes);
+   blockIds[name] = blockCount;
+   blockCount += 1;
+   return blockCount - 1;
 }
 
 // constructors
@@ -59,15 +93,13 @@ Map::~Map() {
 
 void Map::setRow(int y, const std::string &name) {
    blockid_t id = getBlockIdFromName(name);
-   BlockType type = blockAttributes[id];
-   Block block = Block{&getTexture(name), id, TileType::root, type};
+   Block block = Block{&getTexture(name), id, TileType::root};
    std::fill_n(&blocks[y * sizeX], sizeX, block);
 }
 
 void Map::setWallRow(int y, const std::string &name) {
    blockid_t id = getBlockIdFromName(name);
-   BlockType type = blockAttributes[id];
-   Block block = Block{&getTexture(name), id, TileType::root, type};
+   Block block = Block{&getTexture(name), id, TileType::root};
    std::fill_n(&walls[y * sizeX], sizeX, block);
 }
 
@@ -76,7 +108,6 @@ void Map::setRow(int y, blockid_t *ids) {
    for (int i = 0; i < sizeX; ++i) {
       Block &block = blocks[start + i];
       block.id = ids[i];
-      block.type = blockAttributes[block.id];
       if (block.id != 0) {
          block.texture = &getTexture(blockNames[block.id]);
       }
@@ -88,7 +119,6 @@ void Map::setWallRow(int y, blockid_t *ids) {
    for (int i = 0; i < sizeX; ++i) {
       Block &wall = walls[start + i];
       wall.id = ids[i];
-      wall.type = blockAttributes[wall.id];
       if (wall.id != 0) {
          wall.texture = &getTexture(blockNames[wall.id]);
       }
@@ -97,11 +127,10 @@ void Map::setWallRow(int y, blockid_t *ids) {
 
 void Map::setColumnFromPoint(int x, int y, const std::string &name) {
    blockid_t id = getBlockIdFromName(name);
-   BlockType type = blockAttributes[id];
    Texture *texture = &getTexture(name);
 
-   Block block {texture, id, TileType::root, type};
-   Block wall {texture, id, TileType::root, type};
+   Block block {texture, id, TileType::root};
+   Block wall {texture, id, TileType::root};
 
    int start = y * sizeX + x;
    int end = sizeX * sizeY;
@@ -122,9 +151,8 @@ void Map::setBlock(int x, int y, blockid_t id) {
    block.id = id;
    block.value = 0;
    block.value2 = 0;
-   block.type = blockAttributes[block.id];
 
-   if (!BlockTypeHas(block.type, BlockType::flowable)) {
+   if (!BlockTypeHas(blockAttributes[id], BlockType::flowable)) {
       liquidHeights[i] = 0;
       liquidTypes[i] = LiquidType::none;
    }
@@ -188,7 +216,7 @@ bool Map::isPositionValid(Vector2 position) const {
 }
 
 bool Map::is(int x, int y, BlockType type) const {
-   return isPositionValid(x, y) && BlockTypeHas(blocks[y * sizeX + x].type, type);
+   return isPositionValid(x, y) && BlockTypeHas(blockAttributes[blocks[y * sizeX + x].id], type);
 }
 
 bool Map::isSoil(int x, int y) const {
