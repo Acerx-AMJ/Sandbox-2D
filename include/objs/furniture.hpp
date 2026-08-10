@@ -1,57 +1,81 @@
-#ifndef OBJS_FURNITURE_HPP
-#define OBJS_FURNITURE_HPP
-
+#pragma once
 #include <raylib.h>
 #include <string>
 #include <vector>
+
+// types
+
+using furnitureid_t = unsigned short;
 
 // Constants
 
 constexpr inline float previewAlpha = 0.75f;
 
-// Furniture
+// Furniture data
 
-// Polymorphism would be too complex in this situation and everything
-// works fine just as it is. Also when adding new furniture, you have
-// to change the following: getFurnitureIcon, getFurniture, Furniture
-// ::isValid, Furniture::update and furniture ID constants
 enum class FurnitureType: unsigned char {
    none,
    tree,
    sapling,
-   cactus,
-   cactusSeed,
    table,
    chair,
    door
 };
 
-struct FurnitureTexture {
-   Texture &texture;
-
-   // Floats just to avoid redundant casting
-   float sizeX = 0;
-   float sizeY = 0;
+struct FurnitureData {
+   FurnitureType type = FurnitureType::none;
+   Texture texture;
+   int textureSize = 8;
+   int treeSizeMin = 0;
+   int treeSizeMax = 0;
+   int treeRootChance = 0;
+   int treeBranchChance = 0;
+   bool treeIsCactus = false;
+   int treeCactusFlowerChance = 0;
+   furnitureid_t saplingGrowsInto = 0;
+   float saplingGrowSpeedMin = 0.0f;
+   float saplingGrowSpeedMax = 0.0f;
+   Vector2 furnitureSize = {0, 0};
+   bool shouldFacePlayer = false;
 };
 
 struct FurniturePiece {
-   unsigned char tx = 0;
-   unsigned char ty = 0;
-   bool nil = true;
+   unsigned short tx = 0;
+   unsigned short ty = 0;
+   bool nil = false;
 };
 
-struct Furniture {
-   // Constructors
+// Furniture getter functions
 
-   Furniture() = default;
-   Furniture(FurnitureType type, unsigned short id, short value, short value2, int posX, int posY, short sizeX, short sizeY);
-   Furniture(const std::string &texture, int posX, int posY, short sizeX, short sizeY, FurnitureType type);
+bool isFurnitureTypeValid(const std::string &name);
+FurnitureType getFurnitureTypeFromString(const std::string &name);
+
+bool isValidFurnitureName(const std::string &name);
+std::string getFurnitureNameFromId(furnitureid_t id);
+furnitureid_t getFurnitureIdFromName(const std::string &name);
+FurnitureType getFurnitureType(furnitureid_t id);
+size_t getFurnitureCount();
+
+void reserveFurnitureContainers(size_t estimate);
+furnitureid_t pushFurniture(FurnitureData data, const std::string &name);
+
+// furniture
+
+struct Furniture {
+   void init(furnitureid_t id, int x, int y);
+   void initCustomSize(furnitureid_t, int x, int y, int width, int height);
+
+   bool isSolidUnderneath(const struct Map &map, FurnitureData &data, bool previewing) const;
+   bool isSuitableForPlant(const struct Map &map, FurnitureData &data, bool previewing) const;
+
+   bool setSimpleFurniture(const struct Map &map, FurnitureData &data, bool playerFacingLeft, bool previewing);
+   bool setPlant(const struct Map &map, FurnitureData &data, bool previewing);
 
    // Update functions
 
-   void destroy(struct Map &map, struct Inventory &inventory, int cursorX, int cursorY, int breakingLevel);
-   void update(struct Map &map, struct Player &player, const Vector2 &mousePos);
-   bool isValid(const struct Map &map) const;
+   void destroy(struct Map &map);
+   void update(struct Map &map, struct Player &player, const Vector2 &mousePos, float dt);
+   bool isValid(FurnitureData &data, const struct Map &map) const;
 
    // Render functions
 
@@ -60,35 +84,20 @@ struct Furniture {
 
    // Members
 
-   std::vector<std::vector<FurniturePiece>> pieces;
-   FurnitureType type = FurnitureType::none;
-   unsigned short id = 0;
+   furnitureid_t id = 0;
+   std::vector<FurniturePiece> pieces;
 
-   short value = 0;
-   short value2 = 0;
-   int posX = 0;
-   int posY = 0;
-   short sizeX = 0;
-   short sizeY = 0;
+   int x = 0;
+   int y = 0;
 
+   int ivalue1 = 0;
+   int ivalue2 = 0;
+   float fvalue1 = 0;
+   float fvalue2 = 0;
    bool deleted = false;
-   bool isWalkable = false;
 };
-
-// Furniture getter functions
-
-float getFurnitureBreakingTime(unsigned short id);
-unsigned short getFurnitureIdFromName(const std::string &name);
-unsigned short getFurnitureCount();
-
-bool isValidFurnitureName(const std::string &name);
-std::string getFurnitureNameFromId(unsigned short id);
-FurnitureType getFurnitureType(unsigned short id);
-FurnitureTexture getFurnitureIcon(unsigned short id);
 
 // Furniture generation functions
 
-Furniture getFurniture(int x, int y, const struct Map &map, FurnitureType type, bool playerFacingLeft, bool debug = false);
-void generateFurniture(int x, int y, struct Map &map, FurnitureType type, bool playerFacingLeft);
-
-#endif
+Furniture getFurniture(int x, int y, const struct Map &map, furnitureid_t id, bool playerFacingLeft, bool previewing = false);
+void generateFurniture(int x, int y, struct Map &map, furnitureid_t id, bool playerFacingLeft);

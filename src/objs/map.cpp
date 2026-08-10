@@ -1,5 +1,5 @@
 #include "objs/map.hpp"
-#include "mngr/resource.hpp"
+#include "SRU/assets.hpp"
 #include <unordered_map>
 
 // constants
@@ -16,7 +16,7 @@ static const std::unordered_map<std::string, BlockType> blockAttributeStrings {{
 static size_t blockCount = 0;
 static std::vector<std::string> blockNames;
 static std::vector<BlockType> blockAttributes;
-static std::unordered_map<std::string, size_t> blockIds;
+static std::unordered_map<std::string, blockid_t> blockIds;
 
 // Block getter functions
 

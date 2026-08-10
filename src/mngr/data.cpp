@@ -4,27 +4,62 @@
 #include "objs/map.hpp"
 #include <SRU/file.hpp>
 #include <cstdio>
-#include <sstream>
 
-template<typename T>
-void getFieldAsSimpleValue(std::stringstream &stream, const std::string &value, const std::string &line, T &target) {
-   stream.clear();
-   stream.str(value);
-   stream >> std::boolalpha >> target;
-   if (stream.rdbuf()->in_avail() != 0) {
-      printf("WARNING: Malformed line '%s'. Expected number/boolean.\n", line.c_str());
+// helper functions
+
+void getIntValue(const std::string &value, const std::string &line, int &target) {
+   // disgusting
+   try {
+      target = std::stoi(value);
+   } catch (...) {
+      printf("WARNING: Malformed line '%s'. Expected integer.\n", line.c_str());
    }
 }
+
+void getFloatValue(const std::string &value, const std::string &line, float &target) {
+   // even more disgusting
+   try {
+      target = std::stof(value);
+   } catch (...) {
+      printf("WARNING: Malformed line '%s'. Expected real number.\n", line.c_str());
+   }
+}
+
+void getBoolValue(const std::string &value, const std::string &line, bool &target) {
+   if (value == "true") {
+      target = true;
+   }
+   else if (value == "false") {
+      target = false;
+   }
+   else {
+      printf("WARNING: Malformed line '%s'. Expected true/false.\n", line.c_str());
+   }
+}
+
+void getV2Value(const std::string &value, const std::string &line, Vector2 &target) {
+   std::vector<std::string> values = split(value, ',');
+   if (values.size() != 2) {
+      printf("WARNING: Malformed line '%s'. Expected Vector2 (INT,INT).\n", line.c_str());
+      return;
+   }
+   getFloatValue(values[0], line, target.x);
+   getFloatValue(values[1], line, target.y);
+}
+
+// data functions
 
 void loadData() {
    printf("Loading block data from 'assets/blocks_list.txt'...\n");
    loadBlockData();
+   printf("Loading furniture data from 'assets/furniture_list.txt'...\n");
+   loadFurnitureData();
    printf("Loading done!\n");
 }
 
 void loadBlockData() {
    std::vector<std::string> lines = getLinesFromFileIgnoringComments("assets/blocks_list.txt", "#");
-   std::stringstream stream;
+   reserveBlockContainers(lines.size() / 2);
 
    struct BlockData {
       std::string name;
@@ -65,7 +100,12 @@ void loadBlockData() {
       trimLeftInPlace(value);
 
       if (field == "texture") {
-         data.texture = getTexture(value);
+         if (value.empty()) {
+            data.noTexture = true;
+            data.texture.id = 0;
+         } else {
+            data.texture = getTexture(value);
+         }
       }
       else if (field == "attributes") {
          std::vector<std::string> attributes = split(value, ',');
@@ -78,9 +118,113 @@ void loadBlockData() {
             data.types = data.types | getBlockTypeFromString(trimmed);
          }
       }
+      else {
+         printf("WARNING: Malformed line: '%s'. Invalid field '%s'.\n", line.c_str(), field.c_str());
+      }
    }
 
    if (init) {
       data.push();
+   }
+}
+
+void loadFurnitureData() {
+   std::vector<std::string> lines = getLinesFromFileIgnoringComments("assets/furniture_list.txt", "#");
+   reserveFurnitureContainers(lines.size() / 5);
+
+   FurnitureData data;
+   bool init = false;
+   bool noTexture = false;
+   std::string name;
+
+   for (const std::string &line: lines) {
+      // getLinesFromFileIgnoringComments skips empty lines so this is fine
+      if (line.front() == '[' && line.back() == ']') {
+         if (init) {
+            if (!noTexture && data.texture.id == 0) {
+               data.texture = getTexture(name);
+            }
+            pushFurniture(data, name);
+            data = {};
+            noTexture = false;
+            name.clear();
+         }
+         name = line.substr(1, line.size() - 2);
+         init = true;
+      }
+
+      size_t equals = line.find('=');
+      if (equals == std::string::npos) {
+         printf("WARNING: Malformed line: '%s'. Expected '=' character.\n", line.c_str());
+         continue;
+      }
+
+      std::string field = line.substr(0, equals);
+      std::string value = line.substr(equals + 1);
+      trimRightInPlace(field);
+      trimLeftInPlace(value);
+
+      if (field == "texture") {
+         if (value.empty()) {
+            noTexture = true;
+            data.texture.id = 0;
+         } else {
+            data.texture = getTexture(value);
+         }
+      }
+      else if (field == "type") {
+         if (!isFurnitureTypeValid(value)) {
+            printf("WARNING: Malformed line: '%s'. Invalid type '%s'.\n", line.c_str(), value.c_str());
+            continue;
+         }
+         data.type = getFurnitureTypeFromString(value);
+      }
+      else if (field == "texture_size") {
+         getIntValue(value, line, data.textureSize);
+      }
+      else if (field == "tree_size_min") {
+         getIntValue(value, line, data.treeSizeMin);
+      }
+      else if (field == "tree_size_max") {
+         getIntValue(value, line, data.treeSizeMax);
+      }
+      else if (field == "tree_root_chance") {
+         getIntValue(value, line, data.treeRootChance);
+      }
+      else if (field == "tree_branch_chance") {
+         getIntValue(value, line, data.treeBranchChance);
+      }
+      else if (field == "tree_is_cactus") {
+         getBoolValue(value, line, data.treeIsCactus);
+      }
+      else if (field == "tree_cactus_flower_chance") {
+         getIntValue(value, line, data.treeCactusFlowerChance);
+      }
+      else if (field == "sapling_grows_into") {
+         if (!isValidFurnitureName(value)) {
+            printf("WARNING: Malformed line: '%s'. No such furniture type '%s'. %s must be defined before this line.\n", line.c_str(), value.c_str(), value.c_str());
+            continue;
+         }
+         data.saplingGrowsInto = getFurnitureIdFromName(value);
+      }
+      else if (field == "sapling_grow_speed_min") {
+         getFloatValue(value, line, data.saplingGrowSpeedMin);
+      }
+      else if (field == "sapling_grow_speed_max") {
+         getFloatValue(value, line, data.saplingGrowSpeedMax);
+      }
+      else if (field == "size") {
+         getV2Value(value, line, data.furnitureSize);
+      }
+      else if (field == "face_player") {
+         getBoolValue(value, line, data.shouldFacePlayer);
+      }
+      else {
+         printf("WARNING: Malformed line: '%s'. Invalid field '%s'.\n", line.c_str(), field.c_str());
+      }
+   }
+
+   if (init) {
+      pushFurniture(data, name);
    }
 }

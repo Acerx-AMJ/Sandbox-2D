@@ -1,0 +1,104 @@
+# lines starting with '#' are ignored. white space is trimmed automatically
+# [FURNITURE_NAME]
+# type=TYPE # none,tree,sapling,table,chair,door
+# texture=TEXTURE_NAME # name of texture (assets/sprites/blocks/dirt.png -> dirt) or empty for none. defaults to furniture name
+# texture_size=8 # texture size of a single block. default is 8
+# size=NUMBER,NUMBER # size of furniture (supported types: sapling,table,chair,door)
+# face_player=true/false # should furniture face player when placing (supported types: sapling,table,chair,door)
+
+# tree_size_min=NUMBER # minimum size of tree in blocks
+# tree_size_max=NUMBER # maximum size of tree in blocks
+# tree_root_chance=0..100 # chance for a tree to grow a root
+# tree_branch_chance=0..100 # chance for a tree to grow a branch
+# tree_is_cactus=true/false # should tree's sprite be treated as a cactus sprite sheet
+# tree_cactus_flower_chance=0..100 # cacti alternative top block chance
+
+# sapling_grows_into=FURNITURE_NAME # name of the furniture the sapling grows into
+# sapling_grow_speed_min=NUMBER # minimum sapling grow speed in seconds
+# sapling_grow_speed_max=NUMBER # maximum sapling grow speed in seconds
+
+[tree]
+type=tree
+tree_size_min=5
+tree_size_max=18
+tree_root_chance=25
+tree_branch_chance=15
+
+[palm]
+type=tree
+tree_size_min=8
+tree_size_max=22
+tree_root_chance=0
+tree_branch_chance=0
+
+[pine]
+type=tree
+tree_size_min=5
+tree_size_max=18
+tree_root_chance=25
+tree_branch_chance=15
+
+[jungle_tree]
+type=tree
+tree_size_min=5
+tree_size_max=18
+tree_root_chance=25
+tree_branch_chance=15
+
+[cactus]
+type=tree
+tree_size_min=4
+tree_size_max=9
+tree_root_chance=0
+tree_branch_chance=50
+tree_is_cactus=true
+tree_cactus_flower_chance=10
+
+[sapling]
+type=sapling
+size=1,2
+sapling_grows_into=tree
+sapling_grow_speed_min=30
+sapling_grow_speed_max=200
+
+[palm_sapling]
+type=sapling
+size=1,2
+sapling_grows_into=palm
+sapling_grow_speed_min=30
+sapling_grow_speed_max=200
+
+[pine_sapling]
+type=sapling
+size=1,2
+sapling_grows_into=pine
+sapling_grow_speed_min=30
+sapling_grow_speed_max=200
+
+[jungle_sapling]
+type=sapling
+size=1,2
+sapling_grows_into=jungle_tree
+sapling_grow_speed_min=30
+sapling_grow_speed_max=200
+
+[cactus_seed]
+type=sapling
+size=1,1
+sapling_grows_into=cactus
+sapling_grow_speed_min=45
+sapling_grow_speed_max=240
+
+[table]
+type=table
+size=3,2
+
+[chair]
+type=chair
+size=1,2
+face_player=true
+
+[door]
+type=door
+size=1,3
+face_player=true

@@ -128,7 +128,7 @@ struct Map {
 
    // render
 
-   void render(const std::vector<struct DroppedItem> &droppedItems, const struct Player &player, float accumulator, const Rectangle &cameraBounds, const Camera2D &camera, const Inventory &inventory);
+   void render(const std::vector<struct DroppedItem> &droppedItems, const struct Player &player, float accumulator, const Rectangle &cameraBounds, const Camera2D &camera, const struct Inventory &inventory);
 
    // Members
 
