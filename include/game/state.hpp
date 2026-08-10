@@ -20,9 +20,10 @@ struct State {
    virtual void render() = 0;
    virtual State* change() = 0;
 
-   // Update functions
+   // built-in functions
 
    void updateStateLogic();
+   void renderStateLogic();
    void updateFadingIn();
    void updateFadingOut();
 

@@ -1,10 +1,10 @@
 #include "objs/console.hpp"
-#include "mngr/resource.hpp"
 #include "objs/inventory.hpp"
 #include "util/format.hpp"
 #include "util/parallax.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
+#include "SRU/assets.hpp"
 #include <functional>
 #include <unordered_map>
 
@@ -362,7 +362,7 @@ bool c_placew(Console &console, const VArgs &args, Map &map, Player&, Inventory&
       return false;
    }
 
-   map.setBlock(x, y, id, true);
+   map.setWall(x, y, id);
    console.output(TextFormat("placew: set wall at coordinates (X %d; Y %d) to '%s'.", x, y, getBlockNameFromId(id).c_str()));
    return true;
 }
@@ -409,7 +409,7 @@ bool c_fillw(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
 
    for (int y = sy; y < dy; ++y) {
       for (int x = sx; x < dx; ++x) {
-         map.setBlock(x, y, id, true);
+         map.setWall(x, y, id);
       }
    }
    console.output(TextFormat("fillw: filled all walls from coordinates (X %d; Y %d) to (X %d; Y %d) as %s.", sx, sy, dx, dy, getBlockNameFromId(id).c_str()));
@@ -461,8 +461,8 @@ bool c_placeq(Console &console, const VArgs &args, Map &map, Player&, Inventory&
    }
 
    map.deleteBlock(x, y);
-   map.liquidTypes[y][x] = (LiquidType)id;
-   map.liquidsHeights[y][x] = (id == 0 ? 0 : maxLiquidLayers);
+   map.liquidTypes[y * map.sizeX + x] = (LiquidType)id;
+   map.liquidHeights[y * map.sizeX + x] = (id == 0 ? 0 : maxLiquidLayers);
 
    constexpr const char *liquidNames[] = {"none", "water", "lava", "honey"};
    console.output(TextFormat("placeq: set liquid at coordinates (X %d; Y %d) to '%s'.", x, y, liquidNames[id]));
@@ -516,8 +516,8 @@ bool c_fillq(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
    for (int y = sy; y < dy; ++y) {
       for (int x = sx; x < dx; ++x) {
          map.deleteBlock(x, y);
-         map.liquidTypes[y][x] = (LiquidType)id;
-         map.liquidsHeights[y][x] = (id == 0 ? 0 : maxLiquidLayers);
+         map.liquidTypes[y * map.sizeX + x] = (LiquidType)id;
+         map.liquidHeights[y * map.sizeX + x] = (id == 0 ? 0 : maxLiquidLayers);
       }
    }
    constexpr const char *liquidNames[] = {"none", "water", "lava", "honey"};
@@ -539,23 +539,23 @@ bool c_give(Console &console, const VArgs &args, Map&, Player &player, Inventory
          item.id = getBlockIdFromName(args[1]);
          item.type = ItemType::block;
       }
-      else if (isItemNameValid(args[1])) {
-         item.id = getItemIdFromName(args[1]);
-         item.type = ItemType::item;
-      }
-      else if (isEquipmentNameValid(args[1])) {
-         item.id = getEquipmentIdFromName(args[1]);
-         item.type = ItemType::equipment;
-      }
-      else if (isPotionNameValid(args[1])) {
-         item.id = getPotionIdFromName(args[1]);
-         item.type = ItemType::potion;
-      }
-      else if (isValidFurnitureName(args[1])) {
-         item.id = getFurnitureIdFromName(args[1]);
-         item.type = ItemType::block;
-         item.isFurniture = true;
-      }
+      // else if (isItemNameValid(args[1])) {
+      //    item.id = getItemIdFromName(args[1]);
+      //    item.type = ItemType::item;
+      // }
+      // else if (isEquipmentNameValid(args[1])) {
+      //    item.id = getEquipmentIdFromName(args[1]);
+      //    item.type = ItemType::equipment;
+      // }
+      // else if (isPotionNameValid(args[1])) {
+      //    item.id = getPotionIdFromName(args[1]);
+      //    item.type = ItemType::potion;
+      // }
+      // else if (isValidFurnitureName(args[1])) {
+      //    item.id = getFurnitureIdFromName(args[1]);
+      //    item.type = ItemType::block;
+      //    item.isFurniture = true;
+      // }
       else {
          console.output("give: invalid first argument, expected valid item name.", ConsoleColor::red);
          return false;
@@ -739,10 +739,10 @@ void Console::init(Map &map, Player &player, Inventory &inventory) {
    // Map
    vars["map.size.x"] = Variable(&map.sizeX);
    vars["map.size.y"] = Variable(&map.sizeY);
-   vars["lightingEnabled"] = Variable(&map.lightingEnabled);
-   vars["waterShaderEnabled"] = Variable(&map.waterShaderEnabled);
-   vars["fpsEnabled"] = Variable(&map.fpsEnabled);
-   vars["timeToRespawn"] = Variable(&map.timeToRespawn);
+   // vars["lightingEnabled"] = Variable(&map.lightingEnabled);
+   // vars["waterShaderEnabled"] = Variable(&map.waterShaderEnabled);
+   // vars["fpsEnabled"] = Variable(&map.fpsEnabled);
+   // vars["timeToRespawn"] = Variable(&map.timeToRespawn);
 
    // Inventory
    vars["inventory.selected.x"] = Variable(&inventory.selectedX);

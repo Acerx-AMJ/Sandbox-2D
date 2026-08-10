@@ -76,6 +76,7 @@ bool isBlockNameValid(const std::string &name);
 bool isBlockIdValid(blockid_t id);
 blockid_t getBlockIdFromName(const std::string &name);
 std::string getBlockNameFromId(blockid_t id);
+BlockType getBlockType(blockid_t id);
 size_t getBlockCount();
 
 void reserveBlockContainers(size_t estimate);

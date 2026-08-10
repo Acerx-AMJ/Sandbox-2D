@@ -1,9 +1,9 @@
 #include "game/state.hpp"
-#include "mngr/resource.hpp"
 #include "objs/player.hpp"
-#include "mngr/sound.hpp"
 #include "util/position.hpp"
-#include "util/random.hpp"
+#include "SRU/audio.hpp"
+#include "SRU/assets.hpp"
+#include "SRU/random.hpp"
 #include <raymath.h>
 
 // Player's keybinds shouldn't overlap with any other keybinds in GameState. It
@@ -213,27 +213,27 @@ void Player::updateCollisions(Map &map) {
 
    for (int y = std::max(0, (int)position.y); y < maxY; ++y) {
       for (int x = std::max(0, (int)position.x); x < maxX; ++x) {
-         if (map.isLiquidAtAll(x, y) && map.getLiquidHeight(x, y) > playerLiquidThreshold) {
+         if (map.isAnyLiquid(x, y) && map.getLiquidHeight(x, y) > playerLiquidThreshold) {
             waterTileCount += map.isLiquidOfType(x, y, LiquidType::water);
             lavaTileCount  += map.isLiquidOfType(x, y, LiquidType::lava);
             honeyTileCount += map.isLiquidOfType(x, y, LiquidType::honey);
             liquidsAboveHead += (y <= position.y + 1.0f);
          }
-         honeyTileCount += map.isu(x, y, BlockType::sticky);
+         honeyTileCount += map.is(x, y, BlockType::sticky);
 
-         if ((!map.isu(x, y, BlockType::solid) && !map.isPlatformedFurniture(x, y)) || ((map.isu(x, y, BlockType::platform) || map.isu(x, y, BlockType::furnitureTop)) && (!blockInput && IsKeyDown(KEY_S)))) {
+         if (!map.is(x, y, BlockType::solid) || ((map.is(x, y, BlockType::platform) || map.blocks[y * map.sizeX + x].platformOverride) && (!blockInput && IsKeyDown(KEY_S)))) {
             continue;
          }
 
          // Not necessary in both loops
-         blocksInHeadX1 += (y <= position.y + 1.0f && x >= position.x + playerSize.x / 2.0f && !map.isu(x, y, BlockType::platform) && !map.isu(x, y, BlockType::furnitureTop));
-         blocksInHeadX2 += (y <= position.y + 1.0f && x <  position.x + playerSize.x / 2.0f && !map.isu(x, y, BlockType::platform) && !map.isu(x, y, BlockType::furnitureTop));
+         blocksInHeadX1 += (y <= position.y + 1.0f && x >= position.x + playerSize.x / 2.0f && !map.is(x, y, BlockType::platform) && !map.blocks[y * map.sizeX + x].platformOverride);
+         blocksInHeadX2 += (y <= position.y + 1.0f && x <  position.x + playerSize.x / 2.0f && !map.is(x, y, BlockType::platform) && !map.blocks[y * map.sizeX + x].platformOverride);
 
          if (!CheckCollisionRecs({position.x, position.y, playerSize.x, playerSize.y}, {(float)x, (float)y, 1.f, 1.f})) {
             continue;
          }
 
-         if (previousPosition.y >= y + 1.f && !map.isu(x, y, BlockType::platform)) {
+         if (previousPosition.y >= y + 1.f && !map.is(x, y, BlockType::platform)) {
             velocity.y = std::max(0.f, velocity.y);
             position.y = y + 1.f;
             collisionY = true;
@@ -241,8 +241,8 @@ void Player::updateCollisions(Map &map) {
          }
 
          if (previousPosition.y + playerSize.y <= y) {
-            shouldBounce = (!onGround && map.isu(x, y, BlockType::bouncy) && std::abs(velocity.y) > 0.5f);
-            iceTileCount += map.isu(x, y, BlockType::ice);
+            shouldBounce = (!onGround && map.is(x, y, BlockType::bouncy) && std::abs(velocity.y) > 0.5f);
+            iceTileCount += map.is(x, y, BlockType::ice);
 
             position.y = y - playerSize.y;
             onGround = true;
@@ -269,15 +269,15 @@ void Player::updateCollisions(Map &map) {
    for (int y = std::max(0, (int)position.y - 1); y < maxY; ++y) {
       for (int x = std::max(0, (int)position.x); x < maxX; ++x) {
          // Necessary to count in both loops for making the player stick to sticky walls
-         if (map.isLiquidAtAll(x, y) && map.getLiquidHeight(x, y) > playerLiquidThreshold) {
+         if (map.isAnyLiquid(x, y) && map.getLiquidHeight(x, y) > playerLiquidThreshold) {
             waterTileCount += map.isLiquidOfType(x, y, LiquidType::water);
             lavaTileCount  += map.isLiquidOfType(x, y, LiquidType::lava);
             honeyTileCount += map.isLiquidOfType(x, y, LiquidType::honey);
             liquidsAboveHead += (y <= position.y + 1.0f);
          }
-         honeyTileCount += map.isu(x, y, BlockType::sticky);
+         honeyTileCount += map.is(x, y, BlockType::sticky);
 
-         if ((!map.isu(x, y, BlockType::solid) && !map.isPlatformedFurniture(x, y)) || ((map.isu(x, y, BlockType::platform) || map.isu(x, y, BlockType::furnitureTop)) /* && !IsKeyDown(KEY_W) */)) {
+         if (!map.is(x, y, BlockType::solid) || ((map.is(x, y, BlockType::platform) || map.blocks[y * map.sizeX + x].platformOverride))) {
             continue;
          }
 
@@ -286,7 +286,7 @@ void Player::updateCollisions(Map &map) {
             feetCollisionY = y;
          }
 
-         if (map.isu(x, y, BlockType::platform) || map.isu(x, y, BlockType::furnitureTop)) {
+         if (map.is(x, y, BlockType::platform) || map.blocks[y * map.sizeX + x].platformOverride) {
             continue;
          }
 
@@ -332,7 +332,7 @@ void Player::updateCollisions(Map &map) {
       }
 
       if (breath == 0) {
-         takeDamage(map, random(1, 6), 0, 0.0f);
+         takeDamage(map, randomInt(1, 6), 0, 0.0f);
       }
    }
 
@@ -347,7 +347,7 @@ void Player::updateCollisions(Map &map) {
    }
 
    if (!creative && lavaTileCount > 0) {
-      takeDamage(map, random(20, 30), 25, 1.2f);
+      takeDamage(map, randomInt(20, 30), 25, 1.2f);
    }
 
    // Get other things right
@@ -429,10 +429,10 @@ void Player::takeDamage(Map &map, int damage, int critChance, float critDamage) 
    bool critical = chance(critChance);
    int damageApplied = damage * (critical ? critDamage : 1.0f);
 
-   hearts = std::max(0, hearts - damage);
+   hearts = std::max(0, hearts - damageApplied);
    immunityFrame = immunityTime;
    timeSinceLastDamage = timeSpentRegenerating = 0.0f;
-   map.addDamageIndicator(getCenter(), damageApplied, critical);
+   // map.addDamageIndicator(getCenter(), damageApplied, critical);
 }
 
 void Player::handleRegeneration() {

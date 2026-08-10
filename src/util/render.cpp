@@ -1,6 +1,6 @@
-#include "mngr/resource.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
+#include "SRU/assets.hpp"
 
 void drawText(const Vector2 &position, const char *text, float fontSize, const Color &color, float spacing) {
    DrawTextPro(getFont("andy"), text, position, getOrigin(text, fontSize, spacing), 0, fontSize, spacing, color);

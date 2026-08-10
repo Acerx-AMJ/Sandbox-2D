@@ -1,5 +1,5 @@
-#include "mngr/resource.hpp"
 #include "util/format.hpp"
+#include "SRU/assets.hpp"
 
 void wrapText(std::string &string, float maxWidth, float fontSize, float spacing) {
    auto wrap = [maxWidth, fontSize, spacing](const std::string &s) -> bool {

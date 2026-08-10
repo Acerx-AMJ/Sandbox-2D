@@ -1,6 +1,8 @@
 #include "game/state.hpp"
+#include "mngr/input.hpp"
 #include "mngr/particle.hpp"
 #include "ui/popup.hpp"
+#include "util/render.hpp"
 #include <algorithm>
 #include <raylib.h>
 
@@ -12,6 +14,9 @@ constexpr float fadeTime = 0.4f;
 // Update functions
 
 void State::updateStateLogic() {
+   updateInput();
+   updatePopups(realDt);
+
    int width = GetScreenWidth();
    int height = GetScreenHeight();
 
@@ -43,6 +48,15 @@ void State::updateStateLogic() {
       accumulator -= fixedUpdateDT;
    }
    update();
+}
+
+void State::renderStateLogic() {
+   BeginDrawing();
+      ClearBackground(BLACK);
+      render();
+      renderPopups();
+      drawRect(Fade(BLACK, alpha));
+   EndDrawing();
 }
 
 void State::updateFadingIn() {

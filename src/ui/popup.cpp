@@ -1,11 +1,11 @@
 #include "mngr/input.hpp"
-#include "mngr/resource.hpp"
-#include "mngr/sound.hpp"
 #include "ui/button.hpp"
 #include "ui/popup.hpp"
 #include "util/format.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
+#include "SRU/audio.hpp"
+#include "SRU/assets.hpp"
 #include <vector>
 
 // Constants

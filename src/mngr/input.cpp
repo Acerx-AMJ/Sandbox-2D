@@ -1,5 +1,5 @@
 #include "mngr/input.hpp"
-#include "mngr/sound.hpp"
+#include "SRU/audio.hpp"
 #include <raylib.h>
 #include <array>
 

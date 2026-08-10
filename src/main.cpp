@@ -1,22 +1,16 @@
 #include "game/loadingState.hpp"
-#include "mngr/input.hpp"
-#include "ui/popup.hpp"
-#include "util/render.hpp"
 #include <raylib.h>
-#include <cstdlib>
-#include <ctime>
 
 constexpr int minWindowWidth  = 800;
 constexpr int minWindowHeight = 600;
 
 int main() {
-   srand(time(nullptr));
    SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_MAXIMIZED);
    InitWindow(minWindowWidth, minWindowHeight, "Sandbox-2D");
    SetWindowMinSize(minWindowWidth, minWindowHeight);
-
    InitAudioDevice();
    SetExitKey(KEY_NULL);
+   SetTraceLogLevel(LOG_ERROR);
 
    State *current = new LoadingState();
    
@@ -30,18 +24,8 @@ int main() {
       if (!current) {
          break;
       }
-
-      updateInput();
-      updatePopups(current->realDt);
       current->updateStateLogic();
-
-      BeginDrawing();
-         ClearBackground(BLACK);
-         current->render();
-
-         renderPopups();
-         drawRect(Fade(BLACK, current->alpha));
-      EndDrawing();
+      current->renderStateLogic();
    }
    CloseWindow();
    CloseAudioDevice();

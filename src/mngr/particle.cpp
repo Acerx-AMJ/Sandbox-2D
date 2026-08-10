@@ -1,8 +1,8 @@
 #include "game/state.hpp"
 #include "mngr/particle.hpp"
-#include "mngr/resource.hpp"
 #include "util/position.hpp"
-#include "util/random.hpp"
+#include "SRU/assets.hpp"
+#include "SRU/random.hpp"
 #include <raymath.h>
 #include <algorithm>
 #include <vector>
@@ -47,13 +47,13 @@ void spawnParticles(const Particle &minimum, const Particle &maximum, int count)
    for (int i = 0; i < count; ++i) {
       Particle particle = {
          minimum.texture,
-         {random(minimum.position.x, maximum.position.x), random(minimum.position.y, maximum.position.y)},
-         {random(minimum.velocity.x, maximum.velocity.x), random(minimum.velocity.y, maximum.velocity.y)},
-         {random(minimum.size.x, maximum.size.x), random(minimum.size.y, maximum.size.y)},
-         {random(minimum.sizeVelocity.x, maximum.sizeVelocity.x), random(minimum.sizeVelocity.y, maximum.sizeVelocity.y)},
-         random(minimum.rotation, maximum.rotation),
-         random(minimum.rotationVelocity, maximum.rotationVelocity),
-         random(minimum.lifetime, maximum.lifetime),
+         randomV2(minimum.position, maximum.position),
+         randomV2(minimum.velocity, maximum.velocity),
+         randomV2(minimum.size, maximum.size),
+         randomV2(minimum.sizeVelocity, maximum.sizeVelocity),
+         randomFloat(minimum.rotation, maximum.rotation),
+         randomFloat(minimum.rotationVelocity, maximum.rotationVelocity),
+         randomFloat(minimum.lifetime, maximum.lifetime),
          0.0f, // age
       };
       particles.push_back(particle);

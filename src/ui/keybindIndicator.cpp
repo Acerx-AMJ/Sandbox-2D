@@ -1,7 +1,7 @@
 #include "ui/keybindIndicator.hpp"
-#include "mngr/resource.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
+#include "SRU/assets.hpp"
 #include <raymath.h>
 
 // Constants

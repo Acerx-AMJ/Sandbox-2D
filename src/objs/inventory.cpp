@@ -1,11 +1,10 @@
 #include "mngr/input.hpp"
-#include "mngr/resource.hpp"
-#include "mngr/sound.hpp"
 #include "objs/inventory.hpp"
 #include "objs/map.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
-#include "util/strarray.hpp"
+#include "SRU/audio.hpp"
+#include "SRU/assets.hpp"
 #include <raymath.h>
 #include <array>
 #include <algorithm>
@@ -25,45 +24,45 @@ constexpr int itemStackSize      = 9999;
 constexpr int equipmentStackSize = 1;
 constexpr int potionStackSize    = 99;
 
-constexpr size_t itemCount = 7;
-constexpr static inline std::array<const char*, itemCount> itemTextures {{
-   "coal",
-   "iron_lump",
-   "gold_lump",
-   "mythril_lump",
-   "iron_bar",
-   "gold_bar",
-   "mythril_bar"
-}};
+// constexpr size_t itemCount = 7;
+// constexpr static inline std::array<const char*, itemCount> itemTextures {{
+//    "coal",
+//    "iron_lump",
+//    "gold_lump",
+//    "mythril_lump",
+//    "iron_bar",
+//    "gold_bar",
+//    "mythril_bar"
+// }};
 
-constexpr size_t toolCount = 5;
-struct ToolInfo {
-   const char *texture;
-   float breakMultiplier;
-   int breakLevel;
-};
+// constexpr size_t toolCount = 5;
+// struct ToolInfo {
+//    const char *texture;
+//    float breakMultiplier;
+//    int breakLevel;
+// };
 
-constexpr size_t potionCount = 0;
+// constexpr size_t potionCount = 0;
 
-constexpr static inline std::array<ToolInfo, toolCount> toolInfo {{
-   ToolInfo{"wooden_pickaxe",  1.3f, 1},
-   ToolInfo{"stone_pickaxe",   1.6f, 2},
-   ToolInfo{"iron_pickaxe",    2.0f, 3},
-   ToolInfo{"gold_pickaxe",    2.2f, 3},
-   ToolInfo{"mythril_pickaxe", 2.5f, 3},
-}};
+// constexpr static inline std::array<ToolInfo, toolCount> toolInfo {{
+//    ToolInfo{"wooden_pickaxe",  1.3f, 1},
+//    ToolInfo{"stone_pickaxe",   1.6f, 2},
+//    ToolInfo{"iron_pickaxe",    2.0f, 3},
+//    ToolInfo{"gold_pickaxe",    2.2f, 3},
+//    ToolInfo{"mythril_pickaxe", 2.5f, 3},
+// }};
 
-const static inline StrArray<std::string> itemNames {
-   "", "coal", "iron_lump", "gold_lump", "mythril_lump", "iron_bar", "gold_bar", "mythril_bar"
-};
+// const static inline StrArray<std::string> itemNames {
+//    "", "coal", "iron_lump", "gold_lump", "mythril_lump", "iron_bar", "gold_bar", "mythril_bar"
+// };
 
-const static inline StrArray<std::string> equipmentNames {
-   "", "wooden_pickaxe", "stone_pickaxe", "iron_pickaxe", "gold_pickaxe", "mythril_pickaxe"
-};
+// const static inline StrArray<std::string> equipmentNames {
+//    "", "wooden_pickaxe", "stone_pickaxe", "iron_pickaxe", "gold_pickaxe", "mythril_pickaxe"
+// };
 
-const static inline StrArray<std::string> potionNames {
-   "",
-};
+// const static inline StrArray<std::string> potionNames {
+//    "",
+// };
 
 // Constructors
 
@@ -310,20 +309,20 @@ bool Inventory::canPlaceBlock() {
 void Inventory::placeBlock(int x, int y, bool playerFacingLeft) {
    Item &item = (anySelected ? selectedItem.item : items[selectedY][selectedX]);
 
-   if (item.isFurniture) {
-      Furniture furniture = getFurniture(x, y, map, getFurnitureType(item.id), playerFacingLeft);
-      if (furniture.type == FurnitureType::none) {
-         return;
-      }
-      map.addFurniture(furniture);
-      player.placedBlock = true;
-   } else {
-      if (!((item.isWall && (map.walls[y][x].type & BlockType::empty)) || (!item.isWall && (map.blocks[y][x].type & BlockType::empty) && !(map.blocks[y][x].type & BlockType::furniture)))) {
-         return;
-      }
-      map.setBlock(x, y, item.id, item.isWall);
-      player.placedBlock = true;
-   }
+   // if (item.isFurniture) {
+   //    Furniture furniture = getFurniture(x, y, map, getFurnitureType(item.id), playerFacingLeft);
+   //    if (furniture.type == FurnitureType::none) {
+   //       return;
+   //    }
+   //    map.addFurniture(furniture);
+   //    player.placedBlock = true;
+   // } else {
+   //    if (!((item.isWall && (map.walls[y][x].type & BlockType::empty)) || (!item.isWall && (map.blocks[y][x].type & BlockType::empty) && !(map.blocks[y][x].type & BlockType::furniture)))) {
+   //       return;
+   //    }
+   //    map.setBlock(x, y, item.id, item.isWall);
+   //    player.placedBlock = true;
+   // }
 
    item.count -= 1;
    if (anySelected && selectedItem.fullSelect) {
@@ -348,18 +347,18 @@ void Inventory::selectItem(int x, int y) {
    bool furniture = false;
    bool wall = false;
 
-   if (map.blocks[y][x].type & BlockType::furniture) {
-      id = map.getFurnitureAtPosition(x, y).id;
-      furniture = true;
-   } else if (!map.isEmpty(x, y)) {
-      id = map.blocks[y][x].id;
-   } else if (!(map.walls[y][x].type & BlockType::empty)) {
-      id = map.walls[y][x].id;
-      wall = true;
-   } else {
-      // Do not pick any elements
-      return;
-   }
+   // if (map.blocks[y][x].type & BlockType::furniture) {
+   //    id = map.getFurnitureAtPosition(x, y).id;
+   //    furniture = true;
+   // } else if (!map.isEmpty(x, y)) {
+   //    id = map.blocks[y][x].id;
+   // } else if (!(map.walls[y][x].type & BlockType::empty)) {
+   //    id = map.walls[y][x].id;
+   //    wall = true;
+   // } else {
+   //    // Do not pick any elements
+   //    return;
+   // }
 
    for (int y = 0; y < inventoryHeight; ++y) {
       for (int x = 0; x < inventoryWidth; ++x) {
@@ -558,29 +557,29 @@ int Inventory::addItemCount(Item &item1, Item &item2) {
 }
 
 int Inventory::getBlockBreakingLevel() {
-   if (anySelected && selectedItem.item.type == ItemType::equipment && selectedItem.item.id <= toolCount) {
-      return toolInfo.at(selectedItem.item.id - 1).breakLevel;
-   } else if (items[selectedY][selectedX].type == ItemType::equipment && items[selectedY][selectedX].id <= toolCount) {
-      return toolInfo.at(items[selectedY][selectedX].id - 1).breakLevel;
-   }
+   // if (anySelected && selectedItem.item.type == ItemType::equipment && selectedItem.item.id <= toolCount) {
+   //    return toolInfo.at(selectedItem.item.id - 1).breakLevel;
+   // } else if (items[selectedY][selectedX].type == ItemType::equipment && items[selectedY][selectedX].id <= toolCount) {
+   //    return toolInfo.at(items[selectedY][selectedX].id - 1).breakLevel;
+   // }
    return 0;
 }
 
 float Inventory::getBlockBreakingMultiplier() {
-   if (anySelected && selectedItem.item.type == ItemType::equipment && selectedItem.item.id <= toolCount) {
-      return toolInfo.at(selectedItem.item.id - 1).breakMultiplier;
-   } else if (items[selectedY][selectedX].type == ItemType::equipment && items[selectedY][selectedX].id <= toolCount) {
-      return toolInfo.at(items[selectedY][selectedX].id - 1).breakMultiplier;
-   }
+   // if (anySelected && selectedItem.item.type == ItemType::equipment && selectedItem.item.id <= toolCount) {
+   //    return toolInfo.at(selectedItem.item.id - 1).breakMultiplier;
+   // } else if (items[selectedY][selectedX].type == ItemType::equipment && items[selectedY][selectedX].id <= toolCount) {
+   //    return toolInfo.at(items[selectedY][selectedX].id - 1).breakMultiplier;
+   // }
    return 1.0f;
 }
 
 Texture2D *Inventory::getCurrentToolsTexture() const {
-   if (anySelected && selectedItem.item.type == ItemType::equipment && selectedItem.item.id <= toolCount) {
-      return &getTexture(toolInfo.at(selectedItem.item.id - 1).texture);
-   } else if (items[selectedY][selectedX].type == ItemType::equipment && items[selectedY][selectedX].id <= toolCount) {
-      return &getTexture(toolInfo.at(items[selectedY][selectedX].id - 1).texture);
-   }
+   // if (anySelected && selectedItem.item.type == ItemType::equipment && selectedItem.item.id <= toolCount) {
+   //    return &getTexture(toolInfo.at(selectedItem.item.id - 1).texture);
+   // } else if (items[selectedY][selectedX].type == ItemType::equipment && items[selectedY][selectedX].id <= toolCount) {
+   //    return &getTexture(toolInfo.at(items[selectedY][selectedX].id - 1).texture);
+   // }
    return nullptr;
 }
 
@@ -647,80 +646,80 @@ void Inventory::render() const {
 
 // Get counts
 
-size_t getItemCount() {
-   return itemCount;
-}
+// size_t getItemCount() {
+//    return itemCount;
+// }
 
-size_t getToolCount() {
-   return toolCount;
-}
+// size_t getToolCount() {
+//    return toolCount;
+// }
 
-size_t getPotionCount() {
-   return potionCount;
-}
+// size_t getPotionCount() {
+//    return potionCount;
+// }
 
-bool isItemNameValid(const std::string &name) {
-   return itemNames.map.count(name);
-}
+// bool isItemNameValid(const std::string &name) {
+//    return itemNames.map.count(name);
+// }
 
-bool isEquipmentNameValid(const std::string &name) {
-   return equipmentNames.map.count(name);
-}
+// bool isEquipmentNameValid(const std::string &name) {
+//    return equipmentNames.map.count(name);
+// }
 
-bool isPotionNameValid(const std::string &name) {
-   return potionNames.map.count(name);
-}
+// bool isPotionNameValid(const std::string &name) {
+//    return potionNames.map.count(name);
+// }
 
-unsigned short getItemIdFromName(const std::string &name) {
-   return itemNames.map.at(name);
-}
+// unsigned short getItemIdFromName(const std::string &name) {
+//    return itemNames.map.at(name);
+// }
 
-unsigned short getEquipmentIdFromName(const std::string &name) {
-   return equipmentNames.map.at(name);
-}
+// unsigned short getEquipmentIdFromName(const std::string &name) {
+//    return equipmentNames.map.at(name);
+// }
 
-unsigned short getPotionIdFromName(const std::string &name) {
-   return potionNames.map.at(name);
-}
+// unsigned short getPotionIdFromName(const std::string &name) {
+//    return potionNames.map.at(name);
+// }
 
 // Draw item
 
 void drawItem(ItemType type, unsigned short id, unsigned short count, bool isFurniture, bool isWall, const Vector2 &position, const Vector2 &size, bool isSelected, bool isworldspace) {
-   if (type == ItemType::item && id <= itemCount) {
-      Texture2D &texture = getTexture(itemTextures.at(id - 1));
-      drawTexture(texture, position, size);
+   // if (type == ItemType::item && id <= itemCount) {
+   //    Texture2D &texture = getTexture(itemTextures.at(id - 1));
+   //    drawTexture(texture, position, size);
 
-      // fuck dry
-      if (count != 1) {
-         Color textColor = (isSelected ? Fade(WHITE, 0.75f) : WHITE);
-         Vector2 textPosition = Vector2Subtract(position, (isworldspace ? Vector2{0.0f, -0.7f} : applyCubicResponsiveness(itemFrameCountOffset)));
-         drawText(textPosition, std::to_string(count).c_str(), (isworldspace ? 0.75f : getFontSize(25.0f)), textColor, (isworldspace ? 0.1f : getFontSize(1.0f)));
-      }
-      return;
-   }
+   //    // fuck dry
+   //    if (count != 1) {
+   //       Color textColor = (isSelected ? Fade(WHITE, 0.75f) : WHITE);
+   //       Vector2 textPosition = Vector2Subtract(position, (isworldspace ? Vector2{0.0f, -0.7f} : applyCubicResponsiveness(itemFrameCountOffset)));
+   //       drawText(textPosition, std::to_string(count).c_str(), (isworldspace ? 0.75f : getFontSize(25.0f)), textColor, (isworldspace ? 0.1f : getFontSize(1.0f)));
+   //    }
+   //    return;
+   // }
    
-   if (type == ItemType::equipment && id <= toolCount) {
-      Texture2D &texture = getTexture(toolInfo[id - 1].texture);
-      drawTexture(texture, position, size);
-      return;
-   }
+   // if (type == ItemType::equipment && id <= toolCount) {
+   //    Texture2D &texture = getTexture(toolInfo[id - 1].texture);
+   //    drawTexture(texture, position, size);
+   //    return;
+   // }
    
    Color drawColor = Fade((isWall ? wallTint : WHITE), (isSelected ? 0.75f : 1.0f));
 
    if (!isFurniture) {
       Texture2D &texture = getTexture(getBlockNameFromId(id));
       DrawTexturePro(texture, {0, 0, 8, 8}, {position.x, position.y, size.x, size.y}, getOrigin(size), 0, drawColor);
-   } else if (isFurniture) {
-      FurnitureTexture texture = getFurnitureIcon(id);
-      Vector2 newPos = position;//Vector2Add(position, Vector2Scale(itemframeSize, 0.5f));
-      Vector2 fSize = size;
+   // } else if (isFurniture) {
+   //    FurnitureTexture texture = getFurnitureIcon(id);
+   //    Vector2 newPos = position;//Vector2Add(position, Vector2Scale(itemframeSize, 0.5f));
+   //    Vector2 fSize = size;
 
-      if (texture.sizeX < texture.sizeY) {
-         fSize.x *= texture.sizeX / texture.sizeY;
-      } else if (texture.sizeX > texture.sizeY) {
-         fSize.y *= texture.sizeY / texture.sizeX;
-      }
-      DrawTexturePro(texture.texture, {0, 0, (float)texture.sizeX, (float)texture.sizeY}, {newPos.x, newPos.y, fSize.x, fSize.y}, Vector2Scale(fSize, 0.5f), 0, drawColor);
+   //    if (texture.sizeX < texture.sizeY) {
+   //       fSize.x *= texture.sizeX / texture.sizeY;
+   //    } else if (texture.sizeX > texture.sizeY) {
+   //       fSize.y *= texture.sizeY / texture.sizeX;
+   //    }
+   //    DrawTexturePro(texture.texture, {0, 0, (float)texture.sizeX, (float)texture.sizeY}, {newPos.x, newPos.y, fSize.x, fSize.y}, Vector2Scale(fSize, 0.5f), 0, drawColor);
    }
 
    if (count != 1) {

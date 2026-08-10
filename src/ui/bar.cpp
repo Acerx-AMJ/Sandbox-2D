@@ -1,6 +1,6 @@
 #include "ui/bar.hpp"
-#include "mngr/resource.hpp"
 #include "util/render.hpp"
+#include "SRU/assets.hpp"
 #include <raymath.h>
 
 void Bar::update(float alpha) {

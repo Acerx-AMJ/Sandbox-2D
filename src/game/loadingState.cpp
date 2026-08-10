@@ -30,7 +30,7 @@ void LoadingState::update() {
       loadingText = "Loading Textures... ";
       loadPhase = Load::textures;
    } else if (loadPhase == Load::textures) {
-      loadTextures("assets/textures/");
+      loadTextures("assets/sprites/");
       initPopups();
 
       loadingText = "Loading Shaders... ";

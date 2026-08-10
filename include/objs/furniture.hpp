@@ -64,8 +64,7 @@ furnitureid_t pushFurniture(FurnitureData data, const std::string &name);
 // furniture
 
 struct Furniture {
-   void init(furnitureid_t id, int x, int y);
-   void initCustomSize(furnitureid_t, int x, int y, int width, int height);
+   void init(furnitureid_t id, int x, int y, int width, int height);
 
    bool isSolidUnderneath(const struct Map &map, FurnitureData &data, bool previewing) const;
    bool isSuitableForPlant(const struct Map &map, FurnitureData &data, bool previewing) const;
@@ -91,6 +90,8 @@ struct Furniture {
 
    int x = 0;
    int y = 0;
+   int width = 0;
+   int height = 0;
 
    int ivalue1 = 0;
    int ivalue2 = 0;

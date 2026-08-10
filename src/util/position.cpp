@@ -1,5 +1,5 @@
-#include "mngr/resource.hpp"
 #include "util/position.hpp"
+#include "SRU/assets.hpp"
 #include <raymath.h>
 
 // Responsive design

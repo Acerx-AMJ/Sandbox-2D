@@ -1,9 +1,9 @@
 #include "mngr/input.hpp"
-#include "mngr/resource.hpp"
-#include "mngr/sound.hpp"
 #include "ui/checkbox.hpp"
 #include "ui/keybindIndicator.hpp"
 #include "util/render.hpp"
+#include "SRU/audio.hpp"
+#include "SRU/assets.hpp"
 
 void CheckBox::update() {
    if (CheckCollisionPointRec(GetMousePosition(), rectangle)) {

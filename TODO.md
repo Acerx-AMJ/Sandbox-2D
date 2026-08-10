@@ -1,3 +1,17 @@
+### Right Now
+- block ghost checks in render
+- divide text SRU-Lib, move out of format.hpp
+- fix popup size on spawn
+- platformed furniture
+- bring back damage indicators (and don't couple with map)
+- bring back block breaking
+- load all items from file
+- liquid loading, textures
+- backgrounds
+- move textures out of Block and move attributes back in
+- Map::isWall(), Map::setLiquid(), Map::getBlock(), Map::getWall()...
+- add drops back to furniture and blocks
+
 ### Furniture
 - Add furniture with chest logic.
 - Add all of the inventory quirks to chests.
@@ -39,8 +53,6 @@
 - World generation.
 - Add more sounds for sitting, opening doors, swimming, drowning, stepping on sticky and bouncy blocks. And fix existing sounds.
 - make backgrounds fade
-- automate sound loading
-
-### Bugs
 - fix only some inputs having visible cursor
+- use that Raylib UI corner feature for dynamic UI elements
 - fix inventory right click. inventory also doesn't feel as good as it should

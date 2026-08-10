@@ -5,43 +5,12 @@
 #include "util/fileio.hpp"
 #include "util/format.hpp" // IWYU pragma: export
 #include "util/parallax.hpp"
-#include "util/random.hpp"
 #include <fstream>
 #include <vector>
 
 // Please increment after any breaking changes to warn players
 // about corrupted worlds
 constexpr int fileVersion = 9;
-
-// File functions
-
-std::string getRandomLineFromFile(const std::string &path) {
-   return random(getAllLinesFromFile(path));
-}
-
-std::vector<std::string> getAllLinesFromFile(const std::string &path) {
-   std::fstream file (path.c_str());
-   if (!file.is_open()) {
-      return {};
-   }
-
-   std::vector<std::string> lines;
-   std::string line;
-
-   while (std::getline(file, line)) {
-      lines.push_back(line);
-   }
-   return lines;
-}
-
-void saveLinesToFile(const std::string &path, const std::vector<std::string> &lines) {
-   std::ofstream file (path);
-   assert(file.is_open(), "Failed to write to file '{}'.", path);
-
-   for (const std::string &line: lines) {
-      file << line << '\n';
-   }
-}
 
 // World saving functions
 // Save and load functions must follow the same data arrangement
@@ -100,48 +69,38 @@ void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, 
 
    // Write the map
    int blockCount = map.sizeX * map.sizeY;
-   std::vector<unsigned short> blocks, walls;
+   std::vector<blockid_t> blocks, walls;
    blocks.reserve(blockCount);
    walls.reserve(blockCount);
 
-   for (const std::vector<Block> &row: map.blocks) {
-      for (const Block &tile: row) {
-         blocks.push_back(tile.id);
-      }
+   for (const Block &tile: map.blocks) {
+      blocks.push_back(tile.id);
    }
 
-   for (const std::vector<Block> &row: map.walls) {
-      for (const Block &tile: row) {
-         walls.push_back(tile.id);
-      }
+   for (const Block &tile: map.walls) {
+      walls.push_back(tile.id);
    }
 
-   file.write(reinterpret_cast<const char*>(blocks.data()), blocks.size() * sizeof(unsigned short));
-   file.write(reinterpret_cast<const char*>(walls.data()), walls.size() * sizeof(unsigned short));
-
-   for (int y = 0; y < map.sizeY; ++y) {
-      file.write(reinterpret_cast<const char*>(map.liquidsHeights[y].data()), map.liquidsHeights[y].size() * sizeof(unsigned char));
-      file.write(reinterpret_cast<const char*>(map.liquidTypes[y].data()), map.liquidTypes[y].size() * sizeof(LiquidType));
-   }
+   file.write(reinterpret_cast<const char*>(blocks.data()), blocks.size() * sizeof(blockid_t));
+   file.write(reinterpret_cast<const char*>(walls.data()), walls.size() * sizeof(blockid_t));
+   file.write(reinterpret_cast<const char*>(map.liquidHeights.data()), map.liquidHeights.size() * sizeof(liquidlayer_t));
+   file.write(reinterpret_cast<const char*>(map.liquidTypes.data()), map.liquidTypes.size() * sizeof(LiquidType));
 
    // Write the furniture
    size_t furnitureCount = map.furniture.size();
    file.write(reinterpret_cast<const char*>(&furnitureCount), sizeof(furnitureCount));
 
    for (const Furniture &obj: map.furniture) {
-      file.write(reinterpret_cast<const char*>(&obj.posX), sizeof(obj.posX));
-      file.write(reinterpret_cast<const char*>(&obj.posY), sizeof(obj.posY));
-      file.write(reinterpret_cast<const char*>(&obj.sizeX), sizeof(obj.sizeX));
-      file.write(reinterpret_cast<const char*>(&obj.sizeY), sizeof(obj.sizeY));
-      file.write(reinterpret_cast<const char*>(&obj.type), sizeof(obj.type));
-      file.write(reinterpret_cast<const char*>(&obj.value), sizeof(obj.value));
-      file.write(reinterpret_cast<const char*>(&obj.value2), sizeof(obj.value2));
       file.write(reinterpret_cast<const char*>(&obj.id), sizeof(obj.id));
-      file.write(reinterpret_cast<const char*>(&obj.isWalkable), sizeof(obj.isWalkable));
-
-      for (const std::vector<FurniturePiece> &row: obj.pieces) {
-         file.write(reinterpret_cast<const char*>(row.data()), row.size() * sizeof(FurniturePiece));
-      }
+      file.write(reinterpret_cast<const char*>(&obj.x), sizeof(obj.x));
+      file.write(reinterpret_cast<const char*>(&obj.y), sizeof(obj.y));
+      file.write(reinterpret_cast<const char*>(&obj.width), sizeof(obj.width));
+      file.write(reinterpret_cast<const char*>(&obj.height), sizeof(obj.height));
+      file.write(reinterpret_cast<const char*>(&obj.ivalue1), sizeof(obj.ivalue1));
+      file.write(reinterpret_cast<const char*>(&obj.ivalue2), sizeof(obj.ivalue2));
+      file.write(reinterpret_cast<const char*>(&obj.fvalue1), sizeof(obj.fvalue1));
+      file.write(reinterpret_cast<const char*>(&obj.fvalue2), sizeof(obj.fvalue2));
+      file.write(reinterpret_cast<const char*>(obj.pieces.data()), obj.pieces.size() * sizeof(FurniturePiece));
    }
 
    // Write dropped items
@@ -204,17 +163,14 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
 
    // Read map
    int blockCount = map.sizeX * map.sizeY;
-   std::vector<unsigned short> blocks, walls;
+   std::vector<blockid_t> blocks, walls;
    blocks.resize(blockCount);
    walls.resize(blockCount);
 
-   file.read(reinterpret_cast<char*>(blocks.data()), blocks.size() * sizeof(unsigned short));
-   file.read(reinterpret_cast<char*>(walls.data()), walls.size() * sizeof(unsigned short));
-
-   for (int y = 0; y < map.sizeY; ++y) {
-      file.read(reinterpret_cast<char*>(map.liquidsHeights[y].data()), map.liquidsHeights[y].size() * sizeof(unsigned char));
-      file.read(reinterpret_cast<char*>(map.liquidTypes[y].data()), map.liquidTypes[y].size() * sizeof(LiquidType));
-   }
+   file.read(reinterpret_cast<char*>(blocks.data()), blocks.size() * sizeof(blockid_t));
+   file.read(reinterpret_cast<char*>(walls.data()), walls.size() * sizeof(blockid_t));
+   file.read(reinterpret_cast<char*>(map.liquidHeights.data()), map.liquidHeights.size() * sizeof(liquidlayer_t));
+   file.read(reinterpret_cast<char*>(map.liquidTypes.data()), map.liquidTypes.size() * sizeof(LiquidType));
 
    for (int y = 0; y < map.sizeY; ++y) {
       map.setRow(y, blocks.data() + y * map.sizeX);
@@ -230,20 +186,18 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
 
    for (size_t i = 0; i < furnitureCount; ++i) {
       Furniture obj;
-      file.read(reinterpret_cast<char*>(&obj.posX), sizeof(obj.posX));
-      file.read(reinterpret_cast<char*>(&obj.posY), sizeof(obj.posY));
-      file.read(reinterpret_cast<char*>(&obj.sizeX), sizeof(obj.sizeX));
-      file.read(reinterpret_cast<char*>(&obj.sizeY), sizeof(obj.sizeY));
-      file.read(reinterpret_cast<char*>(&obj.type), sizeof(obj.type));
-      file.read(reinterpret_cast<char*>(&obj.value), sizeof(obj.value));
-      file.read(reinterpret_cast<char*>(&obj.value2), sizeof(obj.value2));
       file.read(reinterpret_cast<char*>(&obj.id), sizeof(obj.id));
-      file.read(reinterpret_cast<char*>(&obj.isWalkable), sizeof(obj.isWalkable));
+      file.read(reinterpret_cast<char*>(&obj.x), sizeof(obj.x));
+      file.read(reinterpret_cast<char*>(&obj.y), sizeof(obj.y));
+      file.read(reinterpret_cast<char*>(&obj.width), sizeof(obj.width));
+      file.read(reinterpret_cast<char*>(&obj.height), sizeof(obj.height));
+      file.read(reinterpret_cast<char*>(&obj.ivalue1), sizeof(obj.ivalue1));
+      file.read(reinterpret_cast<char*>(&obj.ivalue2), sizeof(obj.ivalue2));
+      file.read(reinterpret_cast<char*>(&obj.fvalue1), sizeof(obj.fvalue1));
+      file.read(reinterpret_cast<char*>(&obj.fvalue2), sizeof(obj.fvalue2));
 
-      obj.pieces.resize(obj.sizeY, std::vector<FurniturePiece>(obj.sizeX));
-      for (std::vector<FurniturePiece> &row: obj.pieces) {
-         file.read(reinterpret_cast<char*>(row.data()), row.size() * sizeof(FurniturePiece));
-      }
+      obj.pieces.resize(obj.width * obj.height);
+      file.read(reinterpret_cast<char*>(obj.pieces.data()), obj.pieces.size() * sizeof(FurniturePiece));
       map.addFurniture(obj);
    }
 

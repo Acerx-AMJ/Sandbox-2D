@@ -51,6 +51,10 @@ std::string getBlockNameFromId(blockid_t id) {
    return blockNames[id];
 }
 
+BlockType getBlockType(blockid_t id) {
+   return blockAttributes[id];
+}
+
 size_t getBlockCount() {
    return blockCount;
 }
@@ -61,7 +65,7 @@ void reserveBlockContainers(size_t estimate) {
    blockIds.reserve(estimate);
 }
 
-size_t pushBlock(const std::string &name, BlockType attributes) {
+size_t pushBlock(const std::string &name, BlockType attributes, Texture texture) {
    blockNames.push_back(name);
    blockAttributes.push_back(attributes);
    blockIds[name] = blockCount;
@@ -194,18 +198,17 @@ void Map::deleteBlockWithoutDeletingLiquids(int x, int y) {
 }
 
 void Map::swapBlocks(int oldX, int oldY, int newX, int newY) {
-   int oldI = oldY * sizeY + oldX;
-   int newI = newY * sizeY + newX;
+   int oldI = oldY * sizeX + oldX;
+   int newI = newY * sizeX + newX;
    std::swap(blocks[oldI], blocks[newI]);
    std::swap(liquidHeights[oldI], liquidHeights[newI]);
    std::swap(liquidTypes[oldI], liquidTypes[newI]);
 }
 
 void Map::addFurniture(Furniture &object) {
-   FurnitureData &data = getFurnitureData(object.id);
-   for (int y = object.y; y < object.y + data.furnitureSize.y; ++y) {
-      for (int x = object.x; x < object.x + data.furnitureSize.x; ++x) {
-         FurniturePiece &piece = object.pieces[(y - object.y) * data.furnitureSize.x + (x - object.x)];
+   for (int y = object.y; y < object.y + object.height; ++y) {
+      for (int x = object.x; x < object.x + object.width; ++x) {
+         FurniturePiece &piece = object.pieces[(y - object.y) * object.width + (x - object.x)];
          if (piece.nil) {
             continue;
          }
@@ -219,10 +222,9 @@ void Map::addFurniture(Furniture &object) {
 }
 
 void Map::removeFurniture(Furniture &object) {
-   FurnitureData &data = getFurnitureData(object.id);
-   for (int y = object.y; y < object.y + data.furnitureSize.y; ++y) {
-      for (int x = object.x; x < object.x + data.furnitureSize.x; ++x) {
-         if (!object.pieces[(y - object.y) * data.furnitureSize.x + (x - object.x)].nil) {
+   for (int y = object.y; y < object.y + object.height; ++y) {
+      for (int x = object.x; x < object.x + object.width; ++x) {
+         if (!object.pieces[(y - object.y) * object.width + (x - object.x)].nil) {
             int i = y * sizeX + x;
             blocks[i].tile = TileType::root;
             blocks[i].id = 0;
@@ -261,7 +263,7 @@ bool Map::isNotSolid(int x, int y) const {
 }
 
 bool Map::isStable(int x, int y) const {
-   return is(x, y, BlockType::solid) || !is(x, y, BlockType::platform);
+   return is(x, y, BlockType::solid) && !is(x, y, BlockType::platform);
 }
 
 bool Map::isLiquid(int x, int y) const {
@@ -274,11 +276,11 @@ bool Map::isAnyLiquid(int x, int y) const {
 }
 
 liquidlayer_t Map::getLiquidHeight(int x, int y) const {
-   return liquidHeights[y * sizeY + x];
+   return liquidHeights[y * sizeX + x];
 }
 
 bool Map::isLiquidOfType(int x, int y, LiquidType type) const {
-   return liquidTypes[y * sizeY + x] == type;
+   return liquidTypes[y * sizeX + x] == type;
 }
 
 // render

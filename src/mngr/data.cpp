@@ -86,6 +86,7 @@ void loadBlockData() {
          }
          data.name = line.substr(1, line.size() - 2);
          init = true;
+         continue;
       }
 
       size_t equals = line.find('=');
@@ -151,6 +152,7 @@ void loadFurnitureData() {
          }
          name = line.substr(1, line.size() - 2);
          init = true;
+         continue;
       }
 
       size_t equals = line.find('=');

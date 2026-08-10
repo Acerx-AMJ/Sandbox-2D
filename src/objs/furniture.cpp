@@ -53,7 +53,7 @@ FurnitureType getFurnitureType(furnitureid_t id) {
    return furnitureData[id].type;
 }
 
-FurnitureData &getFurnituredata(furnitureid_t id) {
+FurnitureData &getFurnitureData(furnitureid_t id) {
    return furnitureData[id];
 }
 
@@ -68,9 +68,6 @@ void reserveFurnitureContainers(size_t estimate) {
 }
 
 furnitureid_t pushFurniture(FurnitureData data, const std::string &name) {
-   if (data.type == FurnitureType::tree) {
-      data.furnitureSize = V2(treeWidth, 0);
-   }
    furnitureData.push_back(data);
    furnitureNames.push_back(name);
    furnitureIds[name] = furnitureCount;
@@ -80,18 +77,12 @@ furnitureid_t pushFurniture(FurnitureData data, const std::string &name) {
 
 // Constructors
 
-void Furniture::init(furnitureid_t id, int x, int y) {
+void Furniture::init(furnitureid_t id, int x, int y, int width, int height) {
    this->id = id;
    this->x = x;
    this->y = y;
-   FurnitureData &data = furnitureData[id];
-   pieces = std::vector<FurniturePiece>(data.furnitureSize.x * data.furnitureSize.y, FurniturePiece{});
-}
-
-void Furniture::initCustomSize(furnitureid_t id, int x, int y, int width, int height) {
-   this->id = id;
-   this->x = x;
-   this->y = y;
+   this->width = width;
+   this->height = height;
    pieces = std::vector<FurniturePiece>(width * height, FurniturePiece{});
 }
 
@@ -99,8 +90,8 @@ bool Furniture::isSolidUnderneath(const Map &map, FurnitureData &data, bool prev
    if (previewing) {
       return true;
    }
-   for (int dx = x; dx < x + data.furnitureSize.x; ++dx) {
-      if (map.is(x + dx, y + data.furnitureSize.y, BlockType::solid)) {
+   for (int dx = x; dx < x + width; ++dx) {
+      if (map.is(dx, y + height, BlockType::solid)) {
          return false;
       }
    }
@@ -112,9 +103,9 @@ bool Furniture::isSuitableForPlant(const Map &map, FurnitureData &data, bool pre
       return true;
    }
    // make sure there's no liquids in the sapling and no sand on top of it. as well as is it on soil
-   for (int dy = 0; dy < data.furnitureSize.y; ++dy) {
-      for (int dx = 0; dx < data.furnitureSize.x; ++dx) {
-         if (map.isLiquid(y + dy, x + dx) || (dy == 0 && map.is(x + dx, y - 1, BlockType::sand)) || (dy + 1 == data.furnitureSize.y && !map.isSoil(x + dx, y + data.furnitureSize.y))) {
+   for (int dy = 0; dy < height; ++dy) {
+      for (int dx = 0; dx < width; ++dx) {
+         if (map.isLiquid(x + dx, y + dy) || (dy == 0 && map.is(x + dx, y - 1, BlockType::sand)) || (dy + 1 == height && !map.isSoil(x + dx, y + height))) {
             return false;
          }
       }
@@ -123,14 +114,14 @@ bool Furniture::isSuitableForPlant(const Map &map, FurnitureData &data, bool pre
 }
 
 bool Furniture::setSimpleFurniture(const Map &map, FurnitureData &data, bool playerFacingLeft, bool walkable, bool previewing) {
-   int offset = (data.shouldFacePlayer && !playerFacingLeft ? data.textureSize * data.furnitureSize.x : 0);
+   int offset = (data.shouldFacePlayer && !playerFacingLeft ? data.textureSize * width : 0);
 
-   for (int dy = 0; dy < data.furnitureSize.y; ++dy) {
-      for (int dx = 0; dx < data.furnitureSize.x; ++dx) {
+   for (int dy = 0; dy < height; ++dy) {
+      for (int dx = 0; dx < width; ++dx) {
          if (!previewing && !map.isNotSolid(x + dx, y + dy)) {
             return false;
          }
-         int i = dy * data.furnitureSize.x + dx;
+         int i = dy * width + dx;
          pieces[i].tx = data.textureSize * dx + offset;
          pieces[i].ty = data.textureSize * dy;
          pieces[i].walkable = (dy == 0 && walkable);
@@ -140,15 +131,15 @@ bool Furniture::setSimpleFurniture(const Map &map, FurnitureData &data, bool pla
 }
 
 bool Furniture::setPlant(const Map &map, FurnitureData &data, bool previewing) {
-   int textureWidth = data.textureSize * data.furnitureSize.x;
+   int textureWidth = data.textureSize * width;
    int offset = randomInt(0, data.texture.width / textureWidth - 1) * textureWidth;
 
-   for (int dy = 0; dy < data.furnitureSize.y; ++dy) {
-      for (int dx = 0; dx < data.furnitureSize.x; ++dx) {
+   for (int dy = 0; dy < height; ++dy) {
+      for (int dx = 0; dx < width; ++dx) {
          if (!previewing && !map.isEmpty(x + dx, y + dy)) {
             return false;
          }
-         int i = dy * data.furnitureSize.x + dx;
+         int i = dy * width + dx;
          pieces[i].tx = data.textureSize * dx + offset;
          pieces[i].ty = data.textureSize * dy;
       }
@@ -174,11 +165,11 @@ void Furniture::update(Map &map, Player &player, const Vector2 &mousePos, float 
       fvalue2 += dt;
       if (fvalue2 >= fvalue1) {
          map.removeFurniture(*this);
-         generateFurniture(x + (data.furnitureSize.x - 1) / 2, y + data.furnitureSize.y - 1, map, id, false);
+         generateFurniture(x + (width - 1) / 2, y + height - 1, map, id, false);
       }
    } break;
    case FurnitureType::door: {
-      Rectangle doorRect = {(float)x, (float)y, (float)data.furnitureSize.x, (float)data.furnitureSize.y};
+      Rectangle doorRect = {(float)x, (float)y, (float)width, (float)height};
       bool previousValue = ivalue1;
       bool previousValue2 = ivalue2;
 
@@ -195,8 +186,8 @@ void Furniture::update(Map &map, Player &player, const Vector2 &mousePos, float 
          ivalue2 = false;
       }
 
-      for (int i = 0; ivalue1 != previousValue && i < data.furnitureSize.y; ++i) {
-         pieces[i * data.furnitureSize.x].ty = (ivalue1 * data.furnitureSize.y) * data.textureSize;
+      for (int i = 0; ivalue1 != previousValue && i < height; ++i) {
+         pieces[i * width].ty = (ivalue1 * height) * data.textureSize;
       }
    } break;
    default: break;
@@ -222,9 +213,9 @@ void Furniture::preview(const Map &map) const {
    FurnitureData &data = furnitureData[id];
    bool valid = isValid(data, map);
 
-   for (int dy = y; dy - y < data.furnitureSize.y; ++dy) {
-      for (int dx = x; dx - x < data.furnitureSize.x; ++dx) {
-         const FurniturePiece &piece = pieces[(dy - y) * data.furnitureSize.x + (dx - x)];
+   for (int dy = y; dy - y < height; ++dy) {
+      for (int dx = x; dx - x < width; ++dx) {
+         const FurniturePiece &piece = pieces[(dy - y) * width + (dx - x)];
          if (piece.nil) {
             continue;
          }
@@ -236,9 +227,9 @@ void Furniture::preview(const Map &map) const {
 
 void Furniture::render(const Rectangle &cameraBounds) const {
    FurnitureData &data = furnitureData[id];
-   for (int dy = y; dy <= cameraBounds.height && dy - y < data.furnitureSize.y; ++dy) {
-      for (int dx = x; dx <= cameraBounds.width && dx - x < data.furnitureSize.x; ++dx) {
-         const FurniturePiece &piece = pieces[(dy - y) * data.furnitureSize.x + (dx - x)];
+   for (int dy = y; dy <= cameraBounds.height && dy - y < height; ++dy) {
+      for (int dx = x; dx <= cameraBounds.width && dx - x < width; ++dx) {
+         const FurniturePiece &piece = pieces[(dy - y) * width + (dx - x)];
          if (dy < cameraBounds.y || dx < cameraBounds.x || piece.nil) {
             continue;
          }
@@ -256,15 +247,15 @@ Furniture getFurniture(int x, int y, const Map &map, furnitureid_t id, bool play
    switch (data.type) {
    case FurnitureType::tree: {
       // trees are not placed by top-left but from center-bottom.
-      int height = randomInt(data.treeSizeMin, data.treeSizeMax);
-      for (int dy = y; dy < y + height; ++dy) {
+      int treeHeight = randomInt(data.treeSizeMin, data.treeSizeMax);
+      for (int dy = y; dy < y + treeHeight; ++dy) {
          if (!map.isNotSolid(x, dy)) {
-            height = dy - y;
+            treeHeight = dy - y;
             break;
          }
       }
 
-      if (!previewing && (height < data.treeSizeMin || !map.isSoil(x, y + 1))) {
+      if (!previewing && (treeHeight < data.treeSizeMin || !map.isSoil(x, y + 1))) {
          return {};
       }
 
@@ -272,8 +263,7 @@ Furniture getFurniture(int x, int y, const Map &map, furnitureid_t id, bool play
       int middle = treeWidth / 2;
    
       Furniture tree;
-      tree.initCustomSize(id, x - middle, y - height + 1, treeWidth, height);
-      tree.ivalue1 = height;
+      tree.init(id, x - middle, y - treeHeight + 1, treeWidth, treeHeight);
 
       // place the tree top
       if (!data.treeIsCactus) {
@@ -282,27 +272,27 @@ Furniture getFurniture(int x, int y, const Map &map, furnitureid_t id, bool play
 
          for (int dy = 0; dy < topHeight; ++dy) {
             for (int dx = 0; dx < treeWidth; ++dx) {
-               int i = dy * treeWidth + dy;
+               int i = dy * treeWidth + dx;
                tree.pieces[i].tx = dx * data.textureSize + topOffset;
                tree.pieces[i].ty = dy * data.textureSize;
             }
          }
-         height -= topHeight;
+         treeHeight -= topHeight;
       }
       // initial cactus stub setup
       else {
-         for (int dy = y; dy < y + height; ++dy) {
+         for (int dy = 0; dy < treeHeight; ++dy) {
             int middleI = dy * treeWidth + middle;
-            tree.pieces[middleI-1].nil = (dy + 1 == y + height || dy == y || !map.isNotSolid(x - 1, dy) || chance(100 - data.treeBranchChance));
-            tree.pieces[middleI+1].nil = (dy + 1 == y + height || dy == y || !map.isNotSolid(x + 1, dy) || chance(100 - data.treeBranchChance));
+            tree.pieces[middleI-1].nil = (dy + 1 == treeHeight || dy == 0 || !map.isNotSolid(x - 1, y + dy) || chance(100 - data.treeBranchChance));
+            tree.pieces[middleI+1].nil = (dy + 1 == treeHeight || dy == 0 || !map.isNotSolid(x + 1, y + dy) || chance(100 - data.treeBranchChance));
          }
       }
 
       // place the trunk, branches and roots
-      for (int dy = 0; dy < height; ++dy) {
+      for (int dy = 0; dy < treeHeight; ++dy) {
          int middleI = dy * treeWidth + middle;
          if (isPalm) {
-            int topOffset = (dy + 1 == height ? 4 : 3);
+            int topOffset = (dy + 1 == treeHeight ? 4 : 3);
             tree.pieces[middleI].tx = randomInt(0, 2) * data.textureSize;
             tree.pieces[middleI].ty = topOffset * data.textureSize;
 
@@ -317,18 +307,18 @@ Furniture getFurniture(int x, int y, const Map &map, furnitureid_t id, bool play
             // a lot of clever bool logic incoming. it just works and saves long if chains. I don't recommend tinkering too much
             // with cactus or tree sprite layouts and just going with the flow here. another yucky trick is not checking nil
             // on stubs and applying tx and ty anyway since nil pieces don't check them.
-            int topOffset = anyStub * (rightStub + leftStub * 2) + !anyStub * ((dy + 1 == height) * 3 + (dy == 0) * chance(data.treeCactusFlowerChance));
-            int leftOffset = !anyStub * (dy == 0 || dy + 1 == height);
+            int topOffset = anyStub * (rightStub + leftStub * 2) + !anyStub * ((dy + 1 == treeHeight) * 3 + (dy == 0) * chance(data.treeCactusFlowerChance));
+            int leftOffset = !anyStub * (dy == 0 || dy + 1 == treeHeight);
             tree.pieces[middleI].tx = leftOffset * data.textureSize;
             tree.pieces[middleI].ty = topOffset * data.textureSize;
 
             int offsetXLeft = 2 * data.textureSize;
-            int topOffsetLeft = (dy == 0 || tree.pieces[middleI - treeWidth - 1].nil) + (dy + 1 == height || tree.pieces[middleI + treeWidth - 1].nil) * 2;
+            int topOffsetLeft = (dy == 0 || tree.pieces[middleI - treeWidth - 1].nil) + (dy + 1 == treeHeight || tree.pieces[middleI + treeWidth - 1].nil) * 2;
             tree.pieces[middleI-1].tx = offsetXLeft;
             tree.pieces[middleI-1].ty = topOffsetLeft * data.textureSize;
 
             int offsetXRight = 3 * data.textureSize;
-            int topOffsetRight = (dy == 0 || tree.pieces[middleI - treeWidth + 1].nil) + (dy + 1 == height || tree.pieces[middleI + treeWidth + 1].nil) * 2;
+            int topOffsetRight = (dy == 0 || tree.pieces[middleI - treeWidth + 1].nil) + (dy + 1 == treeHeight || tree.pieces[middleI + treeWidth + 1].nil) * 2;
             tree.pieces[middleI+1].tx = offsetXRight;
             tree.pieces[middleI+1].ty = topOffsetRight * data.textureSize;
          }
@@ -356,7 +346,7 @@ Furniture getFurniture(int x, int y, const Map &map, furnitureid_t id, bool play
    } break;
    case FurnitureType::sapling: {
       Furniture sapling;
-      sapling.init(id, x, y);
+      sapling.init(id, x, y, data.furnitureSize.x, data.furnitureSize.y);
       if (sapling.isSuitableForPlant(map, data, previewing) && sapling.setPlant(map, data, previewing)) {
          sapling.fvalue1 = randomFloat(data.saplingGrowSpeedMin, data.saplingGrowSpeedMax);
          return sapling;
@@ -364,21 +354,21 @@ Furniture getFurniture(int x, int y, const Map &map, furnitureid_t id, bool play
    } break;
    case FurnitureType::table: {
       Furniture table;
-      table.init(id, x, y);
+      table.init(id, x, y, data.furnitureSize.x, data.furnitureSize.y);
       if (table.isSolidUnderneath(map, data, previewing) && table.setSimpleFurniture(map, data, playerFacingLeft, true, previewing)) {
          return table;
       }
    } break;
    case FurnitureType::chair: {
       Furniture chair;
-      chair.init(id, x, y);
+      chair.init(id, x, y, data.furnitureSize.x, data.furnitureSize.y);
       if (chair.isSolidUnderneath(map, data, previewing) && chair.setSimpleFurniture(map, data, playerFacingLeft, false, previewing)) {
          return chair;
       }
    } break;
    case FurnitureType::door: {
       Furniture door;
-      door.init(id, x, y);
+      door.init(id, x, y, data.furnitureSize.x, data.furnitureSize.y);
       if (door.isSolidUnderneath(map, data, previewing) && door.setSimpleFurniture(map, data, playerFacingLeft, false, previewing)) {
          return door;
       }

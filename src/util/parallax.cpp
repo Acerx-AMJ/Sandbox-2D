@@ -1,8 +1,8 @@
 #include "util/parallax.hpp"
-#include "mngr/resource.hpp"
 #include "util/position.hpp"
-#include "util/random.hpp"
 #include "util/render.hpp"
+#include "SRU/assets.hpp"
+#include "SRU/random.hpp"
 #include <cmath>
 #include <string>
 #include <vector>
@@ -135,13 +135,13 @@ void drawBackground(float bgSpeed, float fgSpeed, float daySpeed) {
 
    // Draw the stars
    if (prevMoonPhase != moonPhase) {
-      starCount = random(starCountMin, starCountMax);
+      starCount = randomInt(starCountMin, starCountMax);
       for (int i = 0; i < starCount; ++i) {
          Star &star = stars[i];
-         star.size.x = star.size.y = random(starSizeMin.x, starSizeMax.x);
+         star.size.x = star.size.y = randomFloat(starSizeMin.x, starSizeMax.x);
          
-         star.position = {random(0.0f, 1.0f), random(0.0f, 0.5f)};
-         star.frameX = random(0, 3);
+         star.position = {randomFloat(0.0f, 1.0f), randomFloat(0.0f, 0.5f)};
+         star.frameX = randomInt(0, 3);
       }
    }
 
@@ -208,8 +208,8 @@ Color getLightBasedOnTime() {
 
 void setCurrentBackgroundBiome(MapGenerator::Biome biome) {
    if (::biome != biome || !bgTexture || !fgTexture) {
-      bgTexture = &getTexture(random(biomeBackgroundTextures[(size_t)biome]));
-      fgTexture = &getTexture(random(biomeForegroundTextures[(size_t)biome]));   
+      bgTexture = &getTexture(randomElement(biomeBackgroundTextures[(size_t)biome]));
+      fgTexture = &getTexture(randomElement(biomeForegroundTextures[(size_t)biome]));   
    }
    ::biome = biome;
 }

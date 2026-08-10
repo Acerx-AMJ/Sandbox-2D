@@ -1,15 +1,16 @@
 #include "game/gameState.hpp"
 #include "game/menuState.hpp"
 #include "mngr/input.hpp"
-#include "mngr/resource.hpp"
 #include "objs/generation.hpp"
 #include "ui/popup.hpp"
 #include "util/fileio.hpp"
 #include "util/format.hpp"
 #include "util/parallax.hpp"
 #include "util/position.hpp"
-#include "util/random.hpp"
 #include "util/render.hpp"
+#include "SRU/assets.hpp"
+#include "SRU/file.hpp"
+#include "SRU/random.hpp"
 #include <filesystem>
 #include <thread>
 
@@ -78,7 +79,7 @@ MenuState::MenuState() {
    generationProgressBar.foregroundTint = WHITE;
 
    updateResponsiveness();
-   setCurrentBackgroundBiome(MapGenerator::Biome(random(0, (int)MapGenerator::Biome::count - 1)));
+   setCurrentBackgroundBiome(MapGenerator::Biome(randomInt(0, (int)MapGenerator::Biome::count - 1)));
 }
 
 // Update
@@ -334,8 +335,8 @@ void MenuState::updateLevelSelection() {
 
       std::string worldName = selectedButton->text;
       selectedButton->favorite = !selectedButton->favorite;
-      
-      saveLinesToFile("data/favorites.txt", favoriteWorlds);
+
+      writeFileLines("data/favorites.txt", favoriteWorlds);
       sortWorldButtonsByFavorites();
 
       for (Button &button: worldButtons) {
@@ -460,7 +461,7 @@ void MenuState::updateLevelRenaming() {
       if (wasFavoriteBeforeRenaming) {
          favoriteWorlds.erase(std::remove(favoriteWorlds.begin(), favoriteWorlds.end(), renameInput.text), favoriteWorlds.end());
          favoriteWorlds.push_back(renameInput.text);
-         saveLinesToFile("data/favorites.txt", favoriteWorlds);
+         writeFileLines("data/favorites.txt", favoriteWorlds);
       }
 
       loadWorldButtons();
@@ -588,7 +589,7 @@ State* MenuState::change() {
 // World selection functions
 
 void MenuState::loadWorldButtons() {
-   favoriteWorlds = getAllLinesFromFile("data/favorites.txt");
+   getLinesFromFileInPlace(favoriteWorlds, "data/favorites.txt");
    std::filesystem::create_directories("data/worlds/");
 
    worldButtons.clear();

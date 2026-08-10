@@ -50,7 +50,7 @@ attributes=solid,platform,translucent,flowable
 attributes=solid,sand
 
 [ice]
-attributes=slid,ice
+attributes=solid,ice
 
 [jungle_grass]
 attributes=solid,grass

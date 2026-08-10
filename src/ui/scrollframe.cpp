@@ -1,8 +1,8 @@
 #include "mngr/input.hpp"
-#include "mngr/resource.hpp"
 #include "ui/scrollframe.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
+#include "SRU/assets.hpp"
 #include <raymath.h>
 
 // Update

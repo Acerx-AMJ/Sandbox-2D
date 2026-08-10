@@ -1,7 +1,7 @@
 #include "objs/generation.hpp"
-#include "mngr/sound.hpp"
 #include "util/fileio.hpp"
-#include "util/random.hpp"
+#include "SRU/audio.hpp"
+#include "SRU/random.hpp"
 #include <thread>
 
 // Constants
@@ -44,7 +44,7 @@ MapGenerator::MapGenerator(const std::string &name, int sizeX, int sizeY, bool i
    : infoTextMutex(infoTextMutex), infoText(infoText), progress(progress), name(name), isFlat(isFlat) {
    map.sizeX = sizeX;
    map.sizeY = sizeY;
-   map.init(true); // Init with no containers
+   map.initThreadSafe();
    setInfo("Initializing...", 0.0f);
 }
 
@@ -104,11 +104,11 @@ void MapGenerator::generateTerrain() {
       const BiomeData &lastData = biomeData.at((int)last);
 
       int height = std::floor(value * 5.f);
-      y += random(data.hmin[height], data.hmax[height]);
+      y += randomInt(data.hmin[height], data.hmax[height]);
 
       // 2 is the middle point in our data
       if ((height == 2 && chance(data.rng)) || height != 2) {
-         y += random(-1, 1);
+         y += randomInt(-1, 1);
       }
 
       if (y > map.sizeY * seaLevel) {
@@ -122,7 +122,7 @@ void MapGenerator::generateTerrain() {
       }
 
       if (y > map.sizeY * data.lowestPoint || waterLength >= maxWaterLength) {
-         y += data.hmin[random(0, 2)];
+         y += data.hmin[randomInt(0, 2)];
       }
 
       y = std::clamp(y, 0, map.sizeY - 1);
@@ -137,11 +137,11 @@ void MapGenerator::generateTerrain() {
             map.setBlock(x, yy, block);
 
             if (block != "sand" && block != "snow") {
-               map.setBlock(x, yy, block, true);
+               map.setWall(x, yy, block);
             }
          } else {
             rockStartHeights[x] = yy;
-            map.setColumnAndWalls(x, yy, "stone");
+            map.setColumnFromPoint(x, yy, "stone");
             break;
          }
       }
@@ -155,12 +155,12 @@ void MapGenerator::generateWater() {
    unsigned short iceid = getBlockIdFromName("ice");
 
    for (int x = 0; x < map.sizeX; ++x) {
-      for (int y = seaY; y < map.sizeY && map.isu(x, y, BlockType::empty); ++y) {
+      for (int y = seaY; y < map.sizeY && map.isEmpty(x, y); ++y) {
          if (y == seaY && biomeData[(int)getBiome(x)].wamth == BiomeWarmth::cold) {
-            map.lightSetBlock(x, y, iceid);
+            map.setBlock(x, y, iceid);
          } else {
-            map.liquidsHeights[y][x] = maxLiquidLayers;
-            map.liquidTypes[y][x] = LiquidType::water;
+            map.liquidHeights[y * map.sizeX + x] = maxLiquidLayers;
+            map.liquidTypes[y * map.sizeX + x] = LiquidType::water;
          }
       }
    }
@@ -185,29 +185,29 @@ void MapGenerator::generateDebri() {
 
          // Debris
          if (value >= 0.6125f) {
-            map.lightSetBlock(x, y, clayid);
+            map.setBlock(x, y, clayid);
          } else if (value <= -0.6f) {
-            map.lightSetBlock(x, y, dirtid);
+            map.setBlock(x, y, dirtid);
          } else if (sandDebriNoise.octave2D(x * 0.05f, y * 0.05f, 3) <= -0.7f) {
-            map.lightSetBlock(x, y, sandid);
+            map.setBlock(x, y, sandid);
 
          // Tier 1 ores (coal, iron)
          } else {
 
          float ovalue1 = oreNoise1.octave2D(x * 0.1f, y * 0.1f, 3);
          if (ovalue1 >= 0.65f) {
-            map.lightSetBlock(x, y, coalid);
+            map.setBlock(x, y, coalid);
          } else if (ovalue1 <= -0.7f) {
-            map.lightSetBlock(x, y, ironid);
+            map.setBlock(x, y, ironid);
 
          // Tier 2 ores (gold, mythril)
          } else if (y >= tier2OreY) {
 
          float ovalue2 = oreNoise2.octave2D(x * 0.125f, y * 0.125f, 3);
          if (ovalue2 >= 0.725f) {
-            map.lightSetBlock(x, y, goldid);
+            map.setBlock(x, y, goldid);
          } else if (ovalue2 <= -0.75f) {
-            map.lightSetBlock(x, y, mythid);
+            map.setBlock(x, y, mythid);
          }
 
          }
@@ -230,13 +230,13 @@ void MapGenerator::generateTrees() {
       if (counter >= counterThreshold && chance(biomeData[(int)getBiome(x)].treeRate)) {
          bool sapling = chance(5);
 
-         if (map.blocks[y + 1][x].id != getBlockIdFromName("sand") && chance(60)) {
-            generateFurniture(x, y, map, (sapling ? FurnitureType::cactusSeed : FurnitureType::cactus), false);
+         if (map.blocks[(y + 1) * map.sizeX + x].id != getBlockIdFromName("sand") && chance(60)) {
+            generateFurniture(x, y, map, getFurnitureIdFromName(sapling ? "cactus_seed" : "cactus"), false);
          } else {
-            generateFurniture(x, (sapling ? y - 1 : y), map, (sapling ? FurnitureType::sapling : FurnitureType::tree), false);
+            generateFurniture(x, (sapling ? y - 1 : y), map, getFurnitureIdFromName(sapling ? "sapling" : "tree"), false);
          }
          counter = 0;
-         counterThreshold = random(1, 4);
+         counterThreshold = randomInt(1, 4);
       } else {
          counter++;
       }
@@ -254,10 +254,10 @@ void MapGenerator::generateFlatWorld() {
    for (int y = startingPointY + 1; y < map.sizeY; ++y) {
       if (y < rockStart) {
          map.setRow(y, "dirt");
-         map.setRow(y, "dirt", true);
+         map.setWallRow(y, "dirt");
       } else {
          map.setRow(y, "stone");
-         map.setRow(y, "stone", true);
+         map.setWallRow(y, "stone");
       }
    }
 }
@@ -270,13 +270,13 @@ Vector2 MapGenerator::findPlayerSpawnLocation() {
    int offset = 0;
 
    for (int x = map.sizeX / 2; x < map.sizeX && x >= 0; x = map.sizeX / 2 + offset) {
-      while (y < map.sizeY - 1 && map.isu(x, y + 1, BlockType::empty)) { y++; }
-      while (y > 0 && !map.isu(x, y, BlockType::empty)) { y--; }
+      while (y < map.sizeY - 1 && map.isEmpty(x, y + 1)) { y++; }
+      while (y > 0 && !map.isEmpty(x, y)) { y--; }
 
       bool valid = true;
       for (int yy = 0; yy < 3; ++yy) {
          for (int xx = 0; xx < 2; ++xx) {
-            if (!map.is(x + xx, y - yy, BlockType::empty)) {
+            if (!map.isEmpty(x + xx, y - yy)) {
                valid = false;
                goto breakOut;
             }

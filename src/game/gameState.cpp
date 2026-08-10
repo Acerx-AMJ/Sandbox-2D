@@ -1,21 +1,22 @@
 #include "game/gameState.hpp"
 #include "game/menuState.hpp"
 #include "mngr/particle.hpp"
-#include "mngr/resource.hpp"
 #include "mngr/input.hpp"
-#include "mngr/sound.hpp"
 #include "util/fileio.hpp"
 #include "util/format.hpp"
 #include "util/parallax.hpp"
 #include "util/position.hpp"
-#include "util/random.hpp"
 #include "util/render.hpp"
+#include "SRU/audio.hpp"
+#include "SRU/assets.hpp"
+#include "SRU/random.hpp"
 #include <raymath.h>
 #include <algorithm>
 #include <cmath>
 
 // Constants
 
+constexpr float timeToRespawn = 10.0f;
 constexpr float cameraFollowSpeed = 0.416f;
 constexpr float minCameraZoom     = 12.5f;
 constexpr float maxCameraZoom     = 200.0f;
@@ -98,18 +99,18 @@ void GameState::fixedUpdate() {
       player.updatePlayer(map);
    }
 
-   for (DamageIndicator &indicator: map.damageIndicators) {
-      indicator.velocity.y += 0.25f * fixedUpdateDT;
-      indicator.velocity.x *= 0.9f; // Drag
+   // for (DamageIndicator &indicator: map.damageIndicators) {
+   //    indicator.velocity.y += 0.25f * fixedUpdateDT;
+   //    indicator.velocity.x *= 0.9f; // Drag
 
-      indicator.position.x += indicator.velocity.x;
-      indicator.position.y += indicator.velocity.y;
-      indicator.lifetime += fixedUpdateDT;
-   }
+   //    indicator.position.x += indicator.velocity.x;
+   //    indicator.position.y += indicator.velocity.y;
+   //    indicator.lifetime += fixedUpdateDT;
+   // }
 
-   map.damageIndicators.erase(std::remove_if(map.damageIndicators.begin(), map.damageIndicators.end(), [](DamageIndicator &i) -> bool {
-      return i.lifetime >= damageIndicatorLifetime || i.damage <= 0.0f;
-   }), map.damageIndicators.end());   
+   // map.damageIndicators.erase(std::remove_if(map.damageIndicators.begin(), map.damageIndicators.end(), [](DamageIndicator &i) -> bool {
+   //    return i.lifetime >= damageIndicatorLifetime || i.damage <= 0.0f;
+   // }), map.damageIndicators.end());   
 
    // Update physics
    physicsCounter = (physicsCounter + 1) % physicsTicks;
@@ -130,7 +131,7 @@ void GameState::fixedUpdate() {
    // Loop backwards to avoid updating most of the moving blocks twice
    for (int y = physicsBounds.height; y >= physicsBounds.y; --y) {
       for (int x = physicsBounds.width; x >= physicsBounds.x; --x) {
-         if (map.isLiquidAtAll(x, y)) {
+         if (map.isAnyLiquid(x, y)) {
             if (map.isLiquidOfType(x, y, LiquidType::water)) {
                updateWaterPhysics(x, y);
             } else if (lavaCounter == 0 && map.isLiquidOfType(x, y, LiquidType::lava)) {
@@ -140,14 +141,14 @@ void GameState::fixedUpdate() {
             }
          }
 
-         BlockType type = map.blocks[y][x].type;
-         if (type & BlockType::sand) {
+         BlockType type = getBlockType(map.blocks[y * map.sizeX + x].id);
+         if (BlockTypeHas(type, BlockType::sand)) {
             updateSandPhysics(x, y);
-         } else if (type & BlockType::grass) {
+         } else if (BlockTypeHas(type, BlockType::grass)) {
             updateGrassPhysics(x, y);
-         } else if (type & BlockType::dirt) {
+         } else if (BlockTypeHas(type, BlockType::dirt)) {
             updateDirtPhysics(x, y);
-         } else if (type & BlockType::torch) {
+         } else if (BlockTypeHas(type, BlockType::torch)) {
             updateTorchPhysics(x, y);
          }
       }
@@ -208,7 +209,7 @@ void GameState::updatePlaying() {
    // Update furniture
    const Vector2 translatedMousePos = GetScreenToWorld2D(GetMousePosition(), camera);
    for (Furniture &obj: map.furniture) {
-      obj.update(map, player, translatedMousePos);
+      obj.update(map, player, translatedMousePos, dt);
    }
 
    map.furniture.erase(std::remove_if(map.furniture.begin(), map.furniture.end(), [](Furniture &f) -> bool {
@@ -223,40 +224,40 @@ void GameState::updatePlaying() {
 
    if (map.isPositionValid(mouseX, mouseY) && Vector2DistanceSqr(mousePos, playerCenter) <= maxToolRange) {
       canDrawPreview = (inventory.canPlaceBlock() && (inventory.getSelected().isFurniture || !CheckCollisionRecs(player.getBounds(), {(float)mouseX, (float)mouseY, 1, 1})));
-      player.breakingBlock = (isMouseDownOutsideUI(MOUSE_BUTTON_LEFT) && (!(map.blocks[mouseY][mouseX].type & BlockType::empty) || !(map.walls[mouseY][mouseX].type & BlockType::empty) || (map.blocks[mouseY][mouseX].type & BlockType::furniture)));
+      player.breakingBlock = (isMouseDownOutsideUI(MOUSE_BUTTON_LEFT) && (!map.isEmpty(mouseX, mouseY) || !BlockTypeHas(getBlockType(map.walls[mouseY * map.sizeX + mouseX].id), BlockType::empty)));
 
       if (isMouseDownOutsideUI(MOUSE_BUTTON_RIGHT) && inventory.canPlaceBlock()) {
          inventory.placeBlock(mouseX, mouseY, player.flipX);
          canDrawPreview = canDrawPreview && inventory.canPlaceBlock(); // To avoid attempting to draw air on placing last block
       } else if (isMousePressedOutsideUI(MOUSE_BUTTON_MIDDLE)) {
          inventory.selectItem(mouseX, mouseY);
-      } else if (player.breakingBlock) {
-         bool isWall = (map.blocks[mouseY][mouseX].type & BlockType::empty);
-         bool isFurniture = (map.blocks[mouseY][mouseX].type & BlockType::furniture);
-         Block &block = (isWall ? map.walls : map.blocks)[mouseY][mouseX];
+      // } else if (player.breakingBlock) {
+      //    bool isWall = (map.blocks[mouseY][mouseX].type & BlockType::empty);
+      //    bool isFurniture = (map.blocks[mouseY][mouseX].type & BlockType::furniture);
+      //    Block &block = (isWall ? map.walls : map.blocks)[mouseY][mouseX];
 
-         if (mouseX != player.lastBreakingX || mouseY != player.lastBreakingY || isWall != player.breakingWall || isFurniture != player.breakingFurniture) {
-            player.breakTime = 0;
-         }
+      //    if (mouseX != player.lastBreakingX || mouseY != player.lastBreakingY || isWall != player.breakingWall || isFurniture != player.breakingFurniture) {
+      //       player.breakTime = 0;
+      //    }
 
-         player.breakTime += realDt * inventory.getBlockBreakingMultiplier();
-         player.breakingWall = isWall;
-         player.breakingFurniture = isFurniture;
-         player.lastBreakingX = mouseX;
-         player.lastBreakingY = mouseY;
+      //    player.breakTime += realDt * inventory.getBlockBreakingMultiplier();
+      //    player.breakingWall = isWall;
+      //    player.breakingFurniture = isFurniture;
+      //    player.lastBreakingX = mouseX;
+      //    player.lastBreakingY = mouseY;
 
-         if (player.breakTime >= (player.breakingFurniture ? getFurnitureBreakingTime(map.getFurnitureAtPosition(mouseX, mouseY).id) : getBlockBreakingTime(block.id))) {
-            if (player.breakingFurniture) {
-               map.getFurnitureAtPosition(mouseX, mouseY).destroy(map, inventory, mouseX, mouseY, inventory.getBlockBreakingLevel());
-            } else {
-               if (getBlockBreakingLevel(block.id) <= inventory.getBlockBreakingLevel()) {
-                  Item item = getBlockDropId(block.id, player.breakingWall);
-                  inventory.tryToPlaceItemOrDropAtCoordinates(item, mouseX, mouseY);
-               }
-               map.deleteBlockWithoutDeletingLiquids(mouseX, mouseY, player.breakingWall);
-            }
-            player.breakTime = 0;
-         }
+      //    if (player.breakTime >= (player.breakingFurniture ? getFurnitureBreakingTime(map.getFurnitureAtPosition(mouseX, mouseY).id) : getBlockBreakingTime(block.id))) {
+      //       if (player.breakingFurniture) {
+      //          map.getFurnitureAtPosition(mouseX, mouseY).destroy(map, inventory, mouseX, mouseY, inventory.getBlockBreakingLevel());
+      //       } else {
+      //          if (getBlockBreakingLevel(block.id) <= inventory.getBlockBreakingLevel()) {
+      //             Item item = getBlockDropId(block.id, player.breakingWall);
+      //             inventory.tryToPlaceItemOrDropAtCoordinates(item, mouseX, mouseY);
+      //          }
+      //          map.deleteBlockWithoutDeletingLiquids(mouseX, mouseY, player.breakingWall);
+      //       }
+      //       player.breakTime = 0;
+      //    }
       }
    } else {
       canDrawPreview = false;
@@ -303,7 +304,7 @@ void GameState::updatePausing() {
 
 void GameState::updateDying() {
    deathTimer += realDt;
-   if (deathTimer >= map.timeToRespawn) {
+   if (deathTimer >= timeToRespawn) {
       player.previousPosition = player.position = player.spawnPos;
       player.hearts = player.lastHearts = player.displayHearts = player.maxHearts;
       player.displayBreath = player.breath = maxBreath;
@@ -340,57 +341,57 @@ static void applyHalfFlowDown(unsigned char &flow1, unsigned char &flow2) {
 bool GameState::handleLiquidToBlock(int x, int y, LiquidType type, unsigned short blockId) {
    // What even is C++ syntax?
    for (const Vector2 &offset: {Vector2{1, 0}, Vector2{0, 1}, Vector2{-1, 0}, Vector2{0, -1}}) {
-      if (!map.isLiquidAtAll(x + offset.x, y + offset.y) || !map.isLiquidOfType(x + offset.x, y + offset.y, type)) {
+      if (!map.isAnyLiquid(x + offset.x, y + offset.y) || !map.isLiquidOfType(x + offset.x, y + offset.y, type)) {
          continue;
       }
 
-      if (map.getLiquidHeight(x + offset.x, y + offset.y) < liquidToBlockThreshold || !(map.blocks[y + offset.y][x + offset.x].type & BlockType::empty)) {
-         map.liquidTypes[y + offset.y][x + offset.x] = LiquidType::none;
-         map.liquidsHeights[y + offset.y][x + offset.x] = 0;
+      if (map.getLiquidHeight(x + offset.x, y + offset.y) < liquidToBlockThreshold || !map.isEmpty(x + offset.x, y + offset.y)) {
+         map.liquidTypes[(y + offset.y) * map.sizeX + (x + offset.x)] = LiquidType::none;
+         map.liquidHeights[(y + offset.y) * map.sizeX + (x + offset.x)] = 0;
          continue;
       }
 
       if (map.getLiquidHeight(x, y) >= liquidToBlockThreshold) {
          map.setBlock(x + offset.x, y + offset.y, blockId);
       }
-      map.liquidTypes[y][x] = LiquidType::none;
-      map.liquidsHeights[y][x] = 0;
+      map.liquidTypes[y * map.sizeX + x] = LiquidType::none;
+      map.liquidHeights[y * map.sizeX + x] = 0;
    }
-   return map.isLiquidAtAll(x, y);
+   return map.isAnyLiquid(x, y);
 }
 
 void GameState::updateFluid(int x, int y) {
    unsigned char height = map.getLiquidHeight(x, y);
-   LiquidType type = map.liquidTypes[y][x];
+   LiquidType type = map.liquidTypes[y * map.sizeX + x];
 
    // Delete the liquid if its height is zero
    if (height == 0) {
-      map.liquidsHeights[y][x] = 0;
-      map.liquidTypes[y][x] = LiquidType::none;
+      map.liquidHeights[y * map.sizeX + x] = 0;
+      map.liquidTypes[y * map.sizeX + x] = LiquidType::none;
       return;
    }
 
    // Handle liquid going down
-   if (map.is(x, y + 1, BlockType::flowable) && !map.isLiquidAtAll(x, y + 1)) {
-      std::swap(map.liquidTypes[y][x], map.liquidTypes[y + 1][x]);
-      std::swap(map.liquidsHeights[y][x], map.liquidsHeights[y + 1][x]);
+   if (map.is(x, y + 1, BlockType::flowable) && !map.isAnyLiquid(x, y + 1)) {
+      std::swap(map.liquidTypes[y * map.sizeX + x], map.liquidTypes[(y + 1) * map.sizeX + x]);
+      std::swap(map.liquidHeights[y * map.sizeX + x], map.liquidHeights[(y + 1) * map.sizeX + x]);
       return;
-   } else if (map.isLiquidAtAll(x, y + 1) && map.isLiquidOfType(x, y + 1, type) && map.getLiquidHeight(x, y + 1) < maxLiquidLayers) {
-      applyFlowDown(map.liquidsHeights[y][x], map.liquidsHeights[y + 1][x]);
+   } else if (map.isAnyLiquid(x, y + 1) && map.isLiquidOfType(x, y + 1, type) && map.getLiquidHeight(x, y + 1) < maxLiquidLayers) {
+      applyFlowDown(map.liquidHeights[y * map.sizeX + x], map.liquidHeights[(y + 1) * map.sizeX + x]);
    }
 
    // Handle liquid going left
-   if ((map.is(x - 1, y, BlockType::flowable) && !map.isLiquidAtAll(x - 1, y))
-    || (map.isLiquidAtAll(x - 1, y) && map.isLiquidOfType(x - 1, y, type) && map.getLiquidHeight(x - 1, y) < height && map.getLiquidHeight(x - 1, y) < maxLiquidLayers)) {
-      map.liquidTypes[y][x - 1] = type;
-      applyHalfFlowDown(map.liquidsHeights[y][x], map.liquidsHeights[y][x - 1]);
+   if ((map.is(x - 1, y, BlockType::flowable) && !map.isAnyLiquid(x - 1, y))
+    || (map.isAnyLiquid(x - 1, y) && map.isLiquidOfType(x - 1, y, type) && map.getLiquidHeight(x - 1, y) < height && map.getLiquidHeight(x - 1, y) < maxLiquidLayers)) {
+      map.liquidTypes[y * map.sizeX + x - 1] = type;
+      applyHalfFlowDown(map.liquidHeights[y * map.sizeX + x], map.liquidHeights[y * map.sizeX + x - 1]);
    }
 
    // Handle liquid going right
-   if ((map.is(x + 1, y, BlockType::flowable) && !map.isLiquidAtAll(x + 1, y))
-    || (map.isLiquidAtAll(x + 1, y) && map.isLiquidOfType(x + 1, y, type) && map.getLiquidHeight(x + 1, y) < height && map.getLiquidHeight(x + 1, y) < maxLiquidLayers)) {
-      map.liquidTypes[y][x + 1] = type;
-      applyHalfFlowDown(map.liquidsHeights[y][x], map.liquidsHeights[y][x + 1]);
+   if ((map.is(x + 1, y, BlockType::flowable) && !map.isAnyLiquid(x + 1, y))
+    || (map.isAnyLiquid(x + 1, y) && map.isLiquidOfType(x + 1, y, type) && map.getLiquidHeight(x + 1, y) < height && map.getLiquidHeight(x + 1, y) < maxLiquidLayers)) {
+      map.liquidTypes[y * map.sizeX + x + 1] = type;
+      applyHalfFlowDown(map.liquidHeights[y * map.sizeX + x], map.liquidHeights[y * map.sizeX + x + 1]);
    }
 }
 
@@ -418,7 +419,7 @@ void GameState::updateHoneyPhysics(int x, int y) {
 
 void GameState::updateSandPhysics(int x, int y) {
    if (map.isNotSolid(x, y + 1)) {
-      map.moveBlock(x, y, x, y + 1);
+      map.swapBlocks(x, y, x, y + 1);
       return;
    }
 
@@ -431,9 +432,9 @@ void GameState::updateSandPhysics(int x, int y) {
    }
 
    if (rightEmpty) {
-      map.moveBlock(x, y, x + 1, y + 1);
+      map.swapBlocks(x, y, x + 1, y + 1);
    } else if (leftEmpty) {
-      map.moveBlock(x, y, x - 1, y + 1);
+      map.swapBlocks(x, y, x - 1, y + 1);
    }
 }
 
@@ -442,9 +443,9 @@ void GameState::updateGrassPhysics(int x, int y) {
       return;
    }
 
-   Block &block = map.blocks[y][x];
+   Block &block = map.blocks[y * map.sizeX + x];
    if (block.value2 == 0) {
-      block.value2 = random(grassGrowSpeedMin, grassGrowSpeedMax);
+      block.value2 = randomFloat(grassGrowSpeedMin, grassGrowSpeedMax);
    }
 
    block.value += 1;
@@ -465,9 +466,9 @@ void GameState::updateDirtPhysics(int x, int y) {
       return;
    }
 
-   Block &block = map.blocks[y][x];
+   Block &block = map.blocks[y * map.sizeX + x];
    if (block.value2 == 0) {
-      block.value2 = random(grassGrowSpeedMin, grassGrowSpeedMax);
+      block.value2 = randomFloat(grassGrowSpeedMin, grassGrowSpeedMax);
    }
 
    block.value += 1;
@@ -482,20 +483,20 @@ void GameState::updateDirtPhysics(int x, int y) {
 }
 
 void GameState::updateTorchPhysics(int x, int y) {
-   Block &block = map.blocks[y][x];
+   Block &block = map.blocks[y * map.sizeX + x];
    block.value = (block.value + 1) % 5;
 
    if (map.getLiquidHeight(x, y) > liquidToBlockThreshold) {
       map.deleteBlockWithoutDeletingLiquids(x, y);
       return;
    }
-   bool downEmpty = !map.is(x, y + 1, BlockType::solid) && !map.is(x, y + 1, BlockType::furniture);
+   bool downEmpty = map.isNotSolid(x, y + 1);
 
    if (downEmpty && map.isStable(x - 1, y)) {
       block.value2 = 2;
    } else if (downEmpty && map.isStable(x + 1, y)) {
       block.value2 = 3;
-   } else if (downEmpty && !(map.walls[y][x].type & BlockType::empty)) {
+   } else if (downEmpty && !BlockTypeHas(getBlockType(map.walls[y * map.sizeX + x].id), BlockType::empty)) {
       block.value2 = 4;
    } else if (!downEmpty && map.isStable(x, y - 1)) {
       block.value2 = 1;
@@ -516,9 +517,9 @@ void GameState::render() {
    map.render(droppedItems, player, accumulator, cameraBounds, camera, inventory);
 
    renderParticles();
-   for (const DamageIndicator &indicator: map.damageIndicators) {
-      drawText(indicator.position, std::to_string(indicator.damage).c_str(), 1.0f, (indicator.critical ? YELLOW : RED), 0.1f);
-   }
+   // for (const DamageIndicator &indicator: map.damageIndicators) {
+   //    drawText(indicator.position, std::to_string(indicator.damage).c_str(), 1.0f, (indicator.critical ? YELLOW : RED), 0.1f);
+   // }
 
    // Render effects
    if (!player.creative && player.hearts != player.maxHearts) {
@@ -528,7 +529,7 @@ void GameState::render() {
    if (phase == Phase::died) {
       EndMode2D();
       drawText(getScreenCenter({0, -30.0f}), "YOU'VE DIED!", 120, RED);
-      drawText(getScreenCenter({0, 30.0f}), format("RESPAWN IN {}...", int(map.timeToRespawn - deathTimer)).c_str(), 50, RED);
+      drawText(getScreenCenter({0, 30.0f}), format("RESPAWN IN {}...", int(timeToRespawn - deathTimer)).c_str(), 50, RED);
       return;
    }
 
@@ -541,31 +542,31 @@ void GameState::render() {
       const Item &item = inventory.getSelected();
 
       if (item.isFurniture) {
-         BlockType below = (map.isPositionValid(mouseX, mouseY + furniturePreview.sizeY) ? map.blocks[mouseY + furniturePreview.sizeY][mouseX].type : BlockType::empty);
+         // BlockType below = (map.isPositionValid(mouseX, mouseY + furniturePreview.sizeY) ? map.blocks[mouseY + furniturePreview.sizeY][mouseX].type : BlockType::empty);
 
-         if (lastFurnitureType != getFurnitureType(item.id) || oldBlockBelowPreview != below || flippedPreviewX != player.flipX) {
-            furniturePreview = getFurniture(mouseX, mouseY, map, getFurnitureType(item.id), player.flipX, true);
-         }
-         flippedPreviewX = player.flipX;
-         lastFurnitureType = furniturePreview.type;
-         oldBlockBelowPreview = below;
+         // if (lastFurnitureType != getFurnitureType(item.id) || oldBlockBelowPreview != below || flippedPreviewX != player.flipX) {
+         //    furniturePreview = getFurniture(mouseX, mouseY, map, getFurnitureType(item.id), player.flipX, true);
+         // }
+         // flippedPreviewX = player.flipX;
+         // lastFurnitureType = furniturePreview.type;
+         // oldBlockBelowPreview = below;
 
-         furniturePreview.posX = mouseX;
-         furniturePreview.posY = mouseY;
-         furniturePreview.preview(map);
+         // furniturePreview.posX = mouseX;
+         // furniturePreview.posY = mouseY;
+         // furniturePreview.preview(map);
       } else {
          DrawTexturePro(getTexture(getBlockNameFromId(item.id)), {0, 0, 8, 8}, {(float)mouseX, (float)mouseY, 1, 1}, {0, 0}, 0, Fade(item.isWall ? wallTint : WHITE, previewAlpha));
       }
    }
 
-   // Render block breaking preview
-   if (player.breakTime != 0.0f) {
-      // TODO: Change this in the future, shit logic
-      float breakTime = (player.breakingFurniture ? getFurnitureBreakingTime(map.getFurnitureAtPosition(player.lastBreakingX, player.lastBreakingY).id) : getBlockBreakingTime((player.breakingWall ? map.walls : map.blocks)[player.lastBreakingY][player.lastBreakingX].id));
-      int textureX = (player.breakTime / breakTime) * 5;
-      Texture2D &texture = getTexture("breaking");
-      DrawTexturePro(texture, {textureX * 8.0f, 0, 8, 8}, {(float)player.lastBreakingX, (float)player.lastBreakingY, 1, 1}, {0, 0}, 0, (player.breakingWall ? wallTint : WHITE));
-   }
+   // // Render block breaking preview
+   // if (player.breakTime != 0.0f) {
+   //    // TODO: Change this in the future, shit logic
+   //    float breakTime = (player.breakingFurniture ? getFurnitureBreakingTime(map.getFurnitureAtPosition(player.lastBreakingX, player.lastBreakingY).id) : getBlockBreakingTime((player.breakingWall ? map.walls : map.blocks)[player.lastBreakingY][player.lastBreakingX].id));
+   //    int textureX = (player.breakTime / breakTime) * 5;
+   //    Texture2D &texture = getTexture("breaking");
+   //    DrawTexturePro(texture, {textureX * 8.0f, 0, 8, 8}, {(float)player.lastBreakingX, (float)player.lastBreakingY, 1, 1}, {0, 0}, 0, (player.breakingWall ? wallTint : WHITE));
+   // }
 
    // Render breath dynamically
    if (!player.creative && player.breath != maxBreath) {
@@ -633,10 +634,10 @@ void GameState::render() {
    }
    pauseButton.render();
 
-   // Optionally render FPS counter through console command
-   if (map.fpsEnabled) {
-      drawText({getScreenCenter().x, 40.0f * hr}, TextFormat("%d FPS", GetFPS()), getFontSize(40));
-   }
+   // // Optionally render FPS counter through console command
+   // if (map.fpsEnabled) {
+   //    drawText({getScreenCenter().x, 40.0f * hr}, TextFormat("%d FPS", GetFPS()), getFontSize(40));
+   // }
 }
 
 // Change states
