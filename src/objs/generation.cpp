@@ -159,8 +159,7 @@ void MapGenerator::generateWater() {
          if (y == seaY && biomeData[(int)getBiome(x)].wamth == BiomeWarmth::cold) {
             map.setBlock(x, y, iceid);
          } else {
-            map.liquidHeights[y * map.sizeX + x] = maxLiquidLayers;
-            map.liquidTypes[y * map.sizeX + x] = LiquidType::water;
+            map.setLiquid(x, y, LiquidType::water, maxLiquidLayers);
          }
       }
    }
@@ -230,7 +229,7 @@ void MapGenerator::generateTrees() {
       if (counter >= counterThreshold && chance(biomeData[(int)getBiome(x)].treeRate)) {
          bool sapling = chance(5);
 
-         if (map.blocks[(y + 1) * map.sizeX + x].id != getBlockIdFromName("sand") && chance(60)) {
+         if (map.getBlock(x, y + 1).id != getBlockIdFromName("sand") && chance(60)) {
             generateFurniture(x, y, map, getFurnitureIdFromName(sapling ? "cactus_seed" : "cactus"), false);
          } else {
             generateFurniture(x, (sapling ? y - 1 : y), map, getFurnitureIdFromName(sapling ? "sapling" : "tree"), false);

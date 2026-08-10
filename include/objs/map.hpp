@@ -57,14 +57,19 @@ constexpr inline bool BlockTypeHas(BlockType lhs, BlockType rhs) {
 }
 
 struct Block {
-   Texture *texture = nullptr;
    blockid_t id = 0;
    TileType tile = TileType::root;
+   BlockType type = BlockType::empty | BlockType::translucent | BlockType::flowable;
 
    // Values used by physics updates, specific to the block type
    unsigned short value = 0;
    unsigned short value2 = 0;
    bool platformOverride = false; // platformed furniture
+};
+
+struct Wall {
+   blockid_t id = 0;
+   BlockType type = BlockType::empty | BlockType::translucent | BlockType::flowable;
 };
 
 // Block getter functions
@@ -76,7 +81,6 @@ bool isBlockNameValid(const std::string &name);
 bool isBlockIdValid(blockid_t id);
 blockid_t getBlockIdFromName(const std::string &name);
 std::string getBlockNameFromId(blockid_t id);
-BlockType getBlockType(blockid_t id);
 size_t getBlockCount();
 
 void reserveBlockContainers(size_t estimate);
@@ -102,6 +106,7 @@ struct Map {
    void setBlock(int x, int y, blockid_t id);
    void setWall(int x, int y, const std::string &name);
    void setWall(int x, int y, blockid_t id);
+   void setLiquid(int x, int y, LiquidType type, liquidlayer_t height);
 
    void deleteBlock(int x, int y);
    void deleteWall(int x, int y);
@@ -113,10 +118,14 @@ struct Map {
 
    // getters
 
+   Block &getBlock(int x, int y);
+   Wall &getWall(int x, int y);
+
    bool isPositionValid(int x, int y) const;
    bool isPositionValid(Vector2 position) const;
 
    bool is(int x, int y, BlockType type) const;
+   bool isWall(int x, int y, BlockType type) const;
    bool isSoil(int x, int y) const;
    bool isEmpty(int x, int y) const;
    bool isNotSolid(int x, int y) const;
@@ -135,7 +144,8 @@ struct Map {
    // Members
 
    RenderTexture lightmap;
-   std::vector<Block> blocks, walls;
+   std::vector<Block> blocks;
+   std::vector<Wall> walls;
    std::vector<liquidlayer_t> liquidHeights;
    std::vector<LiquidType> liquidTypes;
    std::vector<Furniture> furniture;

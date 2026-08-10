@@ -8,8 +8,6 @@
 - load all items from file
 - liquid loading, textures
 - backgrounds
-- move textures out of Block and move attributes back in
-- Map::isWall(), Map::setLiquid(), Map::getBlock(), Map::getWall()...
 - add drops back to furniture and blocks
 
 ### Furniture

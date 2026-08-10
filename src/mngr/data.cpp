@@ -40,7 +40,7 @@ void getBoolValue(const std::string &value, const std::string &line, bool &targe
 void getV2Value(const std::string &value, const std::string &line, Vector2 &target) {
    std::vector<std::string> values = split(value, ',');
    if (values.size() != 2) {
-      printf("WARNING: Malformed line '%s'. Expected Vector2 (INT,INT).\n", line.c_str());
+      printf("WARNING: Malformed line '%s'. Expected Vector2 (NUMBER,NUMBER).\n", line.c_str());
       return;
    }
    getFloatValue(values[0], line, target.x);

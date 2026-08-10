@@ -77,7 +77,7 @@ void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, 
       blocks.push_back(tile.id);
    }
 
-   for (const Block &tile: map.walls) {
+   for (const Wall &tile: map.walls) {
       walls.push_back(tile.id);
    }
 

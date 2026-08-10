@@ -141,7 +141,7 @@ void GameState::fixedUpdate() {
             }
          }
 
-         BlockType type = getBlockType(map.blocks[y * map.sizeX + x].id);
+         BlockType type = map.getBlock(x, y).type;
          if (BlockTypeHas(type, BlockType::sand)) {
             updateSandPhysics(x, y);
          } else if (BlockTypeHas(type, BlockType::grass)) {
@@ -224,7 +224,7 @@ void GameState::updatePlaying() {
 
    if (map.isPositionValid(mouseX, mouseY) && Vector2DistanceSqr(mousePos, playerCenter) <= maxToolRange) {
       canDrawPreview = (inventory.canPlaceBlock() && (inventory.getSelected().isFurniture || !CheckCollisionRecs(player.getBounds(), {(float)mouseX, (float)mouseY, 1, 1})));
-      player.breakingBlock = (isMouseDownOutsideUI(MOUSE_BUTTON_LEFT) && (!map.isEmpty(mouseX, mouseY) || !BlockTypeHas(getBlockType(map.walls[mouseY * map.sizeX + mouseX].id), BlockType::empty)));
+      player.breakingBlock = (isMouseDownOutsideUI(MOUSE_BUTTON_LEFT) && (!map.isEmpty(mouseX, mouseY) || !map.isWall(mouseX, mouseY, BlockType::empty)));
 
       if (isMouseDownOutsideUI(MOUSE_BUTTON_RIGHT) && inventory.canPlaceBlock()) {
          inventory.placeBlock(mouseX, mouseY, player.flipX);
@@ -346,16 +346,14 @@ bool GameState::handleLiquidToBlock(int x, int y, LiquidType type, unsigned shor
       }
 
       if (map.getLiquidHeight(x + offset.x, y + offset.y) < liquidToBlockThreshold || !map.isEmpty(x + offset.x, y + offset.y)) {
-         map.liquidTypes[(y + offset.y) * map.sizeX + (x + offset.x)] = LiquidType::none;
-         map.liquidHeights[(y + offset.y) * map.sizeX + (x + offset.x)] = 0;
+         map.setLiquid(x + offset.x, y + offset.y, LiquidType::none, 0);
          continue;
       }
 
       if (map.getLiquidHeight(x, y) >= liquidToBlockThreshold) {
          map.setBlock(x + offset.x, y + offset.y, blockId);
       }
-      map.liquidTypes[y * map.sizeX + x] = LiquidType::none;
-      map.liquidHeights[y * map.sizeX + x] = 0;
+      map.setLiquid(x, y, LiquidType::none, 0);
    }
    return map.isAnyLiquid(x, y);
 }
@@ -366,8 +364,7 @@ void GameState::updateFluid(int x, int y) {
 
    // Delete the liquid if its height is zero
    if (height == 0) {
-      map.liquidHeights[y * map.sizeX + x] = 0;
-      map.liquidTypes[y * map.sizeX + x] = LiquidType::none;
+      map.setLiquid(x, y, LiquidType::none, 0);
       return;
    }
 
@@ -496,7 +493,7 @@ void GameState::updateTorchPhysics(int x, int y) {
       block.value2 = 2;
    } else if (downEmpty && map.isStable(x + 1, y)) {
       block.value2 = 3;
-   } else if (downEmpty && !BlockTypeHas(getBlockType(map.walls[y * map.sizeX + x].id), BlockType::empty)) {
+   } else if (downEmpty && map.isWall(x, y, BlockType::empty)) {
       block.value2 = 4;
    } else if (!downEmpty && map.isStable(x, y - 1)) {
       block.value2 = 1;
