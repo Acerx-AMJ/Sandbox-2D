@@ -43,6 +43,7 @@ struct FurniturePiece {
    unsigned short tx = 0;
    unsigned short ty = 0;
    bool nil = false;
+   bool walkable = false;
 };
 
 // Furniture getter functions
@@ -54,6 +55,7 @@ bool isValidFurnitureName(const std::string &name);
 std::string getFurnitureNameFromId(furnitureid_t id);
 furnitureid_t getFurnitureIdFromName(const std::string &name);
 FurnitureType getFurnitureType(furnitureid_t id);
+FurnitureData &getFurnitureData(furnitureid_t id);
 size_t getFurnitureCount();
 
 void reserveFurnitureContainers(size_t estimate);
@@ -68,7 +70,7 @@ struct Furniture {
    bool isSolidUnderneath(const struct Map &map, FurnitureData &data, bool previewing) const;
    bool isSuitableForPlant(const struct Map &map, FurnitureData &data, bool previewing) const;
 
-   bool setSimpleFurniture(const struct Map &map, FurnitureData &data, bool playerFacingLeft, bool previewing);
+   bool setSimpleFurniture(const struct Map &map, FurnitureData &data, bool playerFacingLeft, bool walkable, bool previewing);
    bool setPlant(const struct Map &map, FurnitureData &data, bool previewing);
 
    // Update functions

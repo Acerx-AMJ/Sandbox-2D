@@ -53,6 +53,10 @@ FurnitureType getFurnitureType(furnitureid_t id) {
    return furnitureData[id].type;
 }
 
+FurnitureData &getFurnituredata(furnitureid_t id) {
+   return furnitureData[id];
+}
+
 size_t getFurnitureCount() {
    return furnitureCount;
 }
@@ -64,6 +68,9 @@ void reserveFurnitureContainers(size_t estimate) {
 }
 
 furnitureid_t pushFurniture(FurnitureData data, const std::string &name) {
+   if (data.type == FurnitureType::tree) {
+      data.furnitureSize = V2(treeWidth, 0);
+   }
    furnitureData.push_back(data);
    furnitureNames.push_back(name);
    furnitureIds[name] = furnitureCount;
@@ -115,7 +122,7 @@ bool Furniture::isSuitableForPlant(const Map &map, FurnitureData &data, bool pre
    return true;
 }
 
-bool Furniture::setSimpleFurniture(const Map &map, FurnitureData &data, bool playerFacingLeft, bool previewing) {
+bool Furniture::setSimpleFurniture(const Map &map, FurnitureData &data, bool playerFacingLeft, bool walkable, bool previewing) {
    int offset = (data.shouldFacePlayer && !playerFacingLeft ? data.textureSize * data.furnitureSize.x : 0);
 
    for (int dy = 0; dy < data.furnitureSize.y; ++dy) {
@@ -126,6 +133,7 @@ bool Furniture::setSimpleFurniture(const Map &map, FurnitureData &data, bool pla
          int i = dy * data.furnitureSize.x + dx;
          pieces[i].tx = data.textureSize * dx + offset;
          pieces[i].ty = data.textureSize * dy;
+         pieces[i].walkable = (dy == 0 && walkable);
       }
    }
    return true;
@@ -357,21 +365,21 @@ Furniture getFurniture(int x, int y, const Map &map, furnitureid_t id, bool play
    case FurnitureType::table: {
       Furniture table;
       table.init(id, x, y);
-      if (table.isSolidUnderneath(map, data, previewing) && table.setSimpleFurniture(map, data, playerFacingLeft, previewing)) {
+      if (table.isSolidUnderneath(map, data, previewing) && table.setSimpleFurniture(map, data, playerFacingLeft, true, previewing)) {
          return table;
       }
    } break;
    case FurnitureType::chair: {
       Furniture chair;
       chair.init(id, x, y);
-      if (chair.isSolidUnderneath(map, data, previewing) && chair.setSimpleFurniture(map, data, playerFacingLeft, previewing)) {
+      if (chair.isSolidUnderneath(map, data, previewing) && chair.setSimpleFurniture(map, data, playerFacingLeft, false, previewing)) {
          return chair;
       }
    } break;
    case FurnitureType::door: {
       Furniture door;
       door.init(id, x, y);
-      if (door.isSolidUnderneath(map, data, previewing) && door.setSimpleFurniture(map, data, playerFacingLeft, previewing)) {
+      if (door.isSolidUnderneath(map, data, previewing) && door.setSimpleFurniture(map, data, playerFacingLeft, false, previewing)) {
          return door;
       }
    } break;

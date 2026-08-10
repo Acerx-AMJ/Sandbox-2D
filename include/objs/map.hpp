@@ -19,7 +19,6 @@ constexpr inline liquidlayer_t playerLiquidThreshold = maxLiquidLayers / 2;
 enum class TileType: unsigned char {
    root,
    ghost,
-   none
 };
 
 enum class LiquidType: unsigned char {
@@ -60,11 +59,12 @@ constexpr inline bool BlockTypeHas(BlockType lhs, BlockType rhs) {
 struct Block {
    Texture *texture = nullptr;
    blockid_t id = 0;
-   TileType tile = TileType::none;
+   TileType tile = TileType::root;
 
    // Values used by physics updates, specific to the block type
    unsigned short value = 0;
    unsigned short value2 = 0;
+   bool platformOverride = false; // platformed furniture
 };
 
 // Block getter functions
@@ -128,6 +128,7 @@ struct Map {
 
    // render
 
+   void renderLight(const Camera2D &camera, Texture2D &texture, float x, float y, const Vector2 &size, const Color &color);
    void render(const std::vector<struct DroppedItem> &droppedItems, const struct Player &player, float accumulator, const Rectangle &cameraBounds, const Camera2D &camera, const struct Inventory &inventory);
 
    // Members
