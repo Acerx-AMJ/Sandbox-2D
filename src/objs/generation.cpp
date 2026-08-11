@@ -152,14 +152,15 @@ void MapGenerator::generateWater() {
    setInfo("Filling Water...", 0.75f);
 
    int seaY = map.sizeY * seaLevel;
-   unsigned short iceid = getBlockIdFromName("ice");
+   blockid_t iceid = getBlockIdFromName("ice");
+   liquidid_t waterid = getLiquidIdFromName("water");
 
    for (int x = 0; x < map.sizeX; ++x) {
       for (int y = seaY; y < map.sizeY && map.isEmpty(x, y); ++y) {
          if (y == seaY && biomeData[(int)getBiome(x)].wamth == BiomeWarmth::cold) {
             map.setBlock(x, y, iceid);
          } else {
-            map.setLiquid(x, y, LiquidType::water, maxLiquidLayers);
+            map.setLiquid(x, y, waterid, maxLiquidLayers);
          }
       }
    }
@@ -168,13 +169,13 @@ void MapGenerator::generateWater() {
 void MapGenerator::generateDebri() {
    setInfo("Generating Debri and Ores...", 0.5f);
 
-   unsigned short clayid = getBlockIdFromName("clay");
-   unsigned short dirtid = getBlockIdFromName("dirt");
-   unsigned short sandid = getBlockIdFromName("sand");
-   unsigned short coalid = getBlockIdFromName("coal_ore");
-   unsigned short ironid = getBlockIdFromName("iron_ore");
-   unsigned short goldid = getBlockIdFromName("gold_ore");
-   unsigned short mythid = getBlockIdFromName("mythril_ore");
+   blockid_t clayid = getBlockIdFromName("clay");
+   blockid_t dirtid = getBlockIdFromName("dirt");
+   blockid_t sandid = getBlockIdFromName("sand");
+   blockid_t coalid = getBlockIdFromName("coal_ore");
+   blockid_t ironid = getBlockIdFromName("iron_ore");
+   blockid_t goldid = getBlockIdFromName("gold_ore");
+   blockid_t mythid = getBlockIdFromName("mythril_ore");
 
    int tier2OreY = tier2OreStartY * map.sizeY;
 

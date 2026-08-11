@@ -23,11 +23,8 @@ struct GameState: public State {
 
    // Physics functions
 
-   bool handleLiquidToBlock(int x, int y, LiquidType type, unsigned short blockId);
-   void updateFluid(int x, int y);
-   void updateWaterPhysics(int x, int y);
-   void updateLavaPhysics(int x, int y);
-   void updateHoneyPhysics(int x, int y);
+   bool handleLiquidToBlock(int x, int y, liquidid_t id);
+   void updateLiquid(int x, int y, liquidid_t id);
 
    void updateSandPhysics(int x, int y);
    void updateGrassPhysics(int x, int y);
@@ -63,6 +60,7 @@ struct GameState: public State {
    bool canDrawPreview = false;
    bool flippedPreviewX = false;
 
+   std::vector<int> liquidCounters;
    float deathTimer = 0.0f;
    int physicsCounter = 0;
    int lavaCounter = 0;

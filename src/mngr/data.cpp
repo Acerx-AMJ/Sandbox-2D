@@ -84,7 +84,7 @@ void loadLiquidData() {
             }
          }
          else if (field == "update_speed") {
-            data.updateSpeed = getFloatValue(value);
+            data.updateSpeed = getIntValue(value);
          }
          else if (field == "move_speed_multiplier") {
             data.moveSpeedMultiplier = getFloatValue(value);
@@ -94,6 +94,15 @@ void loadLiquidData() {
          }
          else if (field == "glow") {
             data.glow = getBoolValue(value);
+         }
+         else if (field == "damage_player") {
+            data.damagePlayer = getBoolValue(value);
+         }
+         else if (field == "damage_min") {
+            data.damageMin = getIntValue(value);
+         }
+         else if (field == "damage_max") {
+            data.damageMax = getIntValue(value);
          }
          else if (field == "conversion") {
             std::vector<Line> dictionary = getDictionaryValue(value, '=');

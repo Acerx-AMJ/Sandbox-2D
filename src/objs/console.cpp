@@ -422,29 +422,20 @@ bool c_placeq(Console &console, const VArgs &args, Map &map, Player&, Inventory&
       return false;
    }
 
-   // 0 -> none
-   // 1 -> water
-   // 2 -> lava
-   // 3 -> honey
    int x, y, id;
-
    try {
       id = stoi(args[1]);
 
-      if (id < 0 || id > 3) {
+      if (!isLiquidIdValid(id)) {
          console.output("placeq: invalid liquid id.", ConsoleColor::red);
          return false;
       }
    } catch (...) {
-      const static std::unordered_map<std::string, int> liquidIds {
-         {"none", 0}, {"water", 1}, {"lava", 2}, {"honey", 3}
-      };
-      
-      if (liquidIds.find(args[1]) == liquidIds.end()) {
+      if (!isLiquidNameValid(args[1])) {
          console.output("placeq: expected first argument to either be a valid liquid id or name.", ConsoleColor::red);
          return false;
       }
-      id = liquidIds.at(args[1]);
+      id = getLiquidIdFromName(args[1]);
    }
 
    try {
@@ -461,11 +452,9 @@ bool c_placeq(Console &console, const VArgs &args, Map &map, Player&, Inventory&
    }
 
    map.deleteBlock(x, y);
-   map.liquidTypes[y * map.sizeX + x] = (LiquidType)id;
-   map.liquidHeights[y * map.sizeX + x] = (id == 0 ? 0 : maxLiquidLayers);
+   map.setLiquid(x, y, id, id == 0 ? 0 : maxLiquidLayers);
 
-   constexpr const char *liquidNames[] = {"none", "water", "lava", "honey"};
-   console.output(TextFormat("placeq: set liquid at coordinates (X %d; Y %d) to '%s'.", x, y, liquidNames[id]));
+   console.output(TextFormat("placeq: set liquid at coordinates (X %d; Y %d) to '%s'.", x, y, getLiquidNameFromId(id).c_str()));
    return true;
 }
 
@@ -479,20 +468,16 @@ bool c_fillq(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
    try {
       id = stoi(args[1]);
 
-      if (id < 0 || id > 3) {
-         console.output("fillq: invalid liquid id.", ConsoleColor::red);
+      if (!isLiquidIdValid(id)) {
+         console.output("placeq: invalid liquid id.", ConsoleColor::red);
          return false;
       }
    } catch (...) {
-      const static std::unordered_map<std::string, int> liquidIds {
-         {"none", 0}, {"water", 1}, {"lava", 2}, {"honey", 3}
-      };
-      
-      if (liquidIds.find(args[1]) == liquidIds.end()) {
-         console.output("fillq: expected first argument to either be a valid liquid id or name.", ConsoleColor::red);
+      if (!isLiquidNameValid(args[1])) {
+         console.output("placeq: expected first argument to either be a valid liquid id or name.", ConsoleColor::red);
          return false;
       }
-      id = liquidIds.at(args[1]);
+      id = getLiquidIdFromName(args[1]);
    }
 
    try {
@@ -516,12 +501,10 @@ bool c_fillq(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
    for (int y = sy; y < dy; ++y) {
       for (int x = sx; x < dx; ++x) {
          map.deleteBlock(x, y);
-         map.liquidTypes[y * map.sizeX + x] = (LiquidType)id;
-         map.liquidHeights[y * map.sizeX + x] = (id == 0 ? 0 : maxLiquidLayers);
+         map.setLiquid(x, y, id, id == 0 ? 0 : maxLiquidLayers);
       }
    }
-   constexpr const char *liquidNames[] = {"none", "water", "lava", "honey"};
-   console.output(TextFormat("fillq: filled all liquids from coordinates (X %d; Y %d) to (X %d; Y %d) as %s.", sx, sy, dx, dy, liquidNames[id]));
+   console.output(TextFormat("fillq: filled all liquids from coordinates (X %d; Y %d) to (X %d; Y %d) as %s.", sx, sy, dx, dy, getLiquidNameFromId(id).c_str()));
    return true;
 }
 

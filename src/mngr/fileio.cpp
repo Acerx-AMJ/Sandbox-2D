@@ -9,7 +9,7 @@
 
 // Please increment after any breaking changes to warn players
 // about corrupted worlds
-constexpr int fileVersion = 9;
+constexpr int fileVersion = 10;
 
 // World saving functions
 // Save and load functions must follow the same data arrangement
@@ -86,7 +86,7 @@ void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, 
    file.write(reinterpret_cast<const char*>(blocks.data()), blocks.size() * sizeof(blockid_t));
    file.write(reinterpret_cast<const char*>(walls.data()), walls.size() * sizeof(blockid_t));
    file.write(reinterpret_cast<const char*>(map.liquidHeights.data()), map.liquidHeights.size() * sizeof(liquidlayer_t));
-   file.write(reinterpret_cast<const char*>(map.liquidTypes.data()), map.liquidTypes.size() * sizeof(LiquidType));
+   file.write(reinterpret_cast<const char*>(map.liquidTypes.data()), map.liquidTypes.size() * sizeof(liquidid_t));
 
    // Write the furniture
    size_t furnitureCount = map.furniture.size();
@@ -175,7 +175,7 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
    file.read(reinterpret_cast<char*>(blocks.data()), blocks.size() * sizeof(blockid_t));
    file.read(reinterpret_cast<char*>(walls.data()), walls.size() * sizeof(blockid_t));
    file.read(reinterpret_cast<char*>(map.liquidHeights.data()), map.liquidHeights.size() * sizeof(liquidlayer_t));
-   file.read(reinterpret_cast<char*>(map.liquidTypes.data()), map.liquidTypes.size() * sizeof(LiquidType));
+   file.read(reinterpret_cast<char*>(map.liquidTypes.data()), map.liquidTypes.size() * sizeof(liquidid_t));
 
    for (int y = 0; y < map.sizeY; ++y) {
       map.setRow(y, blocks.data() + y * map.sizeX);

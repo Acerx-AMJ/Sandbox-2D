@@ -30,6 +30,7 @@ struct Player {
 
    // Members
 
+   std::vector<int> liquidCounts;
    Vector2 position, spawnPos, velocity, previousPosition, delta;
    bool blockInput = false;
    bool feetCollision = false;

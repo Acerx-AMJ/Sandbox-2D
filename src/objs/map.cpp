@@ -24,9 +24,9 @@ static std::vector<BlockType> blockAttributes;
 static std::vector<Texture> blockTextures;
 static std::unordered_map<std::string, blockid_t> blockIds;
 
-static size_t liquidCount = 0;
-static std::vector<std::string> liquidNames;
-static std::vector<LiquidData> liquidData;
+static size_t liquidCount = 1; // 1 - nil
+static std::vector<std::string> liquidNames {""};
+static std::vector<LiquidData> liquidData {{}};
 static std::unordered_map<std::string, liquidid_t> liquidIds;
 
 // Block getter functions
@@ -143,7 +143,7 @@ void Map::initContainers() {
    blocks = std::vector<Block>(area, Block{});
    walls = std::vector<Wall>(area, Wall{});
    liquidHeights = std::vector<unsigned char>(area, 0);
-   liquidTypes = std::vector<LiquidType>(area, LiquidType::none);
+   liquidTypes = std::vector<liquidid_t>(area, 0);
 }
 
 Map::~Map() {
@@ -213,7 +213,7 @@ void Map::setBlock(int x, int y, blockid_t id) {
 
    if (!BlockTypeHas(blockAttributes[id], BlockType::flowable)) {
       liquidHeights[i] = 0;
-      liquidTypes[i] = LiquidType::none;
+      liquidTypes[i] = 0;
    }
 }
 
@@ -227,9 +227,9 @@ void Map::setWall(int x, int y, blockid_t id) {
    walls[i].type = blockAttributes[id];
 }
 
-void Map::setLiquid(int x, int y, LiquidType type, liquidlayer_t height) {
+void Map::setLiquid(int x, int y, liquidid_t id, liquidlayer_t height) {
    int i = y * sizeX + x;
-   liquidTypes[i] = type;
+   liquidTypes[i] = id;
    liquidHeights[i] = height;
 }
 
@@ -237,7 +237,7 @@ void Map::deleteBlock(int x, int y) {
    int i = y * sizeX + x;
    blocks[i] = {};
    liquidHeights[i] = 0;
-   liquidTypes[i] = LiquidType::none;
+   liquidTypes[i] = 0;
 }
 
 void Map::deleteWall(int x, int y) {
@@ -332,19 +332,27 @@ bool Map::isStable(int x, int y) const {
 
 bool Map::isLiquid(int x, int y) const {
    int i = y * sizeX + x;
-   return isPositionValid(x, y) && liquidTypes[i] != LiquidType::none && liquidHeights[i] > minLiquidLayers;
+   return isPositionValid(x, y) && liquidTypes[i] != 0 && liquidHeights[i] > minLiquidLayers;
 }
 
 bool Map::isAnyLiquid(int x, int y) const {
-   return isPositionValid(x, y) && liquidTypes[y * sizeX + x] != LiquidType::none;
+   return isPositionValid(x, y) && liquidTypes[y * sizeX + x] != 0;
+}
+
+bool Map::isLiquidOfType(int x, int y, liquidid_t id) const {
+   return liquidTypes[y * sizeX + x] == id;
 }
 
 liquidlayer_t Map::getLiquidHeight(int x, int y) const {
    return liquidHeights[y * sizeX + x];
 }
 
-bool Map::isLiquidOfType(int x, int y, LiquidType type) const {
-   return liquidTypes[y * sizeX + x] == type;
+liquidid_t Map::getLiquidId(int x, int y) const {
+   return liquidTypes[y * sizeX + x];
+}
+
+LiquidData &Map::getLiquidData(int x, int y) const {
+   return liquidData[liquidTypes[y * sizeX + x]];
 }
 
 // render
@@ -440,7 +448,7 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
          liquidFlags.r = (is(x, y - 1, BlockType::solid) && !is(x, y - 1, BlockType::platform) ? 255 : 0);
          liquidFlags.g = (!isAnyLiquid(x, y + 1) || !isLiquidOfType(x, y + 1, liquidTypes[y * sizeX + x]) ? 255 : 0);
    
-         Texture texture = getTexture("tiles");
+         Texture texture = getLiquidData(x, y).texture;
          Rectangle source = R4(0, texture.height - texture.height * height, texture.width, texture.height * height);
          drawTexture(texture, V2(x, y + (1 - height)), V2(1, height), Fade(liquidFlags, height), 0.0f, source);
       }
@@ -484,7 +492,7 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
          }
 
          // Direct light sources, ones who do not require the wall behind to be transparent
-         if (isAnyLiquid(x, y) && isLiquidOfType(x, y, LiquidType::lava)) {
+         if (isAnyLiquid(x, y) && getLiquidData(x, y).glow) {
             if (isLiquid(x, y)) {
                renderLight(camera, lightTexture, x + positionOffset, y + positionOffset, liquidSize, {255, 125, 0, 255});
             }
@@ -500,11 +508,11 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
          }
 
          // Indirect light sources, these require to background to be empty
-         if (isLiquid(x, y)) {
+         if (isLiquid(x, y) && getLiquidData(x, y).naturalLight) {
             renderLight(camera, lightTexture, x, y, lightSize, waterLightColor);
-         } else {
-            renderLight(camera, lightTexture, x, y, lightSize, airLightColor);
+            continue;
          }
+         renderLight(camera, lightTexture, x, y, lightSize, airLightColor);
       }
    }
 

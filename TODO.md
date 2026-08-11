@@ -5,10 +5,8 @@
 - load all items from file
 - backgrounds
 - add drops back to furniture and blocks
-- lightmap
+- lightmap, light color, range in liquid config
 - remove position.hpp, rendering overhaul
-
-- liquid loading, textures
 
 ### Furniture
 - Add furniture with chest logic.

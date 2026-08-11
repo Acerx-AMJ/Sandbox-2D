@@ -1,26 +1,32 @@
 # lines starting with '#' are ignored. white space is trimmed automatically
 # [LIQUID_NAME]
 # texture=TEXTURE_NAME # name of texture (assets/sprites/blocks/dirt.png -> dirt) or empty for none. defaults to liquid name
-# update_speed=NUMBER # time to update liquid once
+# update_speed=UPDATE_TIME # frames to update liquid once. physics runs at 60 FPS
 # conversion=LIQUID_NAME=BLOCK_NAME,... # conversion table on contact with other liquids
 # move_speed_multiplier=NUMBER # player move speed multiplier in the liquid. when player is in multiple liquids, the one with the lowest multiplier is picked
 # glow=true/false # does the liquid emit a glow
 # natural_light=true/false # does the liquid emit natural day light (like water)
+# damage_player=true/false # should liquid damage player on contact
+# damage_min=NUMBER # minimum damage
+# damage_max=NUMBER # maximum damage 
 
 [water]
-update_speed=0.016
+update_speed=1
 conversion=lava=obsidian,honey=honey_block
 move_speed_multiplier=0.85
 natural_light=true
 
 [lava]
-update_speed=0.032
+update_speed=2
 conversion=water=obsidian,honey=crispy_honey_block
 move_speed_multiplier=0.6
 glow=true
+damage_player=true
+damage_min=20
+damage_max=30
 
 [honey]
-update_speed=0.064
+update_speed=4
 conversion=water=honey_block,lava=crispy_honey_block
 move_speed_multiplier=0.5
 natural_light=true

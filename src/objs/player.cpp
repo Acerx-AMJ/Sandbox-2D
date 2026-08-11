@@ -31,7 +31,7 @@ constexpr float jumpTime     = 0.25f;
 constexpr float immunityTime             = 0.4f;
 constexpr float timeToStartRegenerating  = 15.0f;
 constexpr float timeToRampUpRegeneration = 10.0f;
-constexpr float regenSpeedInHoney        = 1.8f;
+// constexpr float regenSpeedInHoney        = 1.8f;
 constexpr int   framesToRegenerateOnce   = 20;
 constexpr int   framesToUpdateBreath     = 10;
 
@@ -180,10 +180,9 @@ void Player::updateCollisions(Map &map) {
    int liquidsAboveHead = 0;
    int blocksInHeadX1 = 0;
    int blocksInHeadX2 = 0;
-   int waterTileCount = 0;
-   int lavaTileCount = 0;
    int honeyTileCount = 0;
    int iceTileCount = 0;
+   liquidCounts = std::vector<int>(getLiquidCount(), 0);
 
    if (position.y < 0) {
       velocity.y = std::max(0.f, velocity.y);
@@ -201,9 +200,7 @@ void Player::updateCollisions(Map &map) {
    for (int y = std::max(0, (int)position.y); y < maxY; ++y) {
       for (int x = std::max(0, (int)position.x); x < maxX; ++x) {
          if (map.isAnyLiquid(x, y) && map.getLiquidHeight(x, y) > playerLiquidThreshold) {
-            waterTileCount += map.isLiquidOfType(x, y, LiquidType::water);
-            lavaTileCount  += map.isLiquidOfType(x, y, LiquidType::lava);
-            honeyTileCount += map.isLiquidOfType(x, y, LiquidType::honey);
+            liquidCounts[map.getLiquidId(x, y)] += 1;
             liquidsAboveHead += (y <= position.y + 1.0f);
          }
          honeyTileCount += map.is(x, y, BlockType::sticky);
@@ -257,9 +254,7 @@ void Player::updateCollisions(Map &map) {
       for (int x = std::max(0, (int)position.x); x < maxX; ++x) {
          // Necessary to count in both loops for making the player stick to sticky walls
          if (map.isAnyLiquid(x, y) && map.getLiquidHeight(x, y) > playerLiquidThreshold) {
-            waterTileCount += map.isLiquidOfType(x, y, LiquidType::water);
-            lavaTileCount  += map.isLiquidOfType(x, y, LiquidType::lava);
-            honeyTileCount += map.isLiquidOfType(x, y, LiquidType::honey);
+            liquidCounts[map.getLiquidId(x, y)] += 1;
             liquidsAboveHead += (y <= position.y + 1.0f);
          }
          honeyTileCount += map.is(x, y, BlockType::sticky);
@@ -304,9 +299,28 @@ void Player::updateCollisions(Map &map) {
       maximumY = std::min(maximumY, position.y);
    }
 
+   bool inAnyLiquid = false;
+   for (liquidid_t i = 1; i < liquidCounts.size(); ++i) {
+      int count = liquidCounts[i];
+      LiquidData &data = getLiquidData(i);
+      
+      if (count > 0) {
+         inAnyLiquid = true;
+         waterMultiplier = std::min(waterMultiplier, data.moveSpeedMultiplier);
+      }
+
+      if (count > 0 && !creative && data.damagePlayer) {
+         takeDamage(map, randomInt(data.damageMin, data.damageMax), 25, 1.2f);
+      }
+   }
+
+   if (!inAnyLiquid) {
+      waterMultiplier = 1.0f;
+   }
+
    // Ignore fall damage if player is touching liquids or didn't fall
    // from that great of a height
-   if (!creative && !wasOnGround && onGround && !shouldBounce && honeyTileCount + lavaTileCount + waterTileCount == 0 && position.y - maximumY >= minimumFallHeight) {
+   if (!creative && !wasOnGround && onGround && !shouldBounce && !inAnyLiquid && position.y - maximumY >= minimumFallHeight) {
       takeDamage(map, std::min(1.0f, ((position.y - maximumY) - minimumFallHeight) / (maximumFallHeight - minimumFallHeight)) * maximumFallDamage, 0, 0.0f);
    }
 
@@ -323,23 +337,9 @@ void Player::updateCollisions(Map &map) {
       }
    }
 
-   if (honeyTileCount > 0) {
-      waterMultiplier = 0.5f;
-   } else if (lavaTileCount > 0) {
-      waterMultiplier = .6f;
-   } else if (waterTileCount > 0) {
-      waterMultiplier = .85f;
-   } else {
-      waterMultiplier = 1.f;
-   }
-
-   if (!creative && lavaTileCount > 0) {
-      takeDamage(map, randomInt(20, 30), 25, 1.2f);
-   }
-
    // Get other things right
 
-   regenSpeedMultiplier = (honeyTileCount > 0 ? regenSpeedInHoney : 1.0f);
+   // regenSpeedMultiplier = (honeyTileCount > 0 ? regenSpeedInHoney : 1.0f);
    if (!collisionY) {
       onGround = false;
    }

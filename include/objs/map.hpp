@@ -7,7 +7,7 @@
 constexpr inline Color wallTint = {120, 120, 120, 255};
 constexpr inline liquidlayer_t maxLiquidLayers = 32;
 constexpr inline liquidlayer_t minLiquidLayers = maxLiquidLayers / 8;
-constexpr inline liquidlayer_t liquidToBlockThreshold = maxLiquidLayers / 4;
+constexpr inline liquidlayer_t liquidToBlockThreshold = maxLiquidLayers / 8;
 constexpr inline liquidlayer_t playerLiquidThreshold = maxLiquidLayers / 2;
 
 // block
@@ -75,20 +75,16 @@ void setBlock(const std::string &name, BlockType attributes, Texture texture);
 
 // Liquids
 
-enum class LiquidType: unsigned char {
-   none,
-   water,
-   lava,
-   honey,
-};
-
 struct LiquidData {
-   Texture texture;
-   float updateSpeed = 0.0f;
+   Texture texture {0};
+   int updateSpeed = 0;
    std::unordered_map<liquidid_t, blockid_t> conversionTable;
    float moveSpeedMultiplier = 1.0f;
    bool naturalLight = false;
    bool glow = false;
+   bool damagePlayer = false;
+   int damageMin = 0;
+   int damageMax = 0;
 };
 
 bool isLiquidNameValid(const std::string &name);
@@ -122,7 +118,7 @@ struct Map {
    void setBlock(int x, int y, blockid_t id);
    void setWall(int x, int y, const std::string &name);
    void setWall(int x, int y, blockid_t id);
-   void setLiquid(int x, int y, LiquidType type, liquidlayer_t height);
+   void setLiquid(int x, int y, liquidid_t id, liquidlayer_t height);
 
    void deleteBlock(int x, int y);
    void deleteWall(int x, int y);
@@ -149,8 +145,10 @@ struct Map {
 
    bool isLiquid(int x, int y) const;
    bool isAnyLiquid(int x, int y) const;
+   bool isLiquidOfType(int x, int y, liquidid_t id) const;
    liquidlayer_t getLiquidHeight(int x, int y) const;
-   bool isLiquidOfType(int x, int y, LiquidType type) const;
+   liquidid_t getLiquidId(int x, int y) const;
+   LiquidData &getLiquidData(int x, int y) const;
 
    // render
 
@@ -163,7 +161,7 @@ struct Map {
    std::vector<Block> blocks;
    std::vector<Wall> walls;
    std::vector<liquidlayer_t> liquidHeights;
-   std::vector<LiquidType> liquidTypes;
+   std::vector<liquidid_t> liquidTypes;
    std::vector<Furniture> furniture;
 
    int sizeX = 0;

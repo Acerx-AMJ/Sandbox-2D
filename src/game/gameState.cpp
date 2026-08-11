@@ -21,8 +21,6 @@ constexpr float minCameraZoom     = 12.5f;
 constexpr float maxCameraZoom     = 200.0f;
 
 constexpr int physicsTicks      = 8;
-constexpr int lavaUpdateSpeed   = 2; // Lava updates 2x slower than water
-constexpr int honeyUpdateSpeed  = 4; // Honey updates 2x slower than lava
 constexpr int grassGrowSpeedMin = 100;
 constexpr int grassGrowSpeedMax = 255;
 
@@ -49,6 +47,8 @@ GameState::GameState(const std::string &worldName)
    menuButton.text = "Save & Quit";
    pauseButton.text = "Pause";
    continueButton.texture = menuButton.texture = &getTexture("button");
+
+   liquidCounters.resize(getLiquidCount());
 
    console.init(map, player, inventory);
    updateResponsiveness();
@@ -117,9 +117,6 @@ void GameState::fixedUpdate() {
       return;
    }
 
-   lavaCounter = (lavaCounter + 1) % lavaUpdateSpeed;
-   honeyCounter = (honeyCounter + 1) % honeyUpdateSpeed;
-
    Rectangle physicsBounds = cameraBounds;
    Vector2 halfSize = {(cameraBounds.width - cameraBounds.x) / 2.0f, (cameraBounds.height - cameraBounds.y) / 2.0f};
    physicsBounds.x = std::max<int>(0, cameraBounds.x - halfSize.x);
@@ -127,16 +124,22 @@ void GameState::fixedUpdate() {
    physicsBounds.width = std::min<int>(map.sizeX - 1, cameraBounds.width + halfSize.x);
    physicsBounds.height = std::min<int>(map.sizeY - 1, cameraBounds.height + halfSize.y);
 
+   // update liquid counters
+   for (liquidid_t i = 1; i < liquidCounters.size(); ++i) {
+      if (liquidCounters[i] >= getLiquidData(i).updateSpeed) {
+         liquidCounters[i] = 0;
+      }
+      liquidCounters[i] += 1;
+   }
+
    // Loop backwards to avoid updating most of the moving blocks twice
    for (int y = physicsBounds.height; y >= physicsBounds.y; --y) {
       for (int x = physicsBounds.width; x >= physicsBounds.x; --x) {
          if (map.isAnyLiquid(x, y)) {
-            if (map.isLiquidOfType(x, y, LiquidType::water)) {
-               updateWaterPhysics(x, y);
-            } else if (lavaCounter == 0 && map.isLiquidOfType(x, y, LiquidType::lava)) {
-               updateLavaPhysics(x, y);
-            } else if (honeyCounter == 0 && map.isLiquidOfType(x, y, LiquidType::honey)) {
-               updateHoneyPhysics(x, y);
+            liquidid_t id = map.getLiquidId(x, y);
+
+            if (liquidCounters[id] >= getLiquidData(id).updateSpeed) {
+               updateLiquid(x, y, id);
             }
          }
 
@@ -337,33 +340,34 @@ static void applyHalfFlowDown(unsigned char &flow1, unsigned char &flow2) {
    flow2 += halfFlowDown;
 }
 
-bool GameState::handleLiquidToBlock(int x, int y, LiquidType type, unsigned short blockId) {
-   // What even is C++ syntax?
+bool GameState::handleLiquidToBlock(int x, int y, liquidid_t id) {
+   LiquidData &data = getLiquidData(id);
    for (const Vector2 &offset: {Vector2{1, 0}, Vector2{0, 1}, Vector2{-1, 0}, Vector2{0, -1}}) {
-      if (!map.isAnyLiquid(x + offset.x, y + offset.y) || !map.isLiquidOfType(x + offset.x, y + offset.y, type)) {
+      int dx = x + offset.x, dy = y + offset.y;
+      if (!map.isAnyLiquid(dx, dy) || map.isLiquidOfType(dx, dy, id)) {
          continue;
       }
 
-      if (map.getLiquidHeight(x + offset.x, y + offset.y) < liquidToBlockThreshold || !map.isEmpty(x + offset.x, y + offset.y)) {
-         map.setLiquid(x + offset.x, y + offset.y, LiquidType::none, 0);
-         continue;
+      if (map.getLiquidHeight(dx, dy) >= liquidToBlockThreshold && map.getLiquidHeight(x, y) >= liquidToBlockThreshold && map.isNotSolid(dx, dy)) {
+         liquidid_t target = map.getLiquidId(dx, dy);
+         if (data.conversionTable.find(target) != data.conversionTable.end()) {
+            map.setBlock(dx, dy, data.conversionTable[target]);
+         }
       }
-
-      if (map.getLiquidHeight(x, y) >= liquidToBlockThreshold) {
-         map.setBlock(x + offset.x, y + offset.y, blockId);
-      }
-      map.setLiquid(x, y, LiquidType::none, 0);
+      map.setLiquid(x, y, 0, 0);
    }
    return map.isAnyLiquid(x, y);
 }
 
-void GameState::updateFluid(int x, int y) {
-   unsigned char height = map.getLiquidHeight(x, y);
-   LiquidType type = map.liquidTypes[y * map.sizeX + x];
+void GameState::updateLiquid(int x, int y, liquidid_t id) {
+   if (!handleLiquidToBlock(x, y, id)) {
+      return;
+   }
+   liquidlayer_t height = map.getLiquidHeight(x, y);
 
    // Delete the liquid if its height is zero
    if (height == 0) {
-      map.setLiquid(x, y, LiquidType::none, 0);
+      map.setLiquid(x, y, 0, 0);
       return;
    }
 
@@ -372,45 +376,23 @@ void GameState::updateFluid(int x, int y) {
       std::swap(map.liquidTypes[y * map.sizeX + x], map.liquidTypes[(y + 1) * map.sizeX + x]);
       std::swap(map.liquidHeights[y * map.sizeX + x], map.liquidHeights[(y + 1) * map.sizeX + x]);
       return;
-   } else if (map.isAnyLiquid(x, y + 1) && map.isLiquidOfType(x, y + 1, type) && map.getLiquidHeight(x, y + 1) < maxLiquidLayers) {
+   } else if (map.isAnyLiquid(x, y + 1) && map.isLiquidOfType(x, y + 1, id) && map.getLiquidHeight(x, y + 1) < maxLiquidLayers) {
       applyFlowDown(map.liquidHeights[y * map.sizeX + x], map.liquidHeights[(y + 1) * map.sizeX + x]);
    }
 
    // Handle liquid going left
    if (((map.getBlock(x - 1, y).tile == TileType::ghost || map.is(x - 1, y, BlockType::flowable)) && !map.isAnyLiquid(x - 1, y))
-    || (map.isAnyLiquid(x - 1, y) && map.isLiquidOfType(x - 1, y, type) && map.getLiquidHeight(x - 1, y) < height && map.getLiquidHeight(x - 1, y) < maxLiquidLayers)) {
-      map.liquidTypes[y * map.sizeX + x - 1] = type;
+    || (map.isAnyLiquid(x - 1, y) && map.isLiquidOfType(x - 1, y, id) && map.getLiquidHeight(x - 1, y) < height && map.getLiquidHeight(x - 1, y) < maxLiquidLayers)) {
+      map.liquidTypes[y * map.sizeX + x - 1] = id;
       applyHalfFlowDown(map.liquidHeights[y * map.sizeX + x], map.liquidHeights[y * map.sizeX + x - 1]);
    }
 
    // Handle liquid going right
    if (((map.getBlock(x + 1, y).tile == TileType::ghost || map.is(x + 1, y, BlockType::flowable)) && !map.isAnyLiquid(x + 1, y))
-    || (map.isAnyLiquid(x + 1, y) && map.isLiquidOfType(x + 1, y, type) && map.getLiquidHeight(x + 1, y) < height && map.getLiquidHeight(x + 1, y) < maxLiquidLayers)) {
-      map.liquidTypes[y * map.sizeX + x + 1] = type;
+    || (map.isAnyLiquid(x + 1, y) && map.isLiquidOfType(x + 1, y, id) && map.getLiquidHeight(x + 1, y) < height && map.getLiquidHeight(x + 1, y) < maxLiquidLayers)) {
+      map.liquidTypes[y * map.sizeX + x + 1] = id;
       applyHalfFlowDown(map.liquidHeights[y * map.sizeX + x], map.liquidHeights[y * map.sizeX + x + 1]);
    }
-}
-
-void GameState::updateWaterPhysics(int x, int y) {
-   // Since lava updates 2x slower and in batch, make water turn
-   // nearby tiles into obsidian
-   if (handleLiquidToBlock(x, y, LiquidType::lava, getBlockIdFromName("obsidian"))) {
-      if (handleLiquidToBlock(x, y, LiquidType::honey, getBlockIdFromName("honey_block"))) {
-         updateFluid(x, y);
-      }
-   }
-}
-
-void GameState::updateLavaPhysics(int x, int y) {
-   // Same with honey. It on purpose updates 2x slower than lava,
-   // to make preventing liquid clashes easier
-   if (handleLiquidToBlock(x, y, LiquidType::honey, getBlockIdFromName("crispy_honey_block"))) {
-      updateFluid(x, y);
-   }
-}
-
-void GameState::updateHoneyPhysics(int x, int y) {
-   updateFluid(x, y);
 }
 
 void GameState::updateSandPhysics(int x, int y) {
