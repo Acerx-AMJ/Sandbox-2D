@@ -1,5 +1,4 @@
 ### Right Now
-- fix popup size on spawn
 - platformed furniture
 - bring back damage indicators (and don't couple with map)
 - bring back block breaking

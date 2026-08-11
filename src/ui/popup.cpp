@@ -56,6 +56,15 @@ void fadeIn(float dt) {
    }
 }
 
+void setPopupSize() {
+   float wr = getWidthRatio();
+   float hr = getHeightRatio();
+
+   denialButton.rectangle = {getScreenCenter().x - 120.0f * wr, getScreenCenter().y + 110.0f * hr, buttonWidth * wr, buttonHeight * hr};
+   confirmationButton.rectangle = {getScreenCenter().x + 120.0f * wr, getScreenCenter().y + 110.0f * hr, buttonWidth * wr, buttonHeight * hr};
+   okayButton.rectangle = {getScreenCenter().x, getScreenCenter().y + 110.0f * hr, buttonWidth * wr, buttonHeight * hr};
+}
+
 // Init functions
 
 void initPopups() {
@@ -69,6 +78,7 @@ void initPopups() {
 
 void insertPopup(const std::string &header, const std::string &body, PopupType type) {
    popups.push_back(Popup{header, body, type});
+   setPopupSize();
 
    if (type == PopupType::error) {
       playSound("failure");
@@ -97,15 +107,9 @@ void updatePopups(float dt) {
       return;
    }
 
-   float wr = getWidthRatio();
-   float hr = getHeightRatio();
-
-   denialButton.rectangle = {getScreenCenter().x - 120.0f * wr, getScreenCenter().y + 110.0f * hr, buttonWidth * wr, buttonHeight * hr};
-   confirmationButton.rectangle = {getScreenCenter().x + 120.0f * wr, getScreenCenter().y + 110.0f * hr, buttonWidth * wr, buttonHeight * hr};
-   okayButton.rectangle = {getScreenCenter().x, getScreenCenter().y + 110.0f * hr, buttonWidth * wr, buttonHeight * hr};
-
    fadeIn(dt);
    Popup &popup = popups.back();
+   setPopupSize();
 
    if (popup.type == PopupType::confirmation) {
       confirmationButton.update(dt);
