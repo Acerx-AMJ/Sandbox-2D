@@ -1,15 +1,9 @@
-#ifndef GAME_LOADINGSTATE_HPP
-#define GAME_LOADINGSTATE_HPP
-
+#pragma once
 #include "game/state.hpp"
 #include <string>
 
-// Loading state
-
 struct LoadingState: public State {
    enum class Load { fonts, textures, shaders, sounds, music, data, count };
-
-   // Constructors
 
    LoadingState();
    ~LoadingState() = default;
@@ -17,9 +11,6 @@ struct LoadingState: public State {
    // Functions
 
    void update() override;
-   void fixedUpdate() override;
-   void updateResponsiveness() override;
-
    void render() override;
    State* change() override;
 
@@ -32,5 +23,3 @@ struct LoadingState: public State {
    float finalWaitTimer = 0.f;
    float iconRotation = 0.f;
 };
-
-#endif

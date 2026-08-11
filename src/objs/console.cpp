@@ -1,7 +1,7 @@
 #include "objs/console.hpp"
+#include "SRU/text.hpp"
 #include "objs/inventory.hpp"
-#include "util/format.hpp"
-#include "util/parallax.hpp"
+#include "objs/parallax.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
 #include "SRU/assets.hpp"
@@ -753,7 +753,7 @@ void Console::init(Map &map, Player &player, Inventory &inventory) {
 
 void Console::output(const std::string &string, ConsoleColor color) {
    size_t last = text.size();
-   divideText(text, string, input.rectangle.width - 10.0f * getMinRatio(), getFontSize(consoleFontSize), getFontSize(1.0f));
+   divideTextInPlace(text, string, getFont("andy"), input.rectangle.width - 10.0f * getMinRatio(), getFontSize(consoleFontSize));
 
    for (size_t i = last; i < text.size(); ++i) {
       textColors.push_back(color);

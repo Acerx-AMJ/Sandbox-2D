@@ -1,6 +1,4 @@
-#ifndef UI_INPUT_HPP
-#define UI_INPUT_HPP
-
+#pragma once
 #include <raylib.h>
 #include <string>
 
@@ -27,5 +25,3 @@ struct Input {
    size_t cursor = 0;
    size_t prevsize = 0;
 };
-
-#endif

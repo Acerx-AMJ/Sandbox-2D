@@ -1,13 +1,16 @@
 #include "game/loadingState.hpp"
+#include "SRU/util.hpp"
 #include "game/menuState.hpp"
 #include "mngr/data.hpp"
 #include "ui/popup.hpp"
-#include "util/position.hpp"
-#include "util/render.hpp"
 #include "SRU/audio.hpp"
 #include "SRU/assets.hpp"
 #include "SRU/file.hpp"
 #include "SRU/text.hpp"
+#include "SRU/render.hpp"
+
+constexpr float splashFontSize = 40.0f;
+constexpr float loadingTextFontSize = 80.0f;
 
 // Constructors
 
@@ -15,7 +18,7 @@ LoadingState::LoadingState() {
    loadFont("andy", "assets/fonts/andy.ttf");
    loadTexture("loading", "assets/sprites/ui/loading.png");
    splashText = getRandomLineFromFile("assets/splash.txt");
-   wrapInPlace(splashText, getFont("andy"), GetScreenWidth() - 50.0f * getWidthRatio(), getFontSizeScaled(40.0f));
+   wrapInPlace(splashText, getFont("andy"), mapRatioToX(0.9), getFontSizeScaled(splashFontSize));
 }
 
 void LoadingState::update() {
@@ -58,23 +61,14 @@ void LoadingState::update() {
    }
 }
 
-void LoadingState::fixedUpdate() {
-   // Loading state does not require any physics
-}
-
-void LoadingState::updateResponsiveness() {
-   // Loading state handles its responsiveness straight in render
-}
-
 void LoadingState::render() {
    std::string finalLoadingText = loadingText;
    if (loadPhase != Load::count) {
       finalLoadingText = TextFormat("%s%d/%d", loadingText.c_str(), (int)loadPhase, (int)Load::count);
    }
-
-   drawText(getScreenCenter({0.0f, getHeightRatio() * -175.0f}), finalLoadingText.c_str(), getFontSize(80));
-   drawText(getScreenCenter({0.0f, getHeightRatio() * 100.0f}), splashText.c_str(), getFontSize(40));
-   drawTexture(getTexture("loading"), getScreenCenter(), applyCubicResponsiveness({70.0f, 70.0f}), iconRotation);
+   drawTextCenteredResponsive("andy", V2(0.5, 0.33f), finalLoadingText.c_str(), loadingTextFontSize);
+   drawTextCenteredResponsive("andy", V2(0.5f, 0.6f), splashText.c_str(), splashFontSize);
+   drawTextureCenteredResponsiveCubic("loading", V2(0.5f, 0.5f), V2(0.065), WHITE, iconRotation);
 }
 
 State* LoadingState::change() {

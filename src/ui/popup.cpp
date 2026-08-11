@@ -1,7 +1,7 @@
+#include "SRU/text.hpp"
 #include "mngr/input.hpp"
 #include "ui/button.hpp"
 #include "ui/popup.hpp"
-#include "util/format.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
 #include "SRU/audio.hpp"
@@ -146,7 +146,7 @@ void renderPopups() {
    drawText(getScreenCenter({0.0f, hr * -125.0f}), popup.header.c_str(), getFontSize(50.0f));
 
    std::string wrappedBody = popup.body;
-   wrapText(wrappedBody, (popupSize.x - 30.0f) * wr, getFontSize(25.0f), getFontSize(1.0f));
+   wrapInPlace(wrappedBody, getFont("andy"), (popupSize.x - 30.0f) * wr, getFontSize(25.0f));
    drawText(getScreenCenter({0.0f, hr * -40.0f}), wrappedBody.c_str(), getFontSize(25.0f), WHITE, getFontSize(1.0f));
 
    if (popup.type == PopupType::confirmation) {

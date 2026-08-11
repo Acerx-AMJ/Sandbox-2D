@@ -1,14 +1,10 @@
-#ifndef OBJS_PLAYER_HPP
-#define OBJS_PLAYER_HPP
-
+#pragma once
 #include "objs/map.hpp"
 #include <limits>
 
 constexpr int maxBreath = 100;
 
 struct Player {
-   // Constructors
-
    void init();
 
    // Update
@@ -87,5 +83,3 @@ struct Player {
 
    bool creative = false;
 };
-
-#endif

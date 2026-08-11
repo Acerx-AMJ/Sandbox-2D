@@ -1,11 +1,5 @@
-#ifndef GAME_STATE_HPP
-#define GAME_STATE_HPP
-
-// Constants
-
+#pragma once
 constexpr float fixedUpdateDT = 1.0f / 60.f;
-
-// Polymorphic state
 
 struct State {
    State() = default;
@@ -14,8 +8,8 @@ struct State {
    // Virtual functions
 
    virtual void update() = 0;
-   virtual void fixedUpdate() = 0;
-   virtual void updateResponsiveness() = 0; // udpate UI element sizes based on window size
+   virtual void fixedUpdate() {};
+   virtual void updateResponsiveness() {}; // udpate UI element sizes based on window size
 
    virtual void render() = 0;
    virtual State* change() = 0;
@@ -42,5 +36,3 @@ struct State {
    float realDt = 0.0f; // Real DT should be used for timers, whereas DT for everything else
    float dt = 0.0f;
 };
-
-#endif

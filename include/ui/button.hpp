@@ -1,6 +1,4 @@
-#ifndef UI_BUTTON_HPP
-#define UI_BUTTON_HPP
-
+#pragma once
 #include <raylib.h>
 #include <string>
 
@@ -33,5 +31,3 @@ struct Button {
 
    float scale = 1.0f;
 };
-
-#endif

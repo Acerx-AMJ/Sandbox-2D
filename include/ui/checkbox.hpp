@@ -1,6 +1,4 @@
-#ifndef UI_CHECKBOX_HPP
-#define UI_CHECKBOX_HPP
-
+#pragma once
 #include <raylib.h>
 #include <string>
 
@@ -12,5 +10,3 @@ struct CheckBox {
    std::string keybind;
    bool checked = false;
 };
-
-#endif

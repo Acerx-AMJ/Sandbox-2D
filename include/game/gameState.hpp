@@ -1,18 +1,12 @@
-#ifndef GAME_GAMESTATE_HPP
-#define GAME_GAMESTATE_HPP
-
+#pragma once
 #include "game/state.hpp"
 #include "objs/console.hpp"
 #include "objs/inventory.hpp"
 #include "objs/player.hpp"
 #include "ui/button.hpp"
 
-// Game state
-
 struct GameState: public State {
    enum class Phase {playing, paused, died};
-
-   // Constructors
 
    GameState(const std::string &worldName);
    ~GameState();
@@ -74,5 +68,3 @@ struct GameState: public State {
    int lavaCounter = 0;
    int honeyCounter = 0;
 };
-
-#endif

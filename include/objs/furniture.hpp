@@ -1,5 +1,5 @@
 #pragma once
-#include "util/types.hpp"
+#include "types.hpp"
 #include <raylib.h>
 #include <string>
 #include <vector>

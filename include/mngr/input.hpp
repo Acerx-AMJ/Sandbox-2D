@@ -1,5 +1,4 @@
-#ifndef MNGR_INPUT_HPP
-#define MNGR_INPUT_HPP
+#pragma once
 
 // Update input
 
@@ -31,5 +30,3 @@ bool isMouseReleasedOutsideUI(int button);
 bool isMouseDown(int button);
 bool isMousePressed(int button);
 bool isMouseReleased(int button);
-
-#endif

@@ -1,6 +1,4 @@
-#ifndef MNGR_PARTICLE
-#define MNGR_PARTICLE
-
+#pragma once
 #include <raylib.h>
 
 // Particle
@@ -28,5 +26,3 @@ void spawnParticles(const Particle &minimum, const Particle &maximum, int count)
 // Particle presets
 
 void spawnDeathParticles(const Vector2 &position);
-
-#endif

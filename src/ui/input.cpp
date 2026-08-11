@@ -1,6 +1,6 @@
 #include "mngr/input.hpp"
+#include "SRU/text.hpp"
 #include "ui/input.hpp"
-#include "util/format.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
 #include "SRU/audio.hpp"
@@ -136,7 +136,7 @@ void Input::render() {
 
    std::string selected = text.empty() ? fallback : text;
    if (wrapinput) {
-      wrapText(selected, rectangle.width - textWrapPadding, fontsize, spacing);
+      wrapInPlace(selected, getFont("andy"), rectangle.width - textWrapPadding, fontsize);
       drawText({rectangle.x, rectangle.y}, selected.c_str(), fontsize, Color{value, value, value, 255}, spacing);
    } else {
       Vector2 origin = getOrigin(selected.c_str(), fontsize, spacing);

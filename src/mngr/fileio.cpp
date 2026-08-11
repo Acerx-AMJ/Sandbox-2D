@@ -1,10 +1,9 @@
+#include "mngr/fileio.hpp"
 #include "objs/console.hpp"
 #include "objs/inventory.hpp"
 #include "objs/map.hpp"
+#include "objs/parallax.hpp"
 #include "objs/player.hpp"
-#include "util/fileio.hpp"
-#include "util/format.hpp" // IWYU pragma: export
-#include "util/parallax.hpp"
 #include <fstream>
 #include <vector>
 
@@ -17,7 +16,10 @@ constexpr int fileVersion = 9;
 
 void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, const Vector2 &position, bool creative, int breath, int hearts, int maxHearts, float zoom, const Map &map, const Console *console, const Inventory *inventory, const std::vector<DroppedItem> *droppedItems) {
    std::ofstream file ("data/worlds/" + name + ".bin", std::ios::binary);
-   assert(file.is_open(), "Failed to save world 'data/worlds/{}.bin'.", name);
+   if (!file.is_open()) {
+      printf("saveWorldData: Failed to save world 'data/worlds/%s.bin'.\n", name.c_str());
+      return;
+   }
 
    // Write basic data
    file.write(reinterpret_cast<const char*>(&fileVersion), sizeof(fileVersion));
@@ -115,7 +117,10 @@ void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, 
 
 void loadWorldData(const std::string &name, Player &player, float &zoom, Map &map, Console &console, Inventory &inventory, std::vector<DroppedItem> &droppedItems) {
    std::ifstream file ("data/worlds/" + name + ".bin", std::ios::binary);
-   assert(file.is_open(), "Failed to load world 'data/worlds/{}.bin'.", name);
+   if (!file.is_open()) {
+      printf("loadWorldData: Failed to load world 'data/worlds/%s.bin'.\n", name.c_str());
+      return;
+   }
 
    // Read basic data
    int versionOfFile = 0;
@@ -213,7 +218,10 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
 
 int getFileVersion(const std::string &name) {
    std::ifstream file ("data/worlds/" + name + ".bin", std::ios::binary);
-   assert(file.is_open(), "Failed to load world 'data/worlds/{}.bin'.", name);
+   if (!file.is_open()) {
+      printf("getFileVersion: Failed to load world 'data/worlds/%s.bin'.\n", name.c_str());
+      return 0;
+   }
 
    int versionOfFile = 0;
    file.read(reinterpret_cast<char*>(&versionOfFile), sizeof(versionOfFile));

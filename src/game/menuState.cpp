@@ -1,16 +1,16 @@
 #include "game/gameState.hpp"
 #include "game/menuState.hpp"
 #include "mngr/input.hpp"
+#include "mngr/fileio.hpp"
 #include "objs/generation.hpp"
+#include "objs/parallax.hpp"
 #include "ui/popup.hpp"
-#include "util/fileio.hpp"
-#include "util/format.hpp"
-#include "util/parallax.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
 #include "SRU/assets.hpp"
 #include "SRU/file.hpp"
 #include "SRU/random.hpp"
+#include "SRU/text.hpp"
 #include <filesystem>
 #include <thread>
 
@@ -273,17 +273,17 @@ void MenuState::updateLevelSelection() {
             return;
          }
 
-         insertPopup("Confirmation Request", format("Are you sure that you want to delete all non-favorited worlds? This includes {} worlds. You won't be able to recover any of them!", deletableWorldCount), PopupType::confirmation);
+         insertPopup("Confirmation Request", TextFormat("Are you sure that you want to delete all non-favorited worlds? This includes %d worlds. You won't be able to recover any of them!", deletableWorldCount), PopupType::confirmation);
          megaDeleteClicked = true;
          return;
       }
       
       if (selectedButton->favorite) {
-         insertPopup("Notice", format("World '{}' cannot be deleted as it is favorited. If you wish to proceed, please unfavorite it and try again.", selectedButton->text), PopupType::info);
+         insertPopup("Notice", TextFormat("World '%s' cannot be deleted as it is favorited. If you wish to proceed, please unfavorite it and try again.", selectedButton->text.c_str()), PopupType::info);
          return;
       }
 
-      insertPopup("Confirmation Request", format("Are you sure that you want to delete world '{}'? You won't be able to recover it!", selectedButton->text), PopupType::confirmation);
+      insertPopup("Confirmation Request", TextFormat("Are you sure that you want to delete world '%s'? You won't be able to recover it!", selectedButton->text.c_str()), PopupType::confirmation);
       deleteClicked = true;
       return;
    }
@@ -294,7 +294,7 @@ void MenuState::updateLevelSelection() {
          if (isWorldFavorite(button.text)) {
             continue;
          }
-         std::string fileName = format("data/worlds/{}.bin", button.text);
+         std::string fileName = TextFormat("data/worlds/%s.bin", button.text.c_str());
 
          if (!std::filesystem::remove_all(fileName)) {
             failedCount += 1;
@@ -302,17 +302,17 @@ void MenuState::updateLevelSelection() {
       }
 
       if (failedCount != 0) {
-         insertPopup("Notice", format("{} worlds could not be deleted. Please check the 'data/worlds/' folder, if the files are present, check your permissions.", failedCount), PopupType::error);
+         insertPopup("Notice", TextFormat("%d worlds could not be deleted. Please check the 'data/worlds/' folder, if the files are present, check your permissions.", failedCount), PopupType::error);
       }
       loadWorldButtons();
    }
    megaDeleteClicked = false;
 
    if (deleteClicked && isPopupConfirmed()) {
-      std::string fileName = format("data/worlds/{}.bin", selectedButton->text);
+      std::string fileName = TextFormat("data/worlds/%s.bin", selectedButton->text.c_str());
 
       if (!std::filesystem::remove_all(fileName)) {
-         insertPopup("Notice", format("World '{}' could not be deleted. Please check the 'data/worlds/' folder, if the file is present, check your permissions.", selectedButton->text, fileName, (std::filesystem::exists(selectedButton->text) ? " " : " not ")), PopupType::error);
+         insertPopup("Notice", TextFormat("World '%s' could not be deleted. Please check the 'data/worlds/' folder, if the file is present, check your permissions.", selectedButton->text.c_str()), PopupType::error);
       }
       loadWorldButtons();
    }
@@ -352,7 +352,7 @@ void MenuState::updateLevelSelection() {
       if (getLatestVersion() != getFileVersion(selectedWorld)) {
          invalidVersionClicked = true;
          resetSelection();
-         insertPopup("Confirmation Request", format("World '{}' uses an outdated file version. The latest version is {}, whereas its version is {}. Are you sure that you want to continue? Your world might get corrupted and become unrecoverable!", selectedWorld, getLatestVersion(), getFileVersion(selectedWorld)), PopupType::confirmation);
+         insertPopup("Confirmation Request", TextFormat("World '%s' uses an outdated file version. The latest version is %d, whereas its version is %d. Are you sure that you want to continue? Your world might get corrupted and become unrecoverable!", selectedWorld.c_str(), getLatestVersion(), getFileVersion(selectedWorld)), PopupType::confirmation);
          return;
       }
 
@@ -397,20 +397,20 @@ void MenuState::updateLevelCreation() {
    if (createButtonCreation.clicked || (!worldName.typing && handleKeyPressWithSound(KEY_ENTER))) {
       // Input characters are capped at maxWorldNameSize already
       if (worldName.text.size() < minWorldNameSize) {
-         insertPopup("Invalid World Name", format("World name must contain from {} to {} characters, but it has {} instead.", minWorldNameSize, maxWorldNameSize, worldName.text.size()), PopupType::error);
+         insertPopup("Invalid World Name", TextFormat("World name must contain from %d to %d characters, but it has %d instead.", minWorldNameSize, maxWorldNameSize, worldName.text.size()), PopupType::error);
          return;
       }
 
       // World with the same name already exists
       for (const Button &button: worldButtons) {
          if (button.text == worldName.text) {
-            insertPopup("World Exists", format("Cannot create world with the name '{}', as a world with the same name already exists.", worldName.text), PopupType::error);
+            insertPopup("World Exists", TextFormat("Cannot create world with the name '%s', as a world with the same name already exists.", worldName.text.c_str()), PopupType::error);
             return;
          }
       }
 
       generationSplash = getRandomLineFromFile("assets/splash.txt");
-      wrapText(generationSplash, GetScreenWidth() - 50.0f, 40.0f, 1.0f);
+      wrapInPlace(generationSplash, getFont("andy"), GetScreenWidth() - 50.0f, 40.0f);
 
       worldName.typing = false;
       phase = Phase::generatingLevel;
@@ -438,25 +438,25 @@ void MenuState::updateLevelRenaming() {
    if (renameButtonRenaming.clicked || (!renameInput.typing && handleKeyPressWithSound(KEY_ENTER))) {
       // Input characters are capped at maxWorldNameSize already
       if (renameInput.text.size() < minWorldNameSize) {
-         insertPopup("Invalid World Name", format("World name must contain from {} to {} characters, but it has {} instead.", minWorldNameSize, maxWorldNameSize, renameInput.text.size()), PopupType::error);
+         insertPopup("Invalid World Name", TextFormat("World name must contain from %d to %d characters, but it has %d instead.", minWorldNameSize, maxWorldNameSize, renameInput.text.size()), PopupType::error);
          return;
       }
 
       // World with the same name already exists
       for (const Button &button: worldButtons) {
          if (button.text == renameInput.text) {
-            insertPopup("World Exists", format("Cannot rename world to '{}', as a world with the same name already exists.", renameInput.text), PopupType::error);
+            insertPopup("World Exists", TextFormat("Cannot rename world to '%s', as a world with the same name already exists.", renameInput.text.c_str()), PopupType::error);
             return;
          }
       }
 
-      std::string newName = format("data/worlds/{}.bin", renameInput.text);
+      std::string newName = TextFormat("data/worlds/%s.bin", renameInput.text.c_str());
       if (std::filesystem::exists(newName) && std::filesystem::is_regular_file(newName)) {
-         insertPopup("Invalid World Name", format("World with the name '{}' already exists.", renameInput.text), PopupType::error);
+         insertPopup("Invalid World Name", TextFormat("World with the name '%s' already exists.", renameInput.text.c_str()), PopupType::error);
          return;
       }
 
-      std::filesystem::rename(format("data/worlds/{}.bin", selectedWorld), newName);
+      std::filesystem::rename(TextFormat("data/worlds/%s.bin", selectedWorld.c_str()), newName);
 
       if (wasFavoriteBeforeRenaming) {
          favoriteWorlds.erase(std::remove(favoriteWorlds.begin(), favoriteWorlds.end(), renameInput.text), favoriteWorlds.end());

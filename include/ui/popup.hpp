@@ -1,6 +1,4 @@
-#ifndef UI_POPUP_HPP
-#define UI_POPUP_HPP
-
+#pragma once
 #include <string>
 
 enum class PopupType: char {
@@ -21,5 +19,3 @@ bool anyPopups();
 
 void updatePopups(float dt);
 void renderPopups();
-
-#endif

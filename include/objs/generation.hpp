@@ -1,6 +1,4 @@
-#ifndef OBJS_GENERATION_HPP
-#define OBJS_GENERATION_HPP
-
+#pragma once
 #include "objs/map.hpp"
 #include "PerlinNoise.hpp"
 #include <atomic>
@@ -10,27 +8,6 @@
 struct MapGenerator {
    enum class Biome { plains, forest, mountains, desert_oasis, desert, tundra, jungle, count };
    enum class BiomeWarmth { cold, warm, hot };
-
-   std::mutex &infoTextMutex;
-   std::string &infoText;
-   float &progress;
-
-   std::vector<int> rockStartHeights;
-   std::string name;
-   Map map;
-
-   std::atomic<bool> isCompleted = false;
-   bool isFlat = false;
-
-   siv::PerlinNoise biomeTemperatureNoise;
-   siv::PerlinNoise biomeMoistureNoise;
-   siv::PerlinNoise heightNoise;
-   siv::PerlinNoise sandDebriNoise;
-   siv::PerlinNoise dirtDebriNoise;
-   siv::PerlinNoise oreNoise1;
-   siv::PerlinNoise oreNoise2;
-
-   // Constructors
 
    MapGenerator(const std::string &name, int sizeX, int sizeY, bool isFlat, std::mutex &infoTextMutex, std::string &infoText, float &progress);
 
@@ -59,6 +36,25 @@ struct MapGenerator {
    // Other functions
 
    void setInfo(const std::string &text, float progress);
-};
 
-#endif
+   // Members
+
+   std::mutex &infoTextMutex;
+   std::string &infoText;
+   float &progress;
+
+   std::vector<int> rockStartHeights;
+   std::string name;
+   Map map;
+
+   std::atomic<bool> isCompleted = false;
+   bool isFlat = false;
+
+   siv::PerlinNoise biomeTemperatureNoise;
+   siv::PerlinNoise biomeMoistureNoise;
+   siv::PerlinNoise heightNoise;
+   siv::PerlinNoise sandDebriNoise;
+   siv::PerlinNoise dirtDebriNoise;
+   siv::PerlinNoise oreNoise1;
+   siv::PerlinNoise oreNoise2;
+};

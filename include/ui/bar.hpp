@@ -1,6 +1,4 @@
-#ifndef UI_BAR_HPP
-#define UI_BAR_HPP
-
+#pragma once
 #include <raylib.h>
 
 struct Bar {
@@ -17,5 +15,3 @@ struct Bar {
    float progress = 1.0f;
    float progressInterpolation = 1.0f;
 };
-
-#endif

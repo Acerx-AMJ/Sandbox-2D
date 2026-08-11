@@ -6,8 +6,8 @@
 - load all items from file
 - backgrounds
 - add drops back to furniture and blocks
+- lightmap
 
-- divide text SRU-Lib, move out of format.hpp
 - liquid loading, textures
 - furniture pre-pass for sapling_grows_into. blocks too just in case for a future update
 
@@ -46,7 +46,6 @@
 
 ### Creative
 - add creative menu
-- make give command accept block/item names
 
 ### Other
 - World generation.

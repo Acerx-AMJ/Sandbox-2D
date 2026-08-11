@@ -1,6 +1,4 @@
-#ifndef OBJS_INVENTORY_HPP
-#define OBJS_INVENTORY_HPP
-
+#pragma once
 #include "objs/item.hpp"
 #include "objs/player.hpp"
 #include <vector>
@@ -88,5 +86,3 @@ struct Inventory {
 // unsigned short getPotionIdFromName(const std::string &name);
 
 void drawItem(ItemType type, unsigned short id, unsigned short count, bool isFurniture, bool isWall, const Vector2 &position, const Vector2 &size, bool isSelected, bool isworldspace = false);
-
-#endif

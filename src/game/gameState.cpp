@@ -2,9 +2,8 @@
 #include "game/menuState.hpp"
 #include "mngr/particle.hpp"
 #include "mngr/input.hpp"
-#include "util/fileio.hpp"
-#include "util/format.hpp"
-#include "util/parallax.hpp"
+#include "mngr/fileio.hpp"
+#include "objs/parallax.hpp"
 #include "util/position.hpp"
 #include "util/render.hpp"
 #include "SRU/audio.hpp"
@@ -526,7 +525,7 @@ void GameState::render() {
    if (phase == Phase::died) {
       EndMode2D();
       drawText(getScreenCenter({0, -30.0f}), "YOU'VE DIED!", 120, RED);
-      drawText(getScreenCenter({0, 30.0f}), format("RESPAWN IN {}...", int(timeToRespawn - deathTimer)).c_str(), 50, RED);
+      drawText(getScreenCenter({0, 30.0f}), TextFormat("RESPAWN IN %d...", int(timeToRespawn - deathTimer)), 50, RED);
       return;
    }
 
@@ -616,7 +615,7 @@ void GameState::render() {
          drawTextureNoOrigin(heartIcon, {startingX + padding * (i % heartsPerRow) - halfSine, startingY + padding * int(i / heartsPerRow) - halfSine}, {size + sine, size + sine}, Fade(WHITE, a));
       }
       EndShaderMode();
-      drawText({startingX + (GetScreenWidth() - startingX) / 2.0f, startingY / 2.0f}, format("HP: {}/{}", player.hearts, player.maxHearts).c_str(), getFontSize(20), WHITE, getFontSize(1));
+      drawText({startingX + (GetScreenWidth() - startingX) / 2.0f, startingY / 2.0f}, TextFormat("HP: %d/%d", player.hearts, player.maxHearts), getFontSize(20), WHITE, getFontSize(1));
    }
 
    // Render other game UI

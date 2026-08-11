@@ -1,6 +1,4 @@
-#ifndef UTIL_PARALLAX_HPP
-#define UTIL_PARALLAX_HPP
-
+#pragma once
 #include "objs/generation.hpp"
 #include <raylib.h>
 
@@ -15,5 +13,3 @@ void setTimeOfDay(float timeOfDay);
 
 Color getLightBasedOnTime();
 void setCurrentBackgroundBiome(MapGenerator::Biome biome);
-
-#endif

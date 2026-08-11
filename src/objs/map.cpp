@@ -1,8 +1,8 @@
 #include "objs/map.hpp"
 #include "SRU/assets.hpp"
 #include "objs/inventory.hpp"
+#include "objs/parallax.hpp"
 #include "objs/player.hpp"
-#include "util/parallax.hpp"
 #include "util/render.hpp"
 #include <unordered_map>
 

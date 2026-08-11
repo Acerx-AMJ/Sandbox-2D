@@ -1,15 +1,9 @@
-#ifndef OBJS_ITEM_HPP
-#define OBJS_ITEM_HPP
-
+#pragma once
 #include <raylib.h>
-
-// Item type
 
 enum class ItemType: unsigned char {
    block, item, equipment, potion
 };
-
-// Item
 
 struct Item {
    ItemType type = ItemType::block;
@@ -20,8 +14,6 @@ struct Item {
    bool favorite = false;
 };
 
-// Selected item
-
 struct SelectedItem {
    Item item;
    Item *address = nullptr;
@@ -30,8 +22,6 @@ struct SelectedItem {
 
    void reset();
 };
-
-// Dropped item
 
 struct DroppedItem {
    ItemType type = ItemType::block;
@@ -55,5 +45,3 @@ struct DroppedItem {
 
    Rectangle getBounds() const;
 };
-
-#endif

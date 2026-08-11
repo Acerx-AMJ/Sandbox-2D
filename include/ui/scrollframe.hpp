@@ -1,13 +1,7 @@
-#ifndef UI_SCROLLFRAME_HPP
-#define UI_SCROLLFRAME_HPP
-
+#pragma once
 #include <raylib.h>
 
-// Constants
-
 constexpr inline float scrollBarWidth = 56.667f;
-
-// Scrollframe
 
 struct Scrollframe {
    void update(float dt);
@@ -29,5 +23,3 @@ struct Scrollframe {
    float scrollbarY = 0.f;
    float scrollbarHeight = 0.f;
 };
-
-#endif

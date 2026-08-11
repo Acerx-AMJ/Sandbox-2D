@@ -17,13 +17,6 @@ enum class TileType: unsigned char {
    ghost,
 };
 
-enum class LiquidType: unsigned char {
-   none,
-   water,
-   lava,
-   honey,
-};
-
 enum class BlockType: unsigned short {
    empty        = 1 <<  0,
    grass        = 1 <<  1,
@@ -68,17 +61,6 @@ struct Wall {
    BlockType type = BlockType::empty | BlockType::translucent | BlockType::flowable;
 };
 
-struct LiquidData {
-   Texture texture;
-   float updateSpeed = 0.0f;
-   std::unordered_map<liquidid_t, blockid_t> conversionTable;
-   float moveSpeedMultiplier = 1.0f;
-   bool naturalLight = false;
-   bool glow = false;
-};
-
-// Block getter functions
-
 bool isBlockTypeValid(const std::string &name);
 bool isBlockNameValid(const std::string &name);
 bool isBlockIdValid(blockid_t id);
@@ -90,7 +72,23 @@ size_t getBlockCount();
 void reserveBlockContainers(size_t estimate);
 blockid_t pushBlock(const std::string &name, BlockType attributes, Texture texture);
 
-// Liquid getter functions
+// Liquids
+
+enum class LiquidType: unsigned char {
+   none,
+   water,
+   lava,
+   honey,
+};
+
+struct LiquidData {
+   Texture texture;
+   float updateSpeed = 0.0f;
+   std::unordered_map<liquidid_t, blockid_t> conversionTable;
+   float moveSpeedMultiplier = 1.0f;
+   bool naturalLight = false;
+   bool glow = false;
+};
 
 bool isLiquidNameValid(const std::string &name);
 bool isLiquidIdValid(liquidid_t id);

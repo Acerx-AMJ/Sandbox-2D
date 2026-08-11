@@ -1,6 +1,4 @@
-#ifndef GAME_MENUSTATE_HPP
-#define GAME_MENUSTATE_HPP
-
+#pragma once
 #include "game/state.hpp"
 #include "ui/bar.hpp"
 #include "ui/button.hpp"
@@ -10,12 +8,8 @@
 #include <mutex>
 #include <vector>
 
-// Menu state
-
 struct MenuState: public State {
    enum class Phase {title, levelSelection, levelCreation, levelRenaming, generatingLevel};
-
-   // Constructors
 
    MenuState();
    ~MenuState() = default;
@@ -94,5 +88,3 @@ struct MenuState: public State {
    float upKeyDelayTimer = 0.0f;
    float downKeyDelayTimer = 0.0f;
 };
-
-#endif

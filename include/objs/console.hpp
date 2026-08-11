@@ -1,12 +1,8 @@
-#ifndef OBJS_CONSOLE_HPP
-#define OBJS_CONSOLE_HPP
-
+#pragma once
 #include "ui/input.hpp"
 #include <unordered_map>
 #include <variant>
 #include <vector>
-
-// Console
 
 enum class ConsoleColor: char {white, gray, yellow, red, green, blue, orange, purple, pink, count};
 using VArgs = std::vector<std::string>;
@@ -33,5 +29,3 @@ struct Console {
    int scrollback = 0;
    int historyIndex = 0;
 };
-
-#endif
