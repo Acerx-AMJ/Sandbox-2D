@@ -52,7 +52,6 @@ struct Player {
    int walkFrame = 6;
    int frameX = 0;
    bool flipX = false;
-   bool sitting = false;
    bool ignoreCollision = false;
 
    int breathFrameCounter = 0;

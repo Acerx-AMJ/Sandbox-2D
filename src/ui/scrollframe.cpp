@@ -1,8 +1,8 @@
 #include "mngr/input.hpp"
 #include "ui/scrollframe.hpp"
 #include "util/position.hpp"
-#include "util/render.hpp"
 #include "SRU/assets.hpp"
+#include "SRU/render.hpp"
 #include <raymath.h>
 
 // Update
@@ -34,8 +34,8 @@ void Scrollframe::update(float dt) {
 // Render
 
 void Scrollframe::render() const {
-   drawTextureNoOrigin(getTexture("scrollframe"), {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height});
-   drawTextureNoOrigin(getTexture("scrollbar"), {rectangle.x + rectangle.width - scrollBarWidth * getWidthRatio(), scrollbarY}, {scrollBarWidth * getWidthRatio(), scrollbarHeight});
+   drawTexture(getTexture("scrollframe"), {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height});
+   drawTexture(getTexture("scrollbar"), {rectangle.x + rectangle.width - scrollBarWidth * getWidthRatio(), scrollbarY}, {scrollBarWidth * getWidthRatio(), scrollbarHeight});
 }
 
 // Helper functions

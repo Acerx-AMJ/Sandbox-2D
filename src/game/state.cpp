@@ -1,8 +1,7 @@
 #include "game/state.hpp"
 #include "mngr/input.hpp"
-#include "mngr/particle.hpp"
 #include "ui/popup.hpp"
-#include "util/render.hpp"
+#include "SRU/particles.hpp"
 #include <algorithm>
 #include <raylib.h>
 
@@ -43,10 +42,10 @@ void State::updateStateLogic() {
 
    accumulator += dt;
    while (accumulator >= fixedUpdateDT) {
-      updateParticles();
       fixedUpdate();
       accumulator -= fixedUpdateDT;
    }
+   updateParticles(dt);
    update();
 }
 
@@ -55,7 +54,7 @@ void State::renderStateLogic() {
       ClearBackground(BLACK);
       render();
       renderPopups();
-      drawRect(Fade(BLACK, alpha));
+      DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, alpha));
    EndDrawing();
 }
 

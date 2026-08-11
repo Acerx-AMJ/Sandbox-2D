@@ -1,6 +1,5 @@
 #include "objs/parallax.hpp"
-#include "util/position.hpp"
-#include "util/render.hpp"
+#include "SRU/render.hpp"
 #include "SRU/assets.hpp"
 #include "SRU/random.hpp"
 #include <cmath>
@@ -15,8 +14,8 @@ constexpr inline float parallaxFgSpeed = 100.0f;
 constexpr int starCountMin    = 10;
 constexpr int starCountMax    = 50;
 constexpr int moonPhaseCount  = 8;
-constexpr Vector2 sunSize     = {90.0f, 90.0f};
-constexpr Vector2 moonSize    = {60.0f, 60.0f};
+constexpr Vector2 sunSize     = {0.083f, 0.083f};
+constexpr Vector2 moonSize    = {0.056f, 0.056f};
 constexpr Vector2 starSizeMin = {20.0f, 20.0f};
 constexpr Vector2 starSizeMax = {50.0f, 50.0f};
 
@@ -72,17 +71,17 @@ static Texture *fgTexture = nullptr;
 
 float getFadeStrengthBasedOnTime() {
    if (currentTime >= 45.0f && currentTime <= 135.0f) {
-      return 1.0f;
-   } else if (currentTime >= 225.0f && currentTime <= 315.0f) {
       return 0.0f;
+   } else if (currentTime >= 225.0f && currentTime <= 315.0f) {
+      return 1.0f;
    } else if (currentTime >= 315.0f) {
-      return (currentTime - 315.0f) / 90.0f;
+      return 1.0f - (currentTime - 315.0f) / 90.0f;
    } else if (currentTime <= 45.0f) {
-      return (currentTime + 45.0f) / 90.0f;
+      return 1.0f - (currentTime + 45.0f) / 90.0f;
    } else if (currentTime >= 135.0f && currentTime <= 225.0f) {
-      return 1.0f - (currentTime - 135.0f) / 90.f;
+      return (currentTime - 135.0f) / 90.f;
    }
-   return 0.0f;
+   return 1.0f;
 }
 
 // Background functions
@@ -94,7 +93,7 @@ void resetBackground() {
 }
 
 void drawBackground(float bgSpeed, float fgSpeed, float daySpeed) {
-   Vector2 screenSize = getScreenSize();
+   Vector2 screenSize = getWindowSize();
    Vector2 origin = getOrigin(screenSize);
 
    bool wasNight = isNight;
@@ -131,7 +130,7 @@ void drawBackground(float bgSpeed, float fgSpeed, float daySpeed) {
    float t = getFadeStrengthBasedOnTime();
 
    // Draw the sky
-   DrawTexturePro(getTexture("sky"), getBox(getTexture("sky")), {0, 0, getScreenSize().x, getScreenSize().y}, {0, 0}, 0, lerp(skyColorDay, skyColorNight, t));
+   DrawTexturePro(getTexture("sky"), getSource(getTexture("sky")), {0, 0, screenSize.x, screenSize.y}, {0, 0}, 0, ColorLerp(skyColorDay, skyColorNight, t));
 
    // Draw the stars
    if (prevMoonPhase != moonPhase) {
@@ -148,36 +147,36 @@ void drawBackground(float bgSpeed, float fgSpeed, float daySpeed) {
    Texture &starTexture = getTexture("stars");
    for (int i = 0; i < starCount; ++i) {
       Star &star = stars[i];
-      DrawTexturePro(starTexture, {(float)star.frameX * starTexture.height, 0.0f, (float)starTexture.height, (float)starTexture.height}, {star.position.x * getScreenSize().x, star.position.y * getScreenSize().y, star.size.x, star.size.y}, {0, 0}, 0, Fade(WHITE, 0.5f - t));
+      DrawTexturePro(starTexture, {(float)star.frameX * starTexture.height, 0.0f, (float)starTexture.height, (float)starTexture.height}, {star.position.x * screenSize.x, star.position.y * screenSize.y, star.size.x, star.size.y}, {0, 0}, 0, Fade(WHITE, 0.5f - (1.0f - t)));
    }
 
    // Draw either moon or sun based on the time
-   float cr = getMinRatio();
-
    if (isNight) {
       Texture &texture = getTexture("moon");
       Vector2 position = {origin.x, screenSize.y};
+      Vector2 size = mapCubicRatioToScreen(moonSize);
 
-      DrawTexturePro(texture, {(float)moonPhase * texture.height, 0.0f, (float)texture.height, (float)texture.height}, {position.x, position.y, moonSize.x * cr, moonSize.y * cr}, origin, currentTime - 180.0f, WHITE);
+      DrawTexturePro(texture, {(float)moonPhase * texture.height, 0.0f, (float)texture.height, (float)texture.height}, {position.x, position.y, size.x, size.y}, origin, currentTime - 180.0f, WHITE);
    } else {
       Texture &texture = getTexture("sun");
       Vector2 position = {origin.x, screenSize.y};
+      Vector2 size = mapCubicRatioToScreen(sunSize);
 
-      DrawTexturePro(texture, getBox(texture), {position.x, position.y, sunSize.x * cr, sunSize.y * cr}, origin, currentTime, WHITE);
+      DrawTexturePro(texture, getSource(texture), {position.x, position.y, size.x, size.y}, origin, currentTime, WHITE);
    }
 
    // Draw backgrounds
 
    if (bgTexture) {
-      Color bgColor = lerp(backgroundTintDay, backgroundTintNight, t);
-      drawTextureNoOrigin(*bgTexture, {bgProgress, 0}, screenSize, bgColor);
-      drawTextureNoOrigin(*bgTexture, {screenSize.x + bgProgress, 0}, screenSize, bgColor);
+      Color bgColor = ColorLerp(backgroundTintDay, backgroundTintNight, t);
+      drawTexture(*bgTexture, {bgProgress, 0.0f}, screenSize, bgColor);
+      drawTexture(*bgTexture, {screenSize.x + bgProgress, 0}, screenSize, bgColor);
    }
 
    if (fgTexture) {
-      Color fgColor = lerp(foregroundTintDay, foregroundTintNight, t);
-      drawTextureNoOrigin(*fgTexture, {fgProgress, 0}, screenSize, fgColor);
-      drawTextureNoOrigin(*fgTexture, {screenSize.x + fgProgress, 0}, screenSize, fgColor);
+      Color fgColor = ColorLerp(foregroundTintDay, foregroundTintNight, t);
+      drawTexture(*fgTexture, {fgProgress, 0}, screenSize, fgColor);
+      drawTexture(*fgTexture, {screenSize.x + fgProgress, 0}, screenSize, fgColor);
    }
 }
 
@@ -203,7 +202,7 @@ void setMoonPhase(int moonPhase) {
 // Texture functions
 
 Color getLightBasedOnTime() {
-   return lerp(WHITE, {15, 15, 15, 255}, getFadeStrengthBasedOnTime());
+   return ColorLerp(WHITE, {15, 15, 15, 255}, getFadeStrengthBasedOnTime());
 }
 
 void setCurrentBackgroundBiome(MapGenerator::Biome biome) {

@@ -1,7 +1,7 @@
 #include "ui/keybindIndicator.hpp"
 #include "util/position.hpp"
-#include "util/render.hpp"
 #include "SRU/assets.hpp"
+#include "SRU/render.hpp"
 #include <raymath.h>
 
 // Constants
@@ -18,6 +18,6 @@ void drawKeybindIndicator(const std::string &keybind, const Vector2 &center, con
    }
 
    const Vector2 position = Vector2Subtract(center, {offset.x * getWidthRatio(), offset.y * getHeightRatio()});
-   drawTexture(getTexture("keybind"), position, {keybindSize.x * getWidthRatio(), keybindSize.y * getHeightRatio()}, 0.0f, tint);
-   DrawTextPro(getFont("RobotoMono"), keybind.c_str(), position, getOrigin(MeasureTextEx(getFont("RobotoMono"), keybind.c_str(), getFontSize(fontSize), getFontSize(1.0f))), 0.0f, getFontSize(fontSize), getFontSize(1.0f), BLACK);
+   drawTextureCentered(getTexture("keybind"), position, {keybindSize.x * getWidthRatio(), keybindSize.y * getHeightRatio()}, tint);
+   DrawTextPro(getFont("RobotoMono"), keybind.c_str(), position, getTextOrigin(getFont("RobotoMono"), keybind.c_str(), getFontSize(fontSize), getFontSize(1.0f)), 0.0f, getFontSize(fontSize), getFontSize(1.0f), BLACK);
 }

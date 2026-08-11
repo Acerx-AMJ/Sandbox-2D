@@ -1,9 +1,9 @@
 #include "mngr/input.hpp"
 #include "ui/checkbox.hpp"
 #include "ui/keybindIndicator.hpp"
-#include "util/render.hpp"
 #include "SRU/audio.hpp"
 #include "SRU/assets.hpp"
+#include "SRU/render.hpp"
 
 void CheckBox::update() {
    if (CheckCollisionPointRec(GetMousePosition(), rectangle)) {
@@ -18,6 +18,6 @@ void CheckBox::update() {
 
 void CheckBox::render() const {
    Texture &texture = getTexture(checked ? "checkbox_checked" : "checkbox_unchecked");
-   drawTextureNoOrigin(texture, {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height});
+   drawTexture(texture, {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height});
    drawKeybindIndicator(keybind, {rectangle.x + rectangle.width, rectangle.y});
 }

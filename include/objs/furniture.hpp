@@ -21,7 +21,7 @@ enum class FurnitureType: unsigned char {
 
 struct FurnitureData {
    FurnitureType type = FurnitureType::none;
-   Texture texture;
+   Texture texture {0};
    int textureSize = 8;
    int treeSizeMin = 0;
    int treeSizeMax = 0;

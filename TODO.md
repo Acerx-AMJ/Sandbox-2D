@@ -7,6 +7,7 @@
 - backgrounds
 - add drops back to furniture and blocks
 - lightmap
+- remove position.hpp, rendering overhaul
 
 - liquid loading, textures
 - furniture pre-pass for sapling_grows_into. blocks too just in case for a future update

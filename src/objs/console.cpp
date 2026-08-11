@@ -1,10 +1,10 @@
 #include "objs/console.hpp"
-#include "SRU/text.hpp"
 #include "objs/inventory.hpp"
 #include "objs/parallax.hpp"
 #include "util/position.hpp"
-#include "util/render.hpp"
 #include "SRU/assets.hpp"
+#include "SRU/render.hpp"
+#include "SRU/text.hpp"
 #include <functional>
 #include <unordered_map>
 
@@ -710,7 +710,6 @@ void Console::init(Map &map, Player &player, Inventory &inventory) {
    vars["walkFrame"] = Variable(&player.walkFrame);
    vars["frameX"] = Variable(&player.frameX);
    vars["flipX"] = Variable(&player.flipX);
-   vars["sitting"] = Variable(&player.sitting);
    vars["ignoreCollision"] = Variable(&player.ignoreCollision);
    vars["breathFrameCounter"] = Variable(&player.breathFrameCounter);
    vars["breath"] = Variable(&player.breath);
@@ -802,7 +801,7 @@ void Console::updateResponsiveness() {
 
 void Console::render() {
    if (!input.typing) return;
-   drawRect(input.rectangle, Fade(BLACK, 0.9f));
+   drawRectCentered(input.rectangle, Fade(BLACK, 0.9f));
    input.render();
 
    Font &font = getFont("andy");
@@ -812,7 +811,7 @@ void Console::render() {
    float xconst = input.rectangle.x - input.rectangle.width / 2.0f + 5.0f * cr;
    float yconst = ym125 - hp250 / 2.0f;
 
-   drawRect({input.rectangle.x, ym125 - input.rectangle.height, input.rectangle.width, hp250}, Fade(BLACK, 0.75f));
+   drawRectCentered({input.rectangle.x, ym125 - input.rectangle.height, input.rectangle.width, hp250}, Fade(BLACK, 0.75f));
    for (int i = scrollback; i < scrollback + maxLines && (size_t)i < text.size(); ++i) {
       DrawTextPro(font, text[i].c_str(), {xconst, yconst + (i - scrollback - 1) * 40.0f * cr}, {0, 0}, 0, getFontSize(consoleFontSize), getFontSize(1), lineColors[(size_t)textColors[i]]);
    }
@@ -877,6 +876,7 @@ void Console::lex(Map &map, Player &player, Inventory &inventory) {
          }
          
          // Classic c++ boilerplate
+         // wow, using troglodyte goto logic and still finding a way to shit on C++
          std::string str;
          if (auto *b = std::get_if<bool*>(&vars[var])) {
             str = std::to_string(**b);

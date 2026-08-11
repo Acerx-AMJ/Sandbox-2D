@@ -2,7 +2,6 @@
 #include "SRU/random.hpp"
 #include "objs/map.hpp"
 #include "objs/player.hpp"
-#include "SRU/assets.hpp"
 #include "SRU/util.hpp"
 #include <raymath.h>
 #include <unordered_map>
@@ -211,7 +210,7 @@ void Furniture::update(Map &map, Player &player, const Vector2 &mousePos, float 
       fvalue2 += dt;
       if (fvalue2 >= fvalue1) {
          map.removeFurniture(*this);
-         generateFurniture(x + (width - 1) / 2, y + (height - 1), map, id, false);
+         generateFurniture(x + (width - 1) / 2, y + (height - 1), map, data.saplingGrowsInto, false);
       }
    } break;
    case FurnitureType::door: {
@@ -266,7 +265,7 @@ void Furniture::preview(const Map &map) const {
             continue;
          }
          Color color = Fade((map.isNotSolid(dx, dy) && valid ? WHITE : RED), previewAlpha);
-         DrawTexturePro(getTexture(furnitureNames[id]), R4(piece.tx, piece.ty, data.textureSize, data.textureSize), R4(dx, dy, 1, 1), {0, 0}, 0, color);
+         DrawTexturePro(data.texture, R4(piece.tx, piece.ty, data.textureSize, data.textureSize), R4(dx, dy, 1, 1), {0, 0}, 0, color);
       }
    }
 }
@@ -280,7 +279,7 @@ void Furniture::render(const Rectangle &cameraBounds) const {
             continue;
          }
          Color color = (data.type == FurnitureType::door && ivalue1 ? wallTint : WHITE);
-         DrawTexturePro(getTexture(furnitureNames[id]), R4(piece.tx, piece.ty, data.textureSize, data.textureSize), R4(dx, dy, 1, 1), {0, 0}, 0, color);
+         DrawTexturePro(data.texture, R4(piece.tx, piece.ty, data.textureSize, data.textureSize), R4(dx, dy, 1, 1), {0, 0}, 0, color);
       }
    }
 }
@@ -350,8 +349,8 @@ Furniture getFurniture(int x, int y, const Map &map, furnitureid_t id, bool play
             tree.pieces[middleI+1].nil = true;
          }
          else if (data.treeIsCactus) {
-            bool rightStub = (!tree.pieces[middleI+1].nil);
-            bool leftStub = (!tree.pieces[middleI-1].nil);
+            bool rightStub = (!tree.pieces[middleI+1].nil && tree.pieces[middleI + treeWidth + 1].nil);
+            bool leftStub = (!tree.pieces[middleI-1].nil && tree.pieces[middleI + treeWidth - 1].nil);
             bool anyStub = (rightStub || leftStub);
 
             // a lot of clever bool logic incoming. it just works and saves long if chains. I don't recommend tinkering too much

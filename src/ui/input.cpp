@@ -1,10 +1,9 @@
 #include "mngr/input.hpp"
 #include "SRU/text.hpp"
 #include "ui/input.hpp"
-#include "util/position.hpp"
-#include "util/render.hpp"
 #include "SRU/audio.hpp"
 #include "SRU/assets.hpp"
+#include "SRU/render.hpp"
 #include <raymath.h>
 #include <cmath>
 
@@ -118,8 +117,8 @@ void Input::update(float dt) {
 // Render function
 
 void Input::render() {
-   float fontsize = getFontSize(35.0f);
-   float spacing = getFontSize(1.0f);
+   float fontsize = getFontSizeScaled(35.0f);
+   float spacing = getFontSizeScaled(1.0f);
    unsigned char value = 255;
 
    if (typing) {
@@ -131,15 +130,15 @@ void Input::render() {
    }
 
    if (texture) {
-      drawTexture(*texture, {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height});
+      drawTextureCentered(*texture, {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height});
    }
 
    std::string selected = text.empty() ? fallback : text;
    if (wrapinput) {
       wrapInPlace(selected, getFont("andy"), rectangle.width - textWrapPadding, fontsize);
-      drawText({rectangle.x, rectangle.y}, selected.c_str(), fontsize, Color{value, value, value, 255}, spacing);
+      drawTextCentered("andy", {rectangle.x, rectangle.y}, selected.c_str(), fontsize, Color{value, value, value, 255}, spacing);
    } else {
-      Vector2 origin = getOrigin(selected.c_str(), fontsize, spacing);
+      Vector2 origin = getTextOrigin(getFont("andy"), selected.c_str(), fontsize, spacing);
       Vector2 position = {rectangle.x - (origin.x - rectangle.width / 2.0f), rectangle.y};
       DrawTextPro(getFont("andy"), selected.c_str(), position, origin, 0, fontsize, spacing, Color{value, value, value, 255});
 

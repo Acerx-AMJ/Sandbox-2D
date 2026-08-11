@@ -3,9 +3,9 @@
 #include "ui/button.hpp"
 #include "ui/popup.hpp"
 #include "util/position.hpp"
-#include "util/render.hpp"
 #include "SRU/audio.hpp"
 #include "SRU/assets.hpp"
+#include "SRU/render.hpp"
 #include <vector>
 
 // Constants
@@ -132,7 +132,7 @@ void updatePopups(float dt) {
 // Render function
 
 void renderPopups() {
-   drawRect(Fade(BLACK, alpha));
+   drawRect({0.0f, 0.0f}, getWindowSize(), Fade(BLACK, alpha));
 
    if (popups.empty()) {
       return;
@@ -142,12 +142,12 @@ void renderPopups() {
    float hr = getHeightRatio();
 
    Popup &popup = popups.back();
-   drawTexture(getTexture("popup_frame"), getScreenCenter(), applyResponsiveness(popupSize));
-   drawText(getScreenCenter({0.0f, hr * -125.0f}), popup.header.c_str(), getFontSize(50.0f));
+   drawTextureCentered(getTexture("popup_frame"), getScreenCenter(), applyResponsiveness(popupSize));
+   drawTextCentered("andy", getScreenCenter({0.0f, hr * -125.0f}), popup.header.c_str(), getFontSize(50.0f));
 
    std::string wrappedBody = popup.body;
    wrapInPlace(wrappedBody, getFont("andy"), (popupSize.x - 30.0f) * wr, getFontSize(25.0f));
-   drawText(getScreenCenter({0.0f, hr * -40.0f}), wrappedBody.c_str(), getFontSize(25.0f), WHITE, getFontSize(1.0f));
+   drawTextCentered("andy", getScreenCenter({0.0f, hr * -40.0f}), wrappedBody.c_str(), getFontSize(25.0f), WHITE, getFontSize(1.0f));
 
    if (popup.type == PopupType::confirmation) {
       confirmationButton.render();

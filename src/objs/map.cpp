@@ -1,9 +1,10 @@
 #include "objs/map.hpp"
 #include "SRU/assets.hpp"
+#include "SRU/render.hpp"
+#include "SRU/util.hpp"
 #include "objs/inventory.hpp"
 #include "objs/parallax.hpp"
 #include "objs/player.hpp"
-#include "util/render.hpp"
 #include <unordered_map>
 
 // constants
@@ -344,7 +345,7 @@ bool Map::isLiquidOfType(int x, int y, LiquidType type) const {
 // render
 
 void Map::renderLight(const Camera2D &camera, Texture2D &texture, float x, float y, const Vector2 &size, const Color &color) {
-   drawTexture(texture, {(((x + 0.5f - camera.target.x) * camera.zoom) + camera.offset.x) / 2.0f, (((y + 0.5f - camera.target.y) * camera.zoom) + camera.offset.y) / 2.0f}, size, 0, color);
+   drawTextureCentered(texture, {(((x + 0.5f - camera.target.x) * camera.zoom) + camera.offset.x) / 2.0f, (((y + 0.5f - camera.target.y) * camera.zoom) + camera.offset.y) / 2.0f}, size, color);
 }
 
 void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &player, float accumulator, const Rectangle &cameraBounds, const Camera2D &camera, const Inventory &inventory) {
@@ -363,7 +364,9 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
             x += 1;
          }
 
-         drawTextureBlock(blockTextures[wall.id], {(float)oldX, (float)y, float(x - oldX), 1}, wallTint);
+         Texture texture = blockTextures[wall.id];
+         Rectangle source = R4(0, 0, texture.width * (x - oldX), texture.height);
+         drawTexture(texture, V2(oldX, y), V2(x - oldX, 1), wallTint, 0.0f, source);
          x -= 1;
       }
    }
@@ -399,8 +402,8 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
             x += 1;
          }
 
-         int xx = x - oldX;
-         drawTextureBlock(texture, {(float)oldX, (float)y, (float)xx, 1});
+         Rectangle source = R4(0, 0, texture.width * (x - oldX), texture.height);
+         drawTexture(texture, V2(oldX, y), V2(x - oldX, 1), WHITE, 0.0f, source);
          x -= 1;
       }
    }
@@ -431,7 +434,10 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
          Color liquidFlags;
          liquidFlags.r = (is(x, y - 1, BlockType::solid) && !is(x, y - 1, BlockType::platform) ? 255 : 0);
          liquidFlags.g = (!isAnyLiquid(x, y + 1) || !isLiquidOfType(x, y + 1, liquidTypes[y * sizeX + x]) ? 255 : 0);
-         drawFluidBlock(getTexture("tiles"), {(float)x, (float)y + (1 - height), 1, height}, Fade(liquidFlags, height));
+   
+         Texture texture = getTexture("tiles");
+         Rectangle source = R4(0, texture.height - texture.height * height, texture.width, texture.height * height);
+         drawTexture(texture, V2(x, y + (1 - height)), V2(1, height), Fade(liquidFlags, height), 0.0f, source);
       }
    }
    EndShaderMode();

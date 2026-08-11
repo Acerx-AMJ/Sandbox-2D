@@ -2,6 +2,7 @@
 #include "SRU/util.hpp"
 #include "game/menuState.hpp"
 #include "mngr/data.hpp"
+#include "mngr/particle.hpp"
 #include "ui/popup.hpp"
 #include "SRU/audio.hpp"
 #include "SRU/assets.hpp"
@@ -33,6 +34,7 @@ void LoadingState::update() {
    } else if (loadPhase == Load::textures) {
       loadTextures("assets/sprites/");
       initPopups();
+      initParticles();
 
       loadingText = "Loading Shaders... ";
       loadPhase = Load::shaders;

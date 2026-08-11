@@ -2,11 +2,10 @@
 #include "objs/inventory.hpp"
 #include "objs/map.hpp"
 #include "util/position.hpp"
-#include "util/render.hpp"
 #include "SRU/audio.hpp"
 #include "SRU/assets.hpp"
+#include "SRU/render.hpp"
 #include <raymath.h>
-#include <array>
 #include <algorithm>
 
 // Constants
@@ -597,14 +596,14 @@ void Inventory::render() const {
          Vector2 position = getFramePosition(x, y, isSelected);
          Vector2 size = getFrameSize(isSelected);
 
-         drawTextureNoOrigin(getFrameTexture(isSelected, isFavorite), position, size);
+         drawTexture(getFrameTexture(isSelected, isFavorite), position, size);
          if (item.id != 0 && (!anySelected || !selectedItem.fullSelect || selectedItem.address != &item)) {
-            drawItem(item.type, item.id, item.count, item.isFurniture, item.isWall, Vector2Add(position, getOrigin(size)), applyCubicResponsiveness(itemframeItemSize), false);
+            drawItem(item.type, item.id, item.count, item.isFurniture, item.isWall, Vector2Add(position, size / 2), applyCubicResponsiveness(itemframeItemSize), false);
          }
 
          if (y == 0) {
             Vector2 textPosition = Vector2Add(position, applyCubicResponsiveness(itemframeIndexOffset));
-            drawText(textPosition, std::to_string(x + 1).c_str(), getFontSize(25));
+            drawTextCentered("andy", textPosition, std::to_string(x + 1).c_str(), getFontSize(25));
          }
       }
    }
@@ -613,16 +612,16 @@ void Inventory::render() const {
    if (externalSlot) {
       Vector2 position = getFramePosition(10, 0, true);
       Vector2 size = getFrameSize(true);
-      drawTextureNoOrigin(getFrameTexture(true, selectedItem.address->favorite),position, size);
-      drawItem(selectedItem.item.type, selectedItem.item.id, selectedItem.item.count, selectedItem.item.isFurniture, selectedItem.item.isWall, Vector2Add(position, getOrigin(size)), applyCubicResponsiveness(itemframeItemSize), true);
+      drawTexture(getFrameTexture(true, selectedItem.address->favorite),position, size);
+      drawItem(selectedItem.item.type, selectedItem.item.id, selectedItem.item.count, selectedItem.item.isFurniture, selectedItem.item.isWall, Vector2Add(position, size / 2), applyCubicResponsiveness(itemframeItemSize), true);
 
       Vector2 textPosition = Vector2Add(position, applyCubicResponsiveness(itemframeIndexOffset));
       if (selectedItem.fromTrash) {
-         drawText(textPosition, "BIN", getFontSize(25));
+         drawTextCentered("andy", textPosition, "BIN", getFontSize(25));
       } else {
          // Pointer arithmetic
          int index = (reinterpret_cast<unsigned long long>(selectedItem.address) - reinterpret_cast<unsigned long long>(items)) / sizeof(Item);
-         drawText(textPosition, std::to_string(index + 1).c_str(), getFontSize(25));
+         drawTextCentered("andy", textPosition, std::to_string(index + 1).c_str(), getFontSize(25));
       }
    }
 
@@ -632,9 +631,9 @@ void Inventory::render() const {
       Vector2 position = getFramePosition(inventoryWidth - 1, inventoryHeight, false);
       Vector2 size = getFrameSize(false);
 
-      drawTextureNoOrigin(getTrashTexture(trashOccupied), position, size);
+      drawTexture(getTrashTexture(trashOccupied), position, size);
       if (trashOccupied) {
-         drawItem(trashedItem.type, trashedItem.id, trashedItem.count, trashedItem.isFurniture, trashedItem.isWall, Vector2Add(position, getOrigin(size)), applyCubicResponsiveness(itemframeItemSize), false);
+         drawItem(trashedItem.type, trashedItem.id, trashedItem.count, trashedItem.isFurniture, trashedItem.isWall, Vector2Add(position, size / 2), applyCubicResponsiveness(itemframeItemSize), false);
       }
    }
 
@@ -708,7 +707,7 @@ void drawItem(ItemType type, unsigned short id, unsigned short count, bool isFur
 
    if (!isFurniture) {
       Texture2D &texture = getTexture(getBlockNameFromId(id));
-      DrawTexturePro(texture, {0, 0, 8, 8}, {position.x, position.y, size.x, size.y}, getOrigin(size), 0, drawColor);
+      DrawTexturePro(texture, {0, 0, 8, 8}, {position.x, position.y, size.x, size.y}, size / 2, 0, drawColor);
    // } else if (isFurniture) {
    //    FurnitureTexture texture = getFurnitureIcon(id);
    //    Vector2 newPos = position;//Vector2Add(position, Vector2Scale(itemframeSize, 0.5f));
@@ -725,6 +724,6 @@ void drawItem(ItemType type, unsigned short id, unsigned short count, bool isFur
    if (count != 1) {
       Color textColor = (isSelected ? Fade(WHITE, 0.75f) : WHITE);
       Vector2 textPosition = Vector2Subtract(position, (isworldspace ? Vector2{0.0f, -0.7f} : applyCubicResponsiveness(itemFrameCountOffset)));
-      drawText(textPosition, std::to_string(count).c_str(), (isworldspace ? 0.75f : getFontSize(25.0f)), textColor, (isworldspace ? 0.1f : getFontSize(1.0f)));
+      drawTextCentered("andy", textPosition, std::to_string(count).c_str(), (isworldspace ? 0.75f : getFontSize(25.0f)), textColor);
    }
 }

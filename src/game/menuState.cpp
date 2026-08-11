@@ -6,10 +6,10 @@
 #include "objs/parallax.hpp"
 #include "ui/popup.hpp"
 #include "util/position.hpp"
-#include "util/render.hpp"
 #include "SRU/assets.hpp"
 #include "SRU/file.hpp"
 #include "SRU/random.hpp"
+#include "SRU/render.hpp"
 #include "SRU/text.hpp"
 #include <filesystem>
 #include <thread>
@@ -509,7 +509,7 @@ void MenuState::render() {
 // Render title
 
 void MenuState::renderTitle() {
-   drawText(getScreenCenter({0.f, -200.0f * getHeightRatio()}), "SANDBOX 2D", getFontSize(180));
+   drawTextCentered("andy", getScreenCenter({0.f, -200.0f * getHeightRatio()}), "SANDBOX 2D", getFontSize(180));
    playButton.render();
    optionsButton.render();
    quitButton.render();
@@ -518,7 +518,7 @@ void MenuState::renderTitle() {
 // Render level selection screen
 
 void MenuState::renderLevelSelection() {
-   drawText(getScreenCenter({0.f, -425.0f * getHeightRatio()}), "SELECT WORLD", getFontSize(180));
+   drawTextCentered("andy", getScreenCenter({0.f, -425.0f * getHeightRatio()}), "SELECT WORLD", getFontSize(180));
    backButton.render();
    renameButton.render();
    deleteButton.render();
@@ -547,34 +547,34 @@ void MenuState::renderLevelSelection() {
 // Render level creation screen
 
 void MenuState::renderLevelCreation() {
-   drawText(getScreenCenter({0.f, -400.0f * getHeightRatio()}), "CREATE WORLD", getFontSize(180));
+   drawTextCentered("andy", getScreenCenter({0.f, -400.0f * getHeightRatio()}), "CREATE WORLD", getFontSize(180));
    backButtonCreation.render();
    createButtonCreation.render();
    worldName.render();
    shouldWorldBeFlat.render();
-   drawText({worldName.rectangle.x - worldName.rectangle.width / 2.0f - 125.0f * getWidthRatio(), worldName.rectangle.y}, "World Name:", getFontSize(50));
-   drawText({worldName.rectangle.x - worldName.rectangle.width / 2.0f - 125.0f * getWidthRatio(), shouldWorldBeFlat.rectangle.y + shouldWorldBeFlat.rectangle.height / 2.f}, "Flat World:", getFontSize(50));
+   drawTextCentered("andy", {worldName.rectangle.x - worldName.rectangle.width / 2.0f - 125.0f * getWidthRatio(), worldName.rectangle.y}, "World Name:", getFontSize(50));
+   drawTextCentered("andy", {worldName.rectangle.x - worldName.rectangle.width / 2.0f - 125.0f * getWidthRatio(), shouldWorldBeFlat.rectangle.y + shouldWorldBeFlat.rectangle.height / 2.f}, "Flat World:", getFontSize(50));
 }
 
 // Render level renaming screen
 
 void MenuState::renderLevelRenaming() {
-   drawText(getScreenCenter({0.0f, -400.0f * getHeightRatio()}), "RENAME WORLD", getFontSize(180));
+   drawTextCentered("andy", getScreenCenter({0.0f, -400.0f * getHeightRatio()}), "RENAME WORLD", getFontSize(180));
    backButtonRenaming.render();
    renameButtonRenaming.render();
    renameInput.render();
 
-   drawText({renameInput.rectangle.x - renameInput.rectangle.width / 2.0f - 175.0f * getWidthRatio(), renameInput.rectangle.y}, "New World Name:", getFontSize(50));
-   drawText({renameInput.rectangle.x - renameInput.rectangle.width / 2.0f - 175.0f * getWidthRatio(), renameInput.rectangle.y + 150.0f * getHeightRatio()}, "Old World Name:", getFontSize(50));
-   drawText({renameInput.rectangle.x, renameInput.rectangle.y + 150.0f * getHeightRatio()}, selectedWorld.c_str(), getFontSize(50));
+   drawTextCentered("andy", {renameInput.rectangle.x - renameInput.rectangle.width / 2.0f - 175.0f * getWidthRatio(), renameInput.rectangle.y}, "New World Name:", getFontSize(50));
+   drawTextCentered("andy", {renameInput.rectangle.x - renameInput.rectangle.width / 2.0f - 175.0f * getWidthRatio(), renameInput.rectangle.y + 150.0f * getHeightRatio()}, "Old World Name:", getFontSize(50));
+   drawTextCentered("andy", {renameInput.rectangle.x, renameInput.rectangle.y + 150.0f * getHeightRatio()}, selectedWorld.c_str(), getFontSize(50));
 }
 
 // Render level generation screen
 
 void MenuState::renderGeneratingLevel() {
    generationProgressBar.render();
-   drawText(getScreenCenter({0.0f, getHeightRatio() * -100.0f}), generationInfoText.c_str(), getFontSize(50.0f));
-   drawText(getScreenCenter({0.0f, getHeightRatio() * 100.0f}), generationSplash.c_str(), getFontSize(40.0f));
+   drawTextCentered("andy", getScreenCenter({0.0f, getHeightRatio() * -100.0f}), generationInfoText.c_str(), getFontSize(50.0f));
+   drawTextCentered("andy", getScreenCenter({0.0f, getHeightRatio() * 100.0f}), generationSplash.c_str(), getFontSize(40.0f));
 }
 
 // Change states

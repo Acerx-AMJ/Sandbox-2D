@@ -5,10 +5,10 @@
 #include "mngr/fileio.hpp"
 #include "objs/parallax.hpp"
 #include "util/position.hpp"
-#include "util/render.hpp"
 #include "SRU/audio.hpp"
 #include "SRU/assets.hpp"
 #include "SRU/random.hpp"
+#include "SRU/render.hpp"
 #include <raymath.h>
 #include <algorithm>
 #include <cmath>
@@ -79,19 +79,19 @@ void GameState::update() {
 }
 
 void GameState::fixedUpdate() {
-   camera.target = lerp(camera.target, player.getCenter(), cameraFollowSpeed);
+   camera.target = Vector2Lerp(camera.target, player.getCenter(), cameraFollowSpeed);
    if (phase == Phase::paused) {
       calculateCameraBounds(); // Make sure the camera does not go out of bounds
       return;
    }
 
-   if (!player.creative && player.hearts == 0) {
+   if (player.hearts == 0) {
       Phase lastPhase = phase;
       phase = Phase::died;
 
       if (lastPhase != phase) {
          playSound("die");
-         spawnDeathParticles(player.getCenter());
+         spawnParticles(player.getCenter(), deathParticles);
       }
       calculateCameraBounds(); // Make sure the camera does not go out of bounds
    } else {
@@ -512,20 +512,20 @@ void GameState::render() {
    BeginMode2D(camera);
    map.render(droppedItems, player, accumulator, cameraBounds, camera, inventory);
 
-   renderParticles();
+   drawParticleCluster(deathParticles);
    // for (const DamageIndicator &indicator: map.damageIndicators) {
    //    drawText(indicator.position, std::to_string(indicator.damage).c_str(), 1.0f, (indicator.critical ? YELLOW : RED), 0.1f);
    // }
 
    // Render effects
    if (!player.creative && player.hearts != player.maxHearts) {
-      drawTextureNoOrigin(getTexture("vignette"), {0, 0}, getScreenSize(), Fade(WHITE, 1.0f - float(player.hearts) / player.maxHearts));
+      drawTexture("vignette", {0, 0}, getScreenSize(), Fade(WHITE, 1.0f - float(player.hearts) / player.maxHearts));
    }
 
    if (phase == Phase::died) {
       EndMode2D();
-      drawText(getScreenCenter({0, -30.0f}), "YOU'VE DIED!", 120, RED);
-      drawText(getScreenCenter({0, 30.0f}), TextFormat("RESPAWN IN %d...", int(timeToRespawn - deathTimer)), 50, RED);
+      drawTextCentered("andy", getScreenCenter({0, -30.0f}), "YOU'VE DIED!", 120, RED);
+      drawTextCentered("andy", getScreenCenter({0, 30.0f}), TextFormat("RESPAWN IN %d...", int(timeToRespawn - deathTimer)), 50, RED);
       return;
    }
 
@@ -582,7 +582,7 @@ void GameState::render() {
 
       for (int i = 0; i < bubbles; ++i) {
          float a = 1.0f - std::min(1.0f, float((i + 1) * breathValue - player.displayBreath) / breathValue);
-         drawTextureNoOrigin(bubbleIcon, {startingX + padding * i - halfSine, startingY - halfSine}, {size + sine, size + sine}, Fade(WHITE, a));
+         drawTexture(bubbleIcon, {startingX + padding * i - halfSine, startingY - halfSine}, {size + sine, size + sine}, Fade(WHITE, a));
       }
    }
    EndMode2D();
@@ -612,10 +612,10 @@ void GameState::render() {
       BeginShaderMode(grayscaleShader);
       for (int i = 0; i < counter; ++i) {
          float a = 1.0f - std::min(1.0f, float((i + 1) * heartValue - player.displayHearts) / heartValue);
-         drawTextureNoOrigin(heartIcon, {startingX + padding * (i % heartsPerRow) - halfSine, startingY + padding * int(i / heartsPerRow) - halfSine}, {size + sine, size + sine}, Fade(WHITE, a));
+         drawTexture(heartIcon, {startingX + padding * (i % heartsPerRow) - halfSine, startingY + padding * int(i / heartsPerRow) - halfSine}, {size + sine, size + sine}, Fade(WHITE, a));
       }
       EndShaderMode();
-      drawText({startingX + (GetScreenWidth() - startingX) / 2.0f, startingY / 2.0f}, TextFormat("HP: %d/%d", player.hearts, player.maxHearts), getFontSize(20), WHITE, getFontSize(1));
+      drawTextCentered("andy", {startingX + (GetScreenWidth() - startingX) / 2.0f, startingY / 2.0f}, TextFormat("HP: %d/%d", player.hearts, player.maxHearts), getFontSize(20), WHITE);
    }
 
    // Render other game UI
@@ -649,7 +649,10 @@ void GameState::calculateCameraBounds() {
    camera.target.x = std::clamp(camera.target.x * camera.zoom, camera.offset.x, map.sizeX * camera.zoom - camera.offset.x) / camera.zoom;
    camera.target.y = std::clamp(camera.target.y * camera.zoom, camera.offset.y, map.sizeY * camera.zoom - camera.offset.y) / camera.zoom;
 
-   cameraBounds = getCameraBounds(camera);
+   Vector2 pos = GetScreenToWorld2D({0, 0}, camera);
+   Vector2 size = Vector2Scale(getScreenSize(), 1.f / camera.zoom);
+   cameraBounds = {pos.x, pos.y, size.x, size.y};
+
    cameraBounds.x = std::max(0, int(cameraBounds.x));
    cameraBounds.y = std::max(0, int(cameraBounds.y));
    cameraBounds.width = std::min(map.sizeX - 1, int(cameraBounds.x + cameraBounds.width) + 1);

@@ -1,6 +1,5 @@
 #include "game/state.hpp"
 #include "objs/player.hpp"
-#include "util/position.hpp"
 #include "SRU/audio.hpp"
 #include "SRU/assets.hpp"
 #include "SRU/random.hpp"
@@ -72,10 +71,8 @@ void Player::updatePlayer(Map &map) {
 }
 
 void Player::updateMovement() {
-   // We do not sit while flying
    if (creative) {
       maximumY = position.y;
-      sitting = false;
 
       float dirx = (!blockInput && IsKeyDown(KEY_D)) - (!blockInput && IsKeyDown(KEY_A));
       float diry = (!blockInput && IsKeyDown(KEY_S)) - (!blockInput && IsKeyDown(KEY_W));
@@ -106,15 +103,6 @@ void Player::updateMovement() {
    }
 
    int directionX = (!blockInput && IsKeyDown(KEY_D)) - (!blockInput && IsKeyDown(KEY_A));
-
-   if (sitting) {
-      if (directionX != 0 || (!blockInput && IsKeyDown(KEY_SPACE)) || (!blockInput && IsKeyDown(KEY_S))) {
-         sitting = false;
-         goto notSittingAnymore;
-      }
-      return;
-   }
-notSittingAnymore: // Whatever the fuck this logic is. Too scared to change it now
 
    // Handle gravity
    if (!onGround) {
@@ -179,7 +167,6 @@ notSittingAnymore: // Whatever the fuck this logic is. Too scared to change it n
 // Update collisions
 
 void Player::updateCollisions(Map &map) {
-   if (sitting) return;
    if (ignoreCollision) {
       ignoreCollision = false;
       return;
@@ -383,11 +370,6 @@ void Player::updateAnimation() {
       breakAnimation = 0;
    }
 
-   if (sitting) {
-      frameX = 15;
-      return;
-   }
-
    if (!onGround) {
       fallTimer += fixedUpdateDT;
       if (fallTimer >= .05f) {
@@ -457,20 +439,19 @@ void Player::handleRegeneration() {
 
 void Player::render(float accumulator, Texture2D *itemTexture) const {
    Texture2D &texture = getTexture("player");
-   const Vector2 drawPos = lerp(previousPosition, position, accumulator / fixedUpdateDT);
-   float sitOffset = (sitting && (breakingBlock || placedBlock)) * (3.0f / 8.0f) * (flipX ? -1.0f : 1.0f);
+   const Vector2 drawPos = Vector2Lerp(previousPosition, position, accumulator / fixedUpdateDT);
 
    DrawTexturePro(texture, {frameX * playerFrameSizeX, 0.f, (flipX ? -playerFrameSizeX : playerFrameSizeX), playerFrameSizeY}, {drawPos.x, drawPos.y, playerSize.x, playerSize.y}, {0, 0}, 0, (timeSinceLastDamage <= 0.3f ? RED : WHITE));
-   DrawTexturePro(texture, {playerFrameSizeX * (breakingBlock || placedBlock ? 16 + breakAnimation : frameX), playerFrameSizeY, (flipX ? -playerFrameSizeX : playerFrameSizeX), playerFrameSizeY}, {drawPos.x + sitOffset, drawPos.y, playerSize.x, playerSize.y}, {0, 0}, 0, (timeSinceLastDamage <= 0.3f ? RED : WHITE));
+   DrawTexturePro(texture, {playerFrameSizeX * (breakingBlock || placedBlock ? 16 + breakAnimation : frameX), playerFrameSizeY, (flipX ? -playerFrameSizeX : playerFrameSizeX), playerFrameSizeY}, {drawPos.x, drawPos.y, playerSize.x, playerSize.y}, {0, 0}, 0, (timeSinceLastDamage <= 0.3f ? RED : WHITE));
 
    // Hard-coded tool animation 
    if (breakingBlock && itemTexture) {
       if (breakAnimation == 0) {
-         DrawTexturePro(*itemTexture, {0, 0, (float)itemTexture->width, (float)itemTexture->height}, {drawPos.x + sitOffset + ((flipX ? 12.0f : 13.0f) / 8.0f) - flipX, drawPos.y + (5.5f / 8.0f), 1.0f, 1.0f}, {1.0f, 1.0f}, 45.0f, WHITE);
+         DrawTexturePro(*itemTexture, {0, 0, (float)itemTexture->width, (float)itemTexture->height}, {drawPos.x + ((flipX ? 12.0f : 13.0f) / 8.0f) - flipX, drawPos.y + (5.5f / 8.0f), 1.0f, 1.0f}, {1.0f, 1.0f}, 45.0f, WHITE);
       } else if (breakAnimation == 1) {
-         DrawTexturePro(*itemTexture, {0, 0, (float)itemTexture->width, (float)itemTexture->height}, {drawPos.x + sitOffset + ((flipX ? 15.0f : 10.0f) / 8.0f) - flipX, drawPos.y + (8.0f / 8.0f) - flipX, 1.0f, 1.0f}, {(float)!flipX, 1.0f}, (flipX ? 90.0f : 0.0f), WHITE);
+         DrawTexturePro(*itemTexture, {0, 0, (float)itemTexture->width, (float)itemTexture->height}, {drawPos.x + ((flipX ? 15.0f : 10.0f) / 8.0f) - flipX, drawPos.y + (8.0f / 8.0f) - flipX, 1.0f, 1.0f}, {(float)!flipX, 1.0f}, (flipX ? 90.0f : 0.0f), WHITE);
       } else {
-         DrawTexturePro(*itemTexture, {0, 0, (float)itemTexture->width, (float)itemTexture->height}, {drawPos.x + sitOffset + ((flipX ? 20.0f : 7.0f) / 8.0f) - flipX, drawPos.y + (16.0f / 8.0f) - (flipX * 0.7f), 1.0f, 1.0f}, {(float)!flipX, 1.0f}, (flipX ? 135.0f : -45.0f), WHITE);
+         DrawTexturePro(*itemTexture, {0, 0, (float)itemTexture->width, (float)itemTexture->height}, {drawPos.x + ((flipX ? 20.0f : 7.0f) / 8.0f) - flipX, drawPos.y + (16.0f / 8.0f) - (flipX * 0.7f), 1.0f, 1.0f}, {(float)!flipX, 1.0f}, (flipX ? 135.0f : -45.0f), WHITE);
       }
    }
 }
