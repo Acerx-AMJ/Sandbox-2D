@@ -369,7 +369,7 @@ void GameState::updateFluid(int x, int y) {
    }
 
    // Handle liquid going down
-   if (map.is(x, y + 1, BlockType::flowable) && !map.isAnyLiquid(x, y + 1)) {
+   if ((map.getBlock(x, y + 1).tile == TileType::ghost || map.is(x, y + 1, BlockType::flowable)) && !map.isAnyLiquid(x, y + 1)) {
       std::swap(map.liquidTypes[y * map.sizeX + x], map.liquidTypes[(y + 1) * map.sizeX + x]);
       std::swap(map.liquidHeights[y * map.sizeX + x], map.liquidHeights[(y + 1) * map.sizeX + x]);
       return;
@@ -378,14 +378,14 @@ void GameState::updateFluid(int x, int y) {
    }
 
    // Handle liquid going left
-   if ((map.is(x - 1, y, BlockType::flowable) && !map.isAnyLiquid(x - 1, y))
+   if (((map.getBlock(x - 1, y).tile == TileType::ghost || map.is(x - 1, y, BlockType::flowable)) && !map.isAnyLiquid(x - 1, y))
     || (map.isAnyLiquid(x - 1, y) && map.isLiquidOfType(x - 1, y, type) && map.getLiquidHeight(x - 1, y) < height && map.getLiquidHeight(x - 1, y) < maxLiquidLayers)) {
       map.liquidTypes[y * map.sizeX + x - 1] = type;
       applyHalfFlowDown(map.liquidHeights[y * map.sizeX + x], map.liquidHeights[y * map.sizeX + x - 1]);
    }
 
    // Handle liquid going right
-   if ((map.is(x + 1, y, BlockType::flowable) && !map.isAnyLiquid(x + 1, y))
+   if (((map.getBlock(x + 1, y).tile == TileType::ghost || map.is(x + 1, y, BlockType::flowable)) && !map.isAnyLiquid(x + 1, y))
     || (map.isAnyLiquid(x + 1, y) && map.isLiquidOfType(x + 1, y, type) && map.getLiquidHeight(x + 1, y) < height && map.getLiquidHeight(x + 1, y) < maxLiquidLayers)) {
       map.liquidTypes[y * map.sizeX + x + 1] = type;
       applyHalfFlowDown(map.liquidHeights[y * map.sizeX + x], map.liquidHeights[y * map.sizeX + x + 1]);

@@ -137,6 +137,7 @@ void loadFurnitureData() {
    bool init = false;
    bool noTexture = false;
    std::string name;
+   std::vector<blockid_t> saplingSoils, treeSoils;
 
    for (const std::string &line: lines) {
       // getLinesFromFileIgnoringComments skips empty lines so this is fine
@@ -145,10 +146,12 @@ void loadFurnitureData() {
             if (!noTexture && data.texture.id == 0) {
                data.texture = getTexture(name);
             }
-            pushFurniture(data, name);
+            pushFurniture(data, name, saplingSoils, treeSoils);
             data = {};
             noTexture = false;
             name.clear();
+            saplingSoils.clear();
+            treeSoils.clear();
          }
          name = line.substr(1, line.size() - 2);
          init = true;
@@ -221,12 +224,34 @@ void loadFurnitureData() {
       else if (field == "face_player") {
          getBoolValue(value, line, data.shouldFacePlayer);
       }
+      else if (field == "sapling_soil") {
+         std::vector<std::string> soils = split(value, ',');
+         for (std::string &soil: soils) {
+            std::string trimmed = trim(soil);
+            if (!isBlockNameValid(trimmed)) {
+               printf("WARNING: Malformed line: '%s'. Block '%s' does not exist.\n", line.c_str(), trimmed.c_str());
+               continue;
+            }
+            saplingSoils.push_back(getBlockIdFromName(trimmed));
+         }
+      }
+      else if (field == "tree_soil") {
+         std::vector<std::string> soils = split(value, ',');
+         for (std::string &soil: soils) {
+            std::string trimmed = trim(soil);
+            if (!isBlockNameValid(trimmed)) {
+               printf("WARNING: Malformed line: '%s'. Block '%s' does not exist.\n", line.c_str(), trimmed.c_str());
+               continue;
+            }
+            treeSoils.push_back(getBlockIdFromName(trimmed));
+         }
+      }
       else {
          printf("WARNING: Malformed line: '%s'. Invalid field '%s'.\n", line.c_str(), field.c_str());
       }
    }
 
    if (init) {
-      pushFurniture(data, name);
+      pushFurniture(data, name, saplingSoils, treeSoils);
    }
 }

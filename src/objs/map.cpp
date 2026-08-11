@@ -211,6 +211,7 @@ void Map::addFurniture(Furniture &object) {
          int i = y * sizeX + x;
          blocks[i].tile = TileType::ghost;
          blocks[i].id = object.id;
+         blocks[i].type = blockAttributes[0];
          blocks[i].platformOverride = piece.walkable;
       }
    }
@@ -233,11 +234,11 @@ void Map::removeFurniture(Furniture &object) {
 
 // getters
 
-Block &Map::getBlock(int x, int y) {
+const Block &Map::getBlock(int x, int y) const {
    return blocks[y * sizeX + x];
 }
 
-Wall &Map::getWall(int x, int y) {
+const Wall &Map::getWall(int x, int y) const {
    return walls[y * sizeX + x];
 }
 
@@ -345,7 +346,7 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
 
          // Render regular blocks
          int oldX = x;
-         while (x <= cameraBounds.width && blocks[y * sizeX + x].id == block.id) {
+         while (x <= cameraBounds.width && blocks[y * sizeX + x].tile == TileType::root && blocks[y * sizeX + x].id == block.id) {
             x += 1;
          }
 
@@ -418,7 +419,7 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
    for (int y = lightBoundsMinY; y <= lightBoundsMaxY; ++y) {
       for (int x = lightBoundsMinX; x <= lightBoundsMaxX; ++x) {
          BlockType type = blocks[y * sizeX + x].type;
-         if (getBlock(x, y).tile != TileType::root || (!BlockTypeHas(type, BlockType::lightsource) && !BlockTypeHas(type, BlockType::translucent))) {
+         if (!BlockTypeHas(type, BlockType::lightsource) && !BlockTypeHas(type, BlockType::translucent)) {
             continue;
          }
 

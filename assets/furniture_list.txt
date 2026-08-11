@@ -12,10 +12,12 @@
 # tree_branch_chance=0..100 # chance for a tree to grow a branch
 # tree_is_cactus=true/false # should tree's sprite be treated as a cactus sprite sheet
 # tree_cactus_flower_chance=0..100 # cacti alternative top block chance
+# tree_soil=BLOCK_NAME,BLOCK_NAME,... # name of soil blocks (attributes=sand,dirt,grass) that the tree is supposed to grow on
 
 # sapling_grows_into=FURNITURE_NAME # name of the furniture the sapling grows into
 # sapling_grow_speed_min=NUMBER # minimum sapling grow speed in seconds
 # sapling_grow_speed_max=NUMBER # maximum sapling grow speed in seconds
+# sapling_soil=BLOCK_NAME,BLOCK_NAME,... # name of soil blocks (attributes=sand,dirt,grass) that the sapling is supposed to grow on
 
 [tree]
 type=tree
@@ -23,6 +25,7 @@ tree_size_min=5
 tree_size_max=18
 tree_root_chance=25
 tree_branch_chance=15
+tree_soil=grass,dirt
 
 [palm]
 type=tree
@@ -30,6 +33,7 @@ tree_size_min=8
 tree_size_max=22
 tree_root_chance=0
 tree_branch_chance=0
+tree_soil=sand
 
 [pine]
 type=tree
@@ -37,6 +41,7 @@ tree_size_min=5
 tree_size_max=18
 tree_root_chance=25
 tree_branch_chance=15
+tree_soil=snow
 
 [jungle_tree]
 type=tree
@@ -44,6 +49,7 @@ tree_size_min=5
 tree_size_max=18
 tree_root_chance=25
 tree_branch_chance=15
+tree_soil=jungle_grass,mud
 
 [cactus]
 type=tree
@@ -53,6 +59,7 @@ tree_root_chance=0
 tree_branch_chance=50
 tree_is_cactus=true
 tree_cactus_flower_chance=10
+tree_soil=sand
 
 [sapling]
 type=sapling
@@ -60,6 +67,7 @@ size=1,2
 sapling_grows_into=tree
 sapling_grow_speed_min=30
 sapling_grow_speed_max=200
+sapling_soil=grass,dirt
 
 [palm_sapling]
 type=sapling
@@ -67,6 +75,7 @@ size=1,2
 sapling_grows_into=palm
 sapling_grow_speed_min=30
 sapling_grow_speed_max=200
+sapling_soil=sand
 
 [pine_sapling]
 type=sapling
@@ -74,6 +83,7 @@ size=1,2
 sapling_grows_into=pine
 sapling_grow_speed_min=30
 sapling_grow_speed_max=200
+sapling_soil=snow
 
 [jungle_sapling]
 type=sapling
@@ -81,6 +91,7 @@ size=1,2
 sapling_grows_into=jungle_tree
 sapling_grow_speed_min=30
 sapling_grow_speed_max=200
+sapling_soil=jungle_grass,mud
 
 [cactus_seed]
 type=sapling
@@ -88,6 +99,7 @@ size=1,1
 sapling_grows_into=cactus
 sapling_grow_speed_min=45
 sapling_grow_speed_max=240
+sapling_soil=sand
 
 [table]
 type=table

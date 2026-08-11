@@ -5,6 +5,7 @@
 
 // types
 
+using blockid_t = unsigned short;
 using furnitureid_t = unsigned short;
 
 // Constants
@@ -51,6 +52,13 @@ struct FurniturePiece {
 bool isFurnitureTypeValid(const std::string &name);
 FurnitureType getFurnitureTypeFromString(const std::string &name);
 
+bool isSaplingSoil(blockid_t id);
+bool isTreeSoil(blockid_t id);
+bool isSaplingSoilCompatible(blockid_t soilId, furnitureid_t saplingId);
+bool isTreeSoilCompatible(blockid_t soilId, furnitureid_t treeId);
+std::vector<furnitureid_t> &getSaplingsFromSoil(blockid_t id);
+std::vector<furnitureid_t> &getTreesFromSoil(blockid_t id);
+
 bool isValidFurnitureName(const std::string &name);
 std::string getFurnitureNameFromId(furnitureid_t id);
 furnitureid_t getFurnitureIdFromName(const std::string &name);
@@ -59,7 +67,7 @@ FurnitureData &getFurnitureData(furnitureid_t id);
 size_t getFurnitureCount();
 
 void reserveFurnitureContainers(size_t estimate);
-furnitureid_t pushFurniture(FurnitureData data, const std::string &name);
+furnitureid_t pushFurniture(FurnitureData data, const std::string &name, const std::vector<blockid_t> &saplingSoils, const std::vector<blockid_t> &treeSoils);
 
 // furniture
 

@@ -23,6 +23,7 @@ static size_t furnitureCount = 1; // 0 - nil
 static std::vector<std::string> furnitureNames {""};
 static std::vector<FurnitureData> furnitureData {{}};
 static std::unordered_map<std::string, furnitureid_t> furnitureIds;
+static std::unordered_map<blockid_t, std::vector<furnitureid_t>> saplingSoils, treeSoils;
 
 // Furniture getter functions
 
@@ -35,6 +36,44 @@ FurnitureType getFurnitureTypeFromString(const std::string &name) {
       return it->second;
    }
    return FurnitureType::none;
+}
+
+bool isSaplingSoil(blockid_t id) {
+   return saplingSoils.find(id) != saplingSoils.end();
+}
+
+bool isTreeSoil(blockid_t id) {
+   return treeSoils.find(id) != treeSoils.end();
+}
+
+bool isSaplingSoilCompatible(blockid_t soilId, furnitureid_t saplingId) {
+   if (auto it = saplingSoils.find(soilId); it != saplingSoils.end()) {
+      for (furnitureid_t sapling: it->second) {
+         if (sapling == saplingId) {
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
+bool isTreeSoilCompatible(blockid_t soilId, furnitureid_t treeId) {
+   if (auto it = treeSoils.find(soilId); it != treeSoils.end()) {
+      for (furnitureid_t tree: it->second) {
+         if (tree == treeId) {
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
+std::vector<furnitureid_t> &getSaplingsFromSoil(blockid_t id) {
+   return saplingSoils.at(id);;
+}
+
+std::vector<furnitureid_t> &getTreesFromSoil(blockid_t id) {
+   return treeSoils.at(id);;
 }
 
 furnitureid_t getFurnitureIdFromName(const std::string &name) {
@@ -67,7 +106,14 @@ void reserveFurnitureContainers(size_t estimate) {
    furnitureIds.reserve(estimate);
 }
 
-furnitureid_t pushFurniture(FurnitureData data, const std::string &name) {
+furnitureid_t pushFurniture(FurnitureData data, const std::string &name, const std::vector<blockid_t> &saplingSoils, const std::vector<blockid_t> &treeSoils) {
+   for (blockid_t soil: saplingSoils) {
+      ::saplingSoils[soil].push_back(furnitureCount);
+   }
+   for (blockid_t soil: treeSoils) {
+      ::treeSoils[soil].push_back(furnitureCount);
+   }
+
    furnitureData.push_back(data);
    furnitureNames.push_back(name);
    furnitureIds[name] = furnitureCount;
@@ -105,7 +151,7 @@ bool Furniture::isSuitableForPlant(const Map &map, FurnitureData &data, bool pre
    // make sure there's no liquids in the sapling and no sand on top of it. as well as is it on soil
    for (int dy = 0; dy < height; ++dy) {
       for (int dx = 0; dx < width; ++dx) {
-         if (map.isLiquid(x + dx, y + dy) || (dy == 0 && map.is(x + dx, y - 1, BlockType::sand)) || (dy + 1 == height && !map.isSoil(x + dx, y + height))) {
+         if (map.isLiquid(x + dx, y + dy) || (dy == 0 && map.is(x + dx, y - 1, BlockType::sand)) || (dy + 1 == height && !isSaplingSoilCompatible(map.getBlock(x + dx, y + height).id, id))) {
             return false;
          }
       }
@@ -165,7 +211,7 @@ void Furniture::update(Map &map, Player &player, const Vector2 &mousePos, float 
       fvalue2 += dt;
       if (fvalue2 >= fvalue1) {
          map.removeFurniture(*this);
-         generateFurniture(x + (width - 1) / 2, y + height - 1, map, id, false);
+         generateFurniture(x + (width - 1) / 2, y + (height - 1), map, id, false);
       }
    } break;
    case FurnitureType::door: {
@@ -197,7 +243,7 @@ void Furniture::update(Map &map, Player &player, const Vector2 &mousePos, float 
 bool Furniture::isValid(FurnitureData &data, const Map &map) const {
    switch (data.type) {
    case FurnitureType::tree:
-      return map.isSoil(x + treeWidth / 2, y + ivalue1);
+      return isTreeSoilCompatible(map.getBlock(x + treeWidth / 2, y + height).id, id);
    case FurnitureType::sapling:
       return isSuitableForPlant(map, data, false);
    case FurnitureType::table: case FurnitureType::chair: case FurnitureType::door:
@@ -220,7 +266,7 @@ void Furniture::preview(const Map &map) const {
             continue;
          }
          Color color = Fade((map.isNotSolid(dx, dy) && valid ? WHITE : RED), previewAlpha);
-         DrawTexturePro(getTexture(furnitureNames[id]), R4(piece.tx, piece.ty, data.textureSize, data.textureSize), R4(x, y, 1, 1), {0, 0}, 0, color);
+         DrawTexturePro(getTexture(furnitureNames[id]), R4(piece.tx, piece.ty, data.textureSize, data.textureSize), R4(dx, dy, 1, 1), {0, 0}, 0, color);
       }
    }
 }
@@ -234,7 +280,7 @@ void Furniture::render(const Rectangle &cameraBounds) const {
             continue;
          }
          Color color = (data.type == FurnitureType::door && ivalue1 ? wallTint : WHITE);
-         DrawTexturePro(getTexture(furnitureNames[id]), R4(piece.tx, piece.ty, data.textureSize, data.textureSize), R4(x, y, 1, 1), {0, 0}, 0, color);
+         DrawTexturePro(getTexture(furnitureNames[id]), R4(piece.tx, piece.ty, data.textureSize, data.textureSize), R4(dx, dy, 1, 1), {0, 0}, 0, color);
       }
    }
 }
@@ -248,19 +294,20 @@ Furniture getFurniture(int x, int y, const Map &map, furnitureid_t id, bool play
    case FurnitureType::tree: {
       // trees are not placed by top-left but from center-bottom.
       int treeHeight = randomInt(data.treeSizeMin, data.treeSizeMax);
-      for (int dy = y; dy < y + treeHeight; ++dy) {
-         if (!map.isNotSolid(x, dy)) {
-            treeHeight = dy - y;
+      for (int dy = 0; dy < treeHeight; ++dy) {
+         if (!map.isNotSolid(x, y - dy)) {
+            treeHeight = dy;
             break;
          }
       }
 
-      if (!previewing && (treeHeight < data.treeSizeMin || !map.isSoil(x, y + 1))) {
+      if (!previewing && (treeHeight < data.treeSizeMin || !isTreeSoilCompatible(map.getBlock(x, y + 1).id, id))) {
          return {};
       }
 
       bool isPalm = (data.treeRootChance == 0 && data.treeBranchChance == 0 && !data.treeIsCactus);
       int middle = treeWidth / 2;
+      int topHeight = 0;
    
       Furniture tree;
       tree.init(id, x - middle, y - treeHeight + 1, treeWidth, treeHeight);
@@ -268,7 +315,7 @@ Furniture getFurniture(int x, int y, const Map &map, furnitureid_t id, bool play
       // place the tree top
       if (!data.treeIsCactus) {
          int topOffset = chance(50) * treeWidth * data.textureSize;
-         int topHeight = (isPalm ? 3 : 2);
+         topHeight = (isPalm ? 3 : 2);
 
          for (int dy = 0; dy < topHeight; ++dy) {
             for (int dx = 0; dx < treeWidth; ++dx) {
@@ -277,22 +324,25 @@ Furniture getFurniture(int x, int y, const Map &map, furnitureid_t id, bool play
                tree.pieces[i].ty = dy * data.textureSize;
             }
          }
-         treeHeight -= topHeight;
       }
       // initial cactus stub setup
       else {
          for (int dy = 0; dy < treeHeight; ++dy) {
             int middleI = dy * treeWidth + middle;
-            tree.pieces[middleI-1].nil = (dy + 1 == treeHeight || dy == 0 || !map.isNotSolid(x - 1, y + dy) || chance(100 - data.treeBranchChance));
-            tree.pieces[middleI+1].nil = (dy + 1 == treeHeight || dy == 0 || !map.isNotSolid(x + 1, y + dy) || chance(100 - data.treeBranchChance));
+            int worldY = y - treeHeight + 1 + dy;
+            tree.pieces[middleI-1].nil = (dy + 1 == treeHeight || dy == 0 || !map.isNotSolid(x - 1, worldY) || chance(100 - data.treeBranchChance));
+            tree.pieces[middleI+1].nil = (dy + 1 == treeHeight || dy == 0 || !map.isNotSolid(x + 1, worldY) || chance(100 - data.treeBranchChance));
          }
       }
 
       // place the trunk, branches and roots
-      for (int dy = 0; dy < treeHeight; ++dy) {
-         int middleI = dy * treeWidth + middle;
+      int trunkHeight = treeHeight - topHeight;
+      for (int dy = 0; dy < trunkHeight; ++dy) {
+         int middleI = (dy + topHeight) * treeWidth + middle;
+         int worldY = y - (trunkHeight - 1 - dy);
+
          if (isPalm) {
-            int topOffset = (dy + 1 == treeHeight ? 4 : 3);
+            int topOffset = (dy + 1 == trunkHeight ? 4 : 3);
             tree.pieces[middleI].tx = randomInt(0, 2) * data.textureSize;
             tree.pieces[middleI].ty = topOffset * data.textureSize;
 
@@ -307,39 +357,43 @@ Furniture getFurniture(int x, int y, const Map &map, furnitureid_t id, bool play
             // a lot of clever bool logic incoming. it just works and saves long if chains. I don't recommend tinkering too much
             // with cactus or tree sprite layouts and just going with the flow here. another yucky trick is not checking nil
             // on stubs and applying tx and ty anyway since nil pieces don't check them.
-            int topOffset = anyStub * (rightStub + leftStub * 2) + !anyStub * ((dy + 1 == treeHeight) * 3 + (dy == 0) * chance(data.treeCactusFlowerChance));
-            int leftOffset = !anyStub * (dy == 0 || dy + 1 == treeHeight);
+            int topOffset = anyStub * (rightStub + leftStub * 2) + !anyStub * ((dy + 1 == trunkHeight) * 3 + (dy == 0) * chance(data.treeCactusFlowerChance));
+            int leftOffset = !anyStub * (dy == 0 || dy + 1 == trunkHeight);
             tree.pieces[middleI].tx = leftOffset * data.textureSize;
             tree.pieces[middleI].ty = topOffset * data.textureSize;
 
             int offsetXLeft = 2 * data.textureSize;
-            int topOffsetLeft = (dy == 0 || tree.pieces[middleI - treeWidth - 1].nil) + (dy + 1 == treeHeight || tree.pieces[middleI + treeWidth - 1].nil) * 2;
+            int topOffsetLeft = (dy == 0 || tree.pieces[middleI - treeWidth - 1].nil) + (dy + 1 == trunkHeight || tree.pieces[middleI + treeWidth - 1].nil) * 2;
             tree.pieces[middleI-1].tx = offsetXLeft;
             tree.pieces[middleI-1].ty = topOffsetLeft * data.textureSize;
 
             int offsetXRight = 3 * data.textureSize;
-            int topOffsetRight = (dy == 0 || tree.pieces[middleI - treeWidth + 1].nil) + (dy + 1 == treeHeight || tree.pieces[middleI + treeWidth + 1].nil) * 2;
+            int topOffsetRight = (dy == 0 || tree.pieces[middleI - treeWidth + 1].nil) + (dy + 1 == trunkHeight || tree.pieces[middleI + treeWidth + 1].nil) * 2;
             tree.pieces[middleI+1].tx = offsetXRight;
             tree.pieces[middleI+1].ty = topOffsetRight * data.textureSize;
          }
          else {
             // some more clever bool logic here.
-            int percent = (dy == 0 ? data.treeRootChance : data.treeBranchChance);
-            bool leftFree = map.isNotSolid(x - 1, y + dy) && chance(percent) && (dy != 0 || (dy == 0 && map.isSoil(x - 1, y + dy + 1)));
-            bool rightFree = map.isNotSolid(x + 1, y + dy) && chance(percent) && (dy != 0 || (dy == 0 && map.isSoil(x + 1, y + dy + 1)));
+            bool isRoot = dy + 1 == trunkHeight;
+            int percent = (isRoot ? data.treeRootChance : data.treeBranchChance);
+            bool leftFree = map.isNotSolid(x - 1, worldY) && chance(percent) && (!isRoot || (isRoot && map.isSoil(x - 1, worldY + 1)));
+            bool rightFree = map.isNotSolid(x + 1, worldY) && chance(percent) && (!isRoot || (isRoot && map.isSoil(x + 1, worldY + 1)));
 
-            int topOffsetMiddle = (dy == 0 ? 4 : 3);
-            int leftOffsetMiddle = (rightFree) * 3 + (leftFree) + (rightFree && leftFree) + (!leftFree && !rightFree) * 4;
+            int topOffsetMiddle = (isRoot ? 4 : 3);
+            int leftOffsetMiddle = (rightFree) * 3 + (leftFree) + (rightFree && leftFree) + (!leftFree && !rightFree) * 2;
             tree.pieces[middleI].tx = leftOffsetMiddle * data.textureSize;
             tree.pieces[middleI].ty = topOffsetMiddle * data.textureSize;
 
-            int topOffsetBranches = (dy == 0 ? 4 : 2) * data.textureSize;
-            int leftOffsetLeftBranch = (dy != 0) * randomInt(0, 2);
-            int leftOffsetRightBranch = (dy == 0 ? 4 : randomInt(3, 5));
+            int topOffsetBranches = (isRoot ? 4 : 2) * data.textureSize;
+            int leftOffsetLeftBranch = (!isRoot) * randomInt(0, 2);
+            int leftOffsetRightBranch = (isRoot ? 4 : randomInt(3, 5));
             tree.pieces[middleI-1].tx = leftOffsetLeftBranch * data.textureSize;
             tree.pieces[middleI-1].ty = topOffsetBranches;
+            tree.pieces[middleI-1].nil = !leftFree;
+
             tree.pieces[middleI+1].tx = leftOffsetRightBranch * data.textureSize;
             tree.pieces[middleI+1].ty = topOffsetBranches;
+            tree.pieces[middleI+1].nil = !rightFree;
          }
       }
       return tree;

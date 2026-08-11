@@ -9,6 +9,7 @@
 - liquid loading, textures
 - backgrounds
 - add drops back to furniture and blocks
+- add types.hpp
 
 ### Furniture
 - Add furniture with chest logic.

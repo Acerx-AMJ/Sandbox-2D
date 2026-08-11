@@ -7,13 +7,13 @@
 // Constants
 
 constexpr float startY         = 0.5f;
-constexpr float seaLevel       = 0.4f;
+constexpr float seaLevel       = 0.475f;
 constexpr float tier2OreStartY = 0.45f;
 
 constexpr int rockOffsetStart = 12;
 constexpr int rockOffsetMin   = 5;
 constexpr int rockOffsetMax   = 25;
-constexpr int maxWaterLength  = 100;
+constexpr int maxWaterLength  = 60;
 
 struct BiomeData {
    int hmin[5];
@@ -226,19 +226,19 @@ void MapGenerator::generateTrees() {
       while (y < map.sizeY - 1 && map.isEmpty(x, y + 1)) { y++; }
       while (y > 0 && !map.isEmpty(x, y)) { y--; }
 
-      if (counter >= counterThreshold && chance(biomeData[(int)getBiome(x)].treeRate)) {
-         bool sapling = chance(5);
-
-         if (map.getBlock(x, y + 1).id != getBlockIdFromName("sand") && chance(60)) {
-            generateFurniture(x, y, map, getFurnitureIdFromName(sapling ? "cactus_seed" : "cactus"), false);
-         } else {
-            generateFurniture(x, (sapling ? y - 1 : y), map, getFurnitureIdFromName(sapling ? "sapling" : "tree"), false);
-         }
-         counter = 0;
-         counterThreshold = randomInt(1, 4);
-      } else {
+      if (counter < counterThreshold || !chance(biomeData[(int)getBiome(x)].treeRate)) {
          counter++;
+         continue;
       }
+      blockid_t soilId = map.getBlock(x, y + 1).id;
+      bool sapling = (isSaplingSoil(soilId) && chance(5)) || (isSaplingSoil(soilId) && !isTreeSoil(soilId));
+   
+      if (sapling || isTreeSoil(soilId)) {
+         furnitureid_t id = randomElement(sapling ? getSaplingsFromSoil(soilId) : getTreesFromSoil(soilId));
+         generateFurniture(x, y - sapling * (getFurnitureData(id).furnitureSize.y - 1), map, id, false);
+      }
+      counter = 0;
+      counterThreshold = randomInt(1, 4);
    }
 }
 

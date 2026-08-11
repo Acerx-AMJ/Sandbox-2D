@@ -3,7 +3,6 @@
 
 // types
 
-using blockid_t = unsigned char;
 using liquidlayer_t = unsigned char;
 
 // constants
@@ -118,8 +117,8 @@ struct Map {
 
    // getters
 
-   Block &getBlock(int x, int y);
-   Wall &getWall(int x, int y);
+   const Block &getBlock(int x, int y) const;
+   const Wall &getWall(int x, int y) const;
 
    bool isPositionValid(int x, int y) const;
    bool isPositionValid(Vector2 position) const;
