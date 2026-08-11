@@ -1,15 +1,15 @@
 ### Right Now
-- block ghost checks in render
-- divide text SRU-Lib, move out of format.hpp
 - fix popup size on spawn
 - platformed furniture
 - bring back damage indicators (and don't couple with map)
 - bring back block breaking
 - load all items from file
-- liquid loading, textures
 - backgrounds
 - add drops back to furniture and blocks
-- add types.hpp
+
+- divide text SRU-Lib, move out of format.hpp
+- liquid loading, textures
+- furniture pre-pass for sapling_grows_into. blocks too just in case for a future update
 
 ### Furniture
 - Add furniture with chest logic.

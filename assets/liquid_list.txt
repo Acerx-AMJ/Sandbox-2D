@@ -1,0 +1,26 @@
+# lines starting with '#' are ignored. white space is trimmed automatically
+# [LIQUID_NAME]
+# texture=TEXTURE_NAME # name of texture (assets/sprites/blocks/dirt.png -> dirt) or empty for none. defaults to liquid name
+# update_speed=NUMBER # time to update liquid once
+# conversion=LIQUID_NAME=BLOCK_NAME,... # conversion table on contact with other liquids
+# move_speed_multiplier=NUMBER # player move speed multiplier in the liquid. when player is in multiple liquids, the one with the lowest multiplier is picked
+# glow=true/false # does the liquid emit a glow
+# natural_light=true/false # does the liquid emit natural day light (like water)
+
+[water]
+update_speed=0.016
+conversion=lava=obsidian,honey=honey_block
+move_speed_multiplier=0.85
+natural_light=true
+
+[lava]
+update_speed=0.032
+conversion=water=obsidian,honey=crispy_honey_block
+move_speed_multiplier=0.6
+glow=true
+
+[honey]
+update_speed=0.064
+conversion=water=honey_block,lava=crispy_honey_block
+move_speed_multiplier=0.5
+natural_light=true

@@ -1,12 +1,8 @@
 #pragma once
+#include "util/types.hpp"
 #include <raylib.h>
 #include <string>
 #include <vector>
-
-// types
-
-using blockid_t = unsigned short;
-using furnitureid_t = unsigned short;
 
 // Constants
 

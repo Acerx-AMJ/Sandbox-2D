@@ -15,9 +15,7 @@ LoadingState::LoadingState() {
    loadFont("andy", "assets/fonts/andy.ttf");
    loadTexture("loading", "assets/sprites/ui/loading.png");
    splashText = getRandomLineFromFile("assets/splash.txt");
-
-   float fontSize = getFontSizeScaled(40.0f);
-   wrapInPlace(splashText, getFont("andy"), GetScreenWidth() - 50.0f * getWidthRatio(), fontSize, fitSpacing(fontSize));
+   wrapInPlace(splashText, getFont("andy"), GetScreenWidth() - 50.0f * getWidthRatio(), getFontSizeScaled(40.0f));
 }
 
 void LoadingState::update() {

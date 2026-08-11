@@ -1,257 +1,218 @@
 #include "mngr/data.hpp"
 #include "SRU/assets.hpp"
-#include "SRU/text.hpp"
 #include "objs/map.hpp"
 #include <SRU/file.hpp>
 #include <cstdio>
-
-// helper functions
-
-void getIntValue(const std::string &value, const std::string &line, int &target) {
-   // disgusting
-   try {
-      target = std::stoi(value);
-   } catch (...) {
-      printf("WARNING: Malformed line '%s'. Expected integer.\n", line.c_str());
-   }
-}
-
-void getFloatValue(const std::string &value, const std::string &line, float &target) {
-   // even more disgusting
-   try {
-      target = std::stof(value);
-   } catch (...) {
-      printf("WARNING: Malformed line '%s'. Expected real number.\n", line.c_str());
-   }
-}
-
-void getBoolValue(const std::string &value, const std::string &line, bool &target) {
-   if (value == "true") {
-      target = true;
-   }
-   else if (value == "false") {
-      target = false;
-   }
-   else {
-      printf("WARNING: Malformed line '%s'. Expected true/false.\n", line.c_str());
-   }
-}
-
-void getV2Value(const std::string &value, const std::string &line, Vector2 &target) {
-   std::vector<std::string> values = split(value, ',');
-   if (values.size() != 2) {
-      printf("WARNING: Malformed line '%s'. Expected Vector2 (NUMBER,NUMBER).\n", line.c_str());
-      return;
-   }
-   getFloatValue(values[0], line, target.x);
-   getFloatValue(values[1], line, target.y);
-}
 
 // data functions
 
 void loadData() {
    printf("Loading block data from 'assets/blocks_list.txt'...\n");
    loadBlockData();
+   printf("Loading liquid data from 'assets/liquid_list.txt'...\n");
+   loadLiquidData();
    printf("Loading furniture data from 'assets/furniture_list.txt'...\n");
    loadFurnitureData();
    printf("Loading done!\n");
 }
 
 void loadBlockData() {
-   std::vector<std::string> lines = getLinesFromFileIgnoringComments("assets/blocks_list.txt", "#");
-   reserveBlockContainers(lines.size() / 2);
+   std::vector<Header> headers = getHeadersFromConfig("assets/blocks_list.txt", "#", "[", "]", '=');
+   reserveBlockContainers(headers.size());
 
-   struct BlockData {
-      std::string name;
+   for (Header &header: headers) {
       Texture texture {0};
-      BlockType types;
+      BlockType types {};
       bool noTexture = false;
 
-      void push() {
-         if (!noTexture && texture.id == 0) {
-            texture = getTexture(name);
-         }
-         pushBlock(name, types, texture);
-         *this = {};
-      }
-   };
-   BlockData data;
-   bool init = false;
-
-   for (const std::string &line: lines) {
-      // getLinesFromFileIgnoringComments skips empty lines so this is fine
-      if (line.front() == '[' && line.back() == ']') {
-         if (init) {
-            data.push();
-         }
-         data.name = line.substr(1, line.size() - 2);
-         init = true;
-         continue;
-      }
-
-      size_t equals = line.find('=');
-      if (equals == std::string::npos) {
-         printf("WARNING: Malformed line: '%s'. Expected '=' character.\n", line.c_str());
-         continue;
-      }
-
-      std::string field = line.substr(0, equals);
-      std::string value = line.substr(equals + 1);
-      trimRightInPlace(field);
-      trimLeftInPlace(value);
-
-      if (field == "texture") {
-         if (value.empty()) {
-            data.noTexture = true;
-            data.texture.id = 0;
-         } else {
-            data.texture = getTexture(value);
-         }
-      }
-      else if (field == "attributes") {
-         std::vector<std::string> attributes = split(value, ',');
-         for (std::string &attribute: attributes) {
-            std::string trimmed = trim(attribute);
-            if (!isBlockTypeValid(trimmed)) {
-               printf("WARNING: Malformed line: '%s'. Invalid attribute '%s'.\n", line.c_str(), trimmed.c_str());
-               continue;
+      for (auto &[field, value]: header.lines) {
+         if (field == "texture") {
+            if (value.empty()) {
+               texture.id = 0;
+               noTexture = true;
             }
-            data.types = data.types | getBlockTypeFromString(trimmed);
+            else {
+               texture = getTexture(value);
+            }
+         }
+         else if (field == "attributes") {
+            std::vector<std::string> attributes = getArrayValue(value);
+            for (std::string &attribute: attributes) {
+               if (!isBlockTypeValid(attribute)) {
+                  printf("loadBlockData: Invalid block attribute '%s'.\n", attribute.c_str());
+                  continue;
+               }
+               types = types | getBlockTypeFromString(attribute);
+            }
+         }
+         else {
+            printf("loadBlockData: Invalid field '%s'.\n", field.c_str());
          }
       }
-      else {
-         printf("WARNING: Malformed line: '%s'. Invalid field '%s'.\n", line.c_str(), field.c_str());
+
+      if (!noTexture && texture.id == 0) {
+         texture = getTexture(header.name);
       }
+      pushBlock(header.name, types, texture);
+   }
+}
+
+void loadLiquidData() {
+   std::vector<Header> headers = getHeadersFromConfig("assets/liquid_list.txt", "#", "[", "]", '=');
+   reserveLiquidContainers(headers.size());
+
+   // pre-pass. no avoiding because of the conversion table
+   for (Header &header: headers) {
+      pushLiquid(header.name);
    }
 
-   if (init) {
-      data.push();
+   for (Header &header: headers) {
+      LiquidData data;
+      bool noTexture = false;
+
+      for (auto &[field, value]: header.lines) {
+         if (field == "texture") {
+            if (value.empty()) {
+               data.texture.id = 0;
+               noTexture = true;
+            }
+            else {
+               data.texture = getTexture(value);
+            }
+         }
+         else if (field == "update_speed") {
+            data.updateSpeed = getFloatValue(value);
+         }
+         else if (field == "move_speed_multiplier") {
+            data.moveSpeedMultiplier = getFloatValue(value);
+         }
+         else if (field == "natural_light") {
+            data.naturalLight = getBoolValue(value);
+         }
+         else if (field == "glow") {
+            data.glow = getBoolValue(value);
+         }
+         else if (field == "conversion") {
+            std::vector<Line> dictionary = getDictionaryValue(value, '=');
+            for (auto &[field, value]: dictionary) {
+               if (!isBlockNameValid(value)) {
+                  printf("loadLiquidData: Block '%s' does not exist.\n", value.c_str());
+                  continue;
+               }
+
+               if (!isLiquidNameValid(field)) {
+                  printf("loadLiquidData: Liquid '%s' does not exist.\n", field.c_str());
+                  continue;
+               }
+               data.conversionTable[getLiquidIdFromName(field)] = getBlockIdFromName(value);
+            }
+         }
+         else {
+            printf("loadLiquidData: Invalid field '%s'.\n", field.c_str());
+         }
+      }
+
+      if (!noTexture && data.texture.id == 0) {
+         data.texture = getTexture(header.name);
+      }
+      setLiquid(header.name, data);
    }
 }
 
 void loadFurnitureData() {
-   std::vector<std::string> lines = getLinesFromFileIgnoringComments("assets/furniture_list.txt", "#");
-   reserveFurnitureContainers(lines.size() / 5);
+   std::vector<Header> headers = getHeadersFromConfig("assets/furniture_list.txt", "#", "[", "]", '=');
+   reserveFurnitureContainers(headers.size());
 
-   FurnitureData data;
-   bool init = false;
-   bool noTexture = false;
-   std::string name;
-   std::vector<blockid_t> saplingSoils, treeSoils;
+   for (Header &header: headers) {
+      FurnitureData data;
+      bool noTexture = false;
+      std::vector<blockid_t> saplingSoils, treeSoils;
 
-   for (const std::string &line: lines) {
-      // getLinesFromFileIgnoringComments skips empty lines so this is fine
-      if (line.front() == '[' && line.back() == ']') {
-         if (init) {
-            if (!noTexture && data.texture.id == 0) {
-               data.texture = getTexture(name);
+      for (auto &[field, value]: header.lines) {
+         if (field == "texture") {
+            if (value.empty()) {
+               data.texture.id = 0;
+               noTexture = true;
             }
-            pushFurniture(data, name, saplingSoils, treeSoils);
-            data = {};
-            noTexture = false;
-            name.clear();
-            saplingSoils.clear();
-            treeSoils.clear();
+            else {
+               data.texture = getTexture(value);
+            }
          }
-         name = line.substr(1, line.size() - 2);
-         init = true;
-         continue;
-      }
-
-      size_t equals = line.find('=');
-      if (equals == std::string::npos) {
-         printf("WARNING: Malformed line: '%s'. Expected '=' character.\n", line.c_str());
-         continue;
-      }
-
-      std::string field = line.substr(0, equals);
-      std::string value = line.substr(equals + 1);
-      trimRightInPlace(field);
-      trimLeftInPlace(value);
-
-      if (field == "texture") {
-         if (value.empty()) {
-            noTexture = true;
-            data.texture.id = 0;
-         } else {
-            data.texture = getTexture(value);
-         }
-      }
-      else if (field == "type") {
-         if (!isFurnitureTypeValid(value)) {
-            printf("WARNING: Malformed line: '%s'. Invalid type '%s'.\n", line.c_str(), value.c_str());
-            continue;
-         }
-         data.type = getFurnitureTypeFromString(value);
-      }
-      else if (field == "texture_size") {
-         getIntValue(value, line, data.textureSize);
-      }
-      else if (field == "tree_size_min") {
-         getIntValue(value, line, data.treeSizeMin);
-      }
-      else if (field == "tree_size_max") {
-         getIntValue(value, line, data.treeSizeMax);
-      }
-      else if (field == "tree_root_chance") {
-         getIntValue(value, line, data.treeRootChance);
-      }
-      else if (field == "tree_branch_chance") {
-         getIntValue(value, line, data.treeBranchChance);
-      }
-      else if (field == "tree_is_cactus") {
-         getBoolValue(value, line, data.treeIsCactus);
-      }
-      else if (field == "tree_cactus_flower_chance") {
-         getIntValue(value, line, data.treeCactusFlowerChance);
-      }
-      else if (field == "sapling_grows_into") {
-         if (!isValidFurnitureName(value)) {
-            printf("WARNING: Malformed line: '%s'. No such furniture type '%s'. %s must be defined before this line.\n", line.c_str(), value.c_str(), value.c_str());
-            continue;
-         }
-         data.saplingGrowsInto = getFurnitureIdFromName(value);
-      }
-      else if (field == "sapling_grow_speed_min") {
-         getFloatValue(value, line, data.saplingGrowSpeedMin);
-      }
-      else if (field == "sapling_grow_speed_max") {
-         getFloatValue(value, line, data.saplingGrowSpeedMax);
-      }
-      else if (field == "size") {
-         getV2Value(value, line, data.furnitureSize);
-      }
-      else if (field == "face_player") {
-         getBoolValue(value, line, data.shouldFacePlayer);
-      }
-      else if (field == "sapling_soil") {
-         std::vector<std::string> soils = split(value, ',');
-         for (std::string &soil: soils) {
-            std::string trimmed = trim(soil);
-            if (!isBlockNameValid(trimmed)) {
-               printf("WARNING: Malformed line: '%s'. Block '%s' does not exist.\n", line.c_str(), trimmed.c_str());
+         else if (field == "type") {
+            if (!isFurnitureTypeValid(value)) {
+               printf("loadFurnitureData: Invalid type '%s'.\n", value.c_str());
                continue;
             }
-            saplingSoils.push_back(getBlockIdFromName(trimmed));
+            data.type = getFurnitureTypeFromString(value);
          }
-      }
-      else if (field == "tree_soil") {
-         std::vector<std::string> soils = split(value, ',');
-         for (std::string &soil: soils) {
-            std::string trimmed = trim(soil);
-            if (!isBlockNameValid(trimmed)) {
-               printf("WARNING: Malformed line: '%s'. Block '%s' does not exist.\n", line.c_str(), trimmed.c_str());
+         else if (field == "texture_size") {
+            data.textureSize = getIntValue(value);
+         }
+         else if (field == "tree_size_min") {
+            data.treeSizeMin = getIntValue(value);
+         }
+         else if (field == "tree_size_max") {
+            data.treeSizeMax = getIntValue(value);
+         }
+         else if (field == "tree_root_chance") {
+            data.treeRootChance = getIntValue(value);
+         }
+         else if (field == "tree_branch_chance") {
+            data.treeBranchChance = getIntValue(value);
+         }
+         else if (field == "tree_is_cactus") {
+            data.treeIsCactus = getBoolValue(value);
+         }
+         else if (field == "tree_cactus_flower_chance") {
+            data.treeCactusFlowerChance = getIntValue(value);
+         }
+         else if (field == "sapling_grows_into") {
+            if (!isValidFurnitureName(value)) {
+               printf("loadFurnitureData: No such furniture type '%s'. %s must be defined before this line.\n", value.c_str(), value.c_str());
                continue;
             }
-            treeSoils.push_back(getBlockIdFromName(trimmed));
+            data.saplingGrowsInto = getFurnitureIdFromName(value);
+         }
+         else if (field == "sapling_grow_speed_min") {
+            data.saplingGrowSpeedMin = getFloatValue(value);
+         }
+         else if (field == "sapling_grow_speed_max") {
+            data.saplingGrowSpeedMax = getFloatValue(value);
+         }
+         else if (field == "size") {
+            data.furnitureSize = getV2Value(value);
+         }
+         else if (field == "face_player") {
+            data.shouldFacePlayer = getBoolValue(value);
+         }
+         else if (field == "sapling_soil") {
+            std::vector<std::string> array = getArrayValue(value);
+            for (std::string &soil: array) {
+               if (!isBlockNameValid(soil)) {
+                  printf("loadFurnitureData: Block '%s' does not exist.\n", soil.c_str());
+                  continue;
+               }
+               saplingSoils.push_back(getBlockIdFromName(soil));
+            }
+         }
+         else if (field == "tree_soil") {
+            std::vector<std::string> array = getArrayValue(value);
+            for (std::string &soil: array) {
+               if (!isBlockNameValid(soil)) {
+                  printf("loadFurnitureData: Block '%s' does not exist.\n", soil.c_str());
+                  continue;
+               }
+               treeSoils.push_back(getBlockIdFromName(soil));
+            }
+         }
+         else {
+            printf("loadFurnitureData: Invalid field '%s'.\n", field.c_str());
          }
       }
-      else {
-         printf("WARNING: Malformed line: '%s'. Invalid field '%s'.\n", line.c_str(), field.c_str());
-      }
-   }
 
-   if (init) {
-      pushFurniture(data, name, saplingSoils, treeSoils);
+      if (!noTexture && data.texture.id == 0) {
+         data.texture = getTexture(header.name);
+      }
+      pushFurniture(data, header.name, saplingSoils, treeSoils);
    }
 }

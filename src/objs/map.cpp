@@ -15,7 +15,7 @@ static const std::unordered_map<std::string, BlockType> blockAttributeStrings {{
    {"bouncy", BlockType::bouncy},
 }};
 
-// block info
+// block/liquid info
 
 static size_t blockCount = 0;
 static std::vector<std::string> blockNames;
@@ -23,17 +23,15 @@ static std::vector<BlockType> blockAttributes;
 static std::vector<Texture> blockTextures;
 static std::unordered_map<std::string, blockid_t> blockIds;
 
+static size_t liquidCount = 0;
+static std::vector<std::string> liquidNames;
+static std::vector<LiquidData> liquidData;
+static std::unordered_map<std::string, liquidid_t> liquidIds;
+
 // Block getter functions
 
 bool isBlockTypeValid(const std::string &name) {
    return blockAttributeStrings.find(name) != blockAttributeStrings.end();
-}
-
-BlockType getBlockTypeFromString(const std::string &name) {
-   if (auto it = blockAttributeStrings.find(name); it != blockAttributeStrings.end()) {
-      return it->second;
-   }
-   return BlockType::empty;
 }
 
 bool isBlockNameValid(const std::string &name) {
@@ -42,6 +40,13 @@ bool isBlockNameValid(const std::string &name) {
 
 bool isBlockIdValid(blockid_t id) {
    return id >= 0 && id < blockCount;
+}
+
+BlockType getBlockTypeFromString(const std::string &name) {
+   if (auto it = blockAttributeStrings.find(name); it != blockAttributeStrings.end()) {
+      return it->second;
+   }
+   return BlockType::empty;
 }
 
 blockid_t getBlockIdFromName(const std::string &name) {
@@ -62,13 +67,57 @@ void reserveBlockContainers(size_t estimate) {
    blockIds.reserve(estimate);
 }
 
-size_t pushBlock(const std::string &name, BlockType attributes, Texture texture) {
+blockid_t pushBlock(const std::string &name, BlockType attributes, Texture texture) {
    blockNames.push_back(name);
    blockAttributes.push_back(attributes);
    blockTextures.push_back(texture);
    blockIds[name] = blockCount;
    blockCount += 1;
    return blockCount - 1;
+}
+
+// liquid getter functions
+
+bool isLiquidNameValid(const std::string &name) {
+   return liquidIds.find(name) != liquidIds.end();
+}
+
+bool isLiquidIdValid(liquidid_t id) {
+   return id >= 0 && id < liquidCount;
+}
+
+LiquidData &getLiquidData(liquidid_t id) {
+   return liquidData[id];
+}
+
+liquidid_t getLiquidIdFromName(const std::string &name) {
+   return liquidIds.at(name);
+}
+
+std::string getLiquidNameFromId(liquidid_t id) {
+   return liquidNames[id];
+}
+
+size_t getLiquidCount() {
+   return liquidCount;
+}
+
+void reserveLiquidContainers(size_t estimate) {
+   liquidNames.reserve(estimate);
+   liquidData.reserve(estimate);
+   liquidIds.reserve(estimate);
+}
+
+liquidid_t pushLiquid(const std::string &name) {
+   liquidData.push_back({});
+   liquidNames.push_back(name);
+   liquidIds[name] = liquidCount;
+   liquidCount += 1;
+   return liquidCount - 1;
+}
+
+void setLiquid(const std::string &name, const LiquidData &data) {
+   liquidData[liquidIds[name]] = data;
 }
 
 // constructors

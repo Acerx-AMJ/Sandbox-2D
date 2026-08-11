@@ -1,9 +1,6 @@
 #pragma once
 #include "objs/furniture.hpp"
-
-// types
-
-using liquidlayer_t = unsigned char;
+#include <unordered_map>
 
 // constants
 
@@ -71,19 +68,40 @@ struct Wall {
    BlockType type = BlockType::empty | BlockType::translucent | BlockType::flowable;
 };
 
+struct LiquidData {
+   Texture texture;
+   float updateSpeed = 0.0f;
+   std::unordered_map<liquidid_t, blockid_t> conversionTable;
+   float moveSpeedMultiplier = 1.0f;
+   bool naturalLight = false;
+   bool glow = false;
+};
+
 // Block getter functions
 
 bool isBlockTypeValid(const std::string &name);
-BlockType getBlockTypeFromString(const std::string &name);
-
 bool isBlockNameValid(const std::string &name);
 bool isBlockIdValid(blockid_t id);
+BlockType getBlockTypeFromString(const std::string &name);
 blockid_t getBlockIdFromName(const std::string &name);
 std::string getBlockNameFromId(blockid_t id);
 size_t getBlockCount();
 
 void reserveBlockContainers(size_t estimate);
-size_t pushBlock(const std::string &name, BlockType attributes, Texture texture);
+blockid_t pushBlock(const std::string &name, BlockType attributes, Texture texture);
+
+// Liquid getter functions
+
+bool isLiquidNameValid(const std::string &name);
+bool isLiquidIdValid(liquidid_t id);
+LiquidData &getLiquidData(liquidid_t id);
+liquidid_t getLiquidIdFromName(const std::string &name);
+std::string getLiquidNameFromId(liquidid_t id);
+size_t getLiquidCount();
+
+void reserveLiquidContainers(size_t estimate);
+liquidid_t pushLiquid(const std::string &name);
+void setLiquid(const std::string &name, const LiquidData &data);
 
 // Map
 
