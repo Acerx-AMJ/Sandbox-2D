@@ -63,7 +63,8 @@ FurnitureData &getFurnitureData(furnitureid_t id);
 size_t getFurnitureCount();
 
 void reserveFurnitureContainers(size_t estimate);
-furnitureid_t pushFurniture(FurnitureData data, const std::string &name, const std::vector<blockid_t> &saplingSoils, const std::vector<blockid_t> &treeSoils);
+void pushFurniture(const std::string &name);
+void setFurniture(const std::string &name, FurnitureData data, const std::vector<blockid_t> &saplingSoils, const std::vector<blockid_t> &treeSoils);
 
 // furniture
 

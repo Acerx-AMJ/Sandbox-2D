@@ -21,6 +21,10 @@ void loadBlockData() {
    reserveBlockContainers(headers.size());
 
    for (Header &header: headers) {
+      pushBlock(header.name);
+   }
+
+   for (Header &header: headers) {
       Texture texture {0};
       BlockType types {};
       bool noTexture = false;
@@ -53,7 +57,7 @@ void loadBlockData() {
       if (!noTexture && texture.id == 0) {
          texture = getTexture(header.name);
       }
-      pushBlock(header.name, types, texture);
+      setBlock(header.name, types, texture);
    }
 }
 
@@ -61,7 +65,6 @@ void loadLiquidData() {
    std::vector<Header> headers = getHeadersFromConfig("assets/liquid_list.txt", "#", "[", "]", '=');
    reserveLiquidContainers(headers.size());
 
-   // pre-pass. no avoiding because of the conversion table
    for (Header &header: headers) {
       pushLiquid(header.name);
    }
@@ -124,6 +127,10 @@ void loadFurnitureData() {
    reserveFurnitureContainers(headers.size());
 
    for (Header &header: headers) {
+      pushFurniture(header.name);
+   }
+
+   for (Header &header: headers) {
       FurnitureData data;
       bool noTexture = false;
       std::vector<blockid_t> saplingSoils, treeSoils;
@@ -168,7 +175,7 @@ void loadFurnitureData() {
          }
          else if (field == "sapling_grows_into") {
             if (!isValidFurnitureName(value)) {
-               printf("loadFurnitureData: No such furniture type '%s'. %s must be defined before this line.\n", value.c_str(), value.c_str());
+               printf("loadFurnitureData: No such furniture type '%s'.\n", value.c_str());
                continue;
             }
             data.saplingGrowsInto = getFurnitureIdFromName(value);
@@ -213,6 +220,6 @@ void loadFurnitureData() {
       if (!noTexture && data.texture.id == 0) {
          data.texture = getTexture(header.name);
       }
-      pushFurniture(data, header.name, saplingSoils, treeSoils);
+      setFurniture(header.name, data, saplingSoils, treeSoils);
    }
 }

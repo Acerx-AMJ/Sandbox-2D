@@ -70,7 +70,8 @@ std::string getBlockNameFromId(blockid_t id);
 size_t getBlockCount();
 
 void reserveBlockContainers(size_t estimate);
-blockid_t pushBlock(const std::string &name, BlockType attributes, Texture texture);
+void pushBlock(const std::string &name);
+void setBlock(const std::string &name, BlockType attributes, Texture texture);
 
 // Liquids
 
@@ -98,7 +99,7 @@ std::string getLiquidNameFromId(liquidid_t id);
 size_t getLiquidCount();
 
 void reserveLiquidContainers(size_t estimate);
-liquidid_t pushLiquid(const std::string &name);
+void pushLiquid(const std::string &name);
 void setLiquid(const std::string &name, const LiquidData &data);
 
 // Map

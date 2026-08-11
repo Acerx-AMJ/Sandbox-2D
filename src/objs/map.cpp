@@ -68,13 +68,18 @@ void reserveBlockContainers(size_t estimate) {
    blockIds.reserve(estimate);
 }
 
-blockid_t pushBlock(const std::string &name, BlockType attributes, Texture texture) {
+void pushBlock(const std::string &name) {
    blockNames.push_back(name);
-   blockAttributes.push_back(attributes);
-   blockTextures.push_back(texture);
+   blockAttributes.push_back({});
+   blockTextures.push_back({});
    blockIds[name] = blockCount;
    blockCount += 1;
-   return blockCount - 1;
+}
+
+void setBlock(const std::string &name, BlockType attributes, Texture texture) {
+   blockid_t id = blockIds.at(name);
+   blockAttributes[id] = attributes;
+   blockTextures[id] = texture;
 }
 
 // liquid getter functions
@@ -109,16 +114,16 @@ void reserveLiquidContainers(size_t estimate) {
    liquidIds.reserve(estimate);
 }
 
-liquidid_t pushLiquid(const std::string &name) {
+void pushLiquid(const std::string &name) {
    liquidData.push_back({});
    liquidNames.push_back(name);
    liquidIds[name] = liquidCount;
    liquidCount += 1;
-   return liquidCount - 1;
 }
 
 void setLiquid(const std::string &name, const LiquidData &data) {
-   liquidData[liquidIds[name]] = data;
+   liquidid_t id = liquidIds.at(name);
+   liquidData[id] = data;
 }
 
 // constructors

@@ -105,19 +105,23 @@ void reserveFurnitureContainers(size_t estimate) {
    furnitureIds.reserve(estimate);
 }
 
-furnitureid_t pushFurniture(FurnitureData data, const std::string &name, const std::vector<blockid_t> &saplingSoils, const std::vector<blockid_t> &treeSoils) {
-   for (blockid_t soil: saplingSoils) {
-      ::saplingSoils[soil].push_back(furnitureCount);
-   }
-   for (blockid_t soil: treeSoils) {
-      ::treeSoils[soil].push_back(furnitureCount);
-   }
-
-   furnitureData.push_back(data);
+void pushFurniture(const std::string &name) {
+   furnitureData.push_back({});
    furnitureNames.push_back(name);
    furnitureIds[name] = furnitureCount;
    furnitureCount += 1;
-   return furnitureCount - 1;
+}
+
+void setFurniture(const std::string &name, FurnitureData data, const std::vector<blockid_t> &saplingSoils, const std::vector<blockid_t> &treeSoils) {
+   furnitureid_t id = furnitureIds[name];
+
+   furnitureData[id] = data;
+   for (blockid_t soil: saplingSoils) {
+      ::saplingSoils[soil].push_back(id);
+   }
+   for (blockid_t soil: treeSoils) {
+      ::treeSoils[soil].push_back(id);
+   }
 }
 
 // Constructors
