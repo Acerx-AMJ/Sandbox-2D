@@ -4,6 +4,69 @@
 #include <raymath.h>
 #include <cmath>
 
+// constants
+
+static const std::unordered_map<std::string, ItemActionType> itemActionTypeStrings {{
+   {"none", ItemActionType::none}, {"place_block", ItemActionType::placeBlock}, {"place_wall", ItemActionType::placeWall},
+   {"place_furniture", ItemActionType::placeFurniture}, {"place_liquid", ItemActionType::placeLiquid}
+}};
+
+static size_t itemCount = 1; // 0 - nil
+static std::vector<std::string> itemNames {""};
+static std::vector<ItemData> itemData {{}};
+static std::unordered_map<std::string, itemid_t> itemIds;
+
+// item getter functions
+
+bool isItemActionValid(const std::string &action) {
+   return itemActionTypeStrings.find(action) != itemActionTypeStrings.end();
+}
+
+bool isItemNameValid(const std::string &name) {
+   return itemIds.find(name) != itemIds.end();
+}
+
+bool isItemIdValid(itemid_t id) {
+   return id >= 0 && id < itemCount;
+}
+
+ItemActionType getItemActionTypeFromString(const std::string &action) {
+   if (auto it = itemActionTypeStrings.find(action); it != itemActionTypeStrings.end()) {
+      return it->second;
+   }
+   return ItemActionType::none;
+}
+
+itemid_t getItemIdFromName(const std::string &name) {
+   return itemIds.at(name);
+}
+
+std::string getItemNameFromId(itemid_t id) {
+   return itemNames[id];
+}
+
+size_t getItemCount() {
+   return itemCount;
+}
+
+void reserveItemContainers(size_t estimate) {
+   itemNames.reserve(estimate + 1);
+   itemData.reserve(estimate + 1);
+   itemIds.reserve(estimate + 1);
+}
+
+void pushItem(const std::string &name) {
+   itemData.push_back({});
+   itemNames.push_back(name);
+   itemIds[name] = itemCount;
+   itemCount += 1;
+}
+
+void setItem(const std::string &name, ItemData data) {
+   itemid_t id = itemIds[name];
+   itemData[id] = data;
+}
+
 // Constants
 
 constexpr int droppedItemLifetime      = 60.0f * 15.0f;

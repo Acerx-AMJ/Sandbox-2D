@@ -79,7 +79,11 @@ furnitureid_t getFurnitureIdFromName(const std::string &name) {
    return furnitureIds.at(name);
 }
 
-bool isValidFurnitureName(const std::string &name) {
+bool isFurnitureIdValid(furnitureid_t id) {
+   return id >= 0 && id < furnitureCount;
+}
+
+bool isFurnitureNameValid(const std::string &name) {
    return furnitureIds.find(name) != furnitureIds.end();
 }
 
@@ -100,9 +104,9 @@ size_t getFurnitureCount() {
 }
 
 void reserveFurnitureContainers(size_t estimate) {
-   furnitureNames.reserve(estimate);
-   furnitureData.reserve(estimate);
-   furnitureIds.reserve(estimate);
+   furnitureNames.reserve(estimate + 1);
+   furnitureData.reserve(estimate + 1);
+   furnitureIds.reserve(estimate + 1);
 }
 
 void pushFurniture(const std::string &name) {

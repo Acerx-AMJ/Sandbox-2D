@@ -63,9 +63,9 @@ size_t getBlockCount() {
 }
 
 void reserveBlockContainers(size_t estimate) {
-   blockNames.reserve(estimate);
-   blockAttributes.reserve(estimate);
-   blockIds.reserve(estimate);
+   blockNames.reserve(estimate + 1);
+   blockAttributes.reserve(estimate + 1);
+   blockIds.reserve(estimate + 1);
 }
 
 void pushBlock(const std::string &name) {
@@ -109,9 +109,9 @@ size_t getLiquidCount() {
 }
 
 void reserveLiquidContainers(size_t estimate) {
-   liquidNames.reserve(estimate);
-   liquidData.reserve(estimate);
-   liquidIds.reserve(estimate);
+   liquidNames.reserve(estimate + 1);
+   liquidData.reserve(estimate + 1);
+   liquidIds.reserve(estimate + 1);
 }
 
 void pushLiquid(const std::string &name) {

@@ -1,5 +1,6 @@
 #include "mngr/data.hpp"
 #include "SRU/assets.hpp"
+#include "objs/item.hpp"
 #include "objs/map.hpp"
 #include <SRU/file.hpp>
 #include <cstdio>
@@ -13,6 +14,8 @@ void loadData() {
    loadLiquidData();
    printf("Loading furniture data from 'assets/furniture_list.txt'...\n");
    loadFurnitureData();
+   printf("Loading item data from 'assets/item_list.txt'...\n");
+   loadItemData();
    printf("Loading done!\n");
 }
 
@@ -183,7 +186,7 @@ void loadFurnitureData() {
             data.treeCactusFlowerChance = getIntValue(value);
          }
          else if (field == "sapling_grows_into") {
-            if (!isValidFurnitureName(value)) {
+            if (!isFurnitureNameValid(value)) {
                printf("loadFurnitureData: No such furniture type '%s'.\n", value.c_str());
                continue;
             }
@@ -230,5 +233,77 @@ void loadFurnitureData() {
          data.texture = getTexture(header.name);
       }
       setFurniture(header.name, data, saplingSoils, treeSoils);
+   }
+}
+
+void loadItemData() {
+   std::vector<Header> headers = getHeadersFromConfig("assets/item_list.txt", "#", "[", "]", '=');
+   reserveItemContainers(headers.size());
+
+   for (Header &header: headers) {
+      pushItem(header.name);
+   }
+
+   for (Header &header: headers) {
+      ItemData data;
+      bool noTexture = false;
+
+      for (auto &[field, value]: header.lines) {
+         if (field == "texture") {
+            if (value.empty()) {
+               data.texture.id = 0;
+               noTexture = true;
+            }
+            else {
+               data.texture = getTexture(value);
+            }
+         }
+         else if (field == "block") {
+            if (!isBlockNameValid(value)) {
+               printf("loadItemData: Block '%s' does not exist.\n", value.c_str());
+               continue;
+            }
+            data.block = getBlockIdFromName(value);
+         }
+         else if (field == "wall") {
+            if (!isBlockNameValid(value)) {
+               printf("loadItemData: Wall '%s' does not exist.\n", value.c_str());
+               continue;
+            }
+            data.wall = getBlockIdFromName(value);
+         }
+         else if (field == "furniture") {
+            if (!isFurnitureNameValid(value)) {
+               printf("loadItemData: Furniture '%s' does not exist.\n", value.c_str());
+               continue;
+            }
+            data.furniture = getFurnitureIdFromName(value);
+         }
+         else if (field == "liquid") {
+            if (!isLiquidNameValid(value)) {
+               printf("loadItemData: Liquid '%s' does not exist.\n", value.c_str());
+               continue;
+            }
+            data.liquid = getLiquidIdFromName(value);
+         }
+         else if (field == "stack_size") {
+            data.stackSize = getIntValue(value);
+         }
+         else if (field == "action") {
+            if (!isItemActionValid(value)) {
+               printf("loadItemData: Invalid action '%s'.\n", value.c_str());
+               continue;
+            }
+            data.action = getItemActionTypeFromString(value);
+         }
+         else {
+            printf("loadItemData: Invalid field '%s'.\n", field.c_str());
+         }
+      }
+
+      if (!noTexture && data.texture.id == 0) {
+         data.texture = getTexture(header.name);
+      }
+      setItem(header.name, data);
    }
 }

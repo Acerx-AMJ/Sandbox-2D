@@ -55,7 +55,8 @@ bool isTreeSoilCompatible(blockid_t soilId, furnitureid_t treeId);
 std::vector<furnitureid_t> &getSaplingsFromSoil(blockid_t id);
 std::vector<furnitureid_t> &getTreesFromSoil(blockid_t id);
 
-bool isValidFurnitureName(const std::string &name);
+bool isFurnitureIdValid(furnitureid_t id);
+bool isFurnitureNameValid(const std::string &name);
 std::string getFurnitureNameFromId(furnitureid_t id);
 furnitureid_t getFurnitureIdFromName(const std::string &name);
 FurnitureType getFurnitureType(furnitureid_t id);
