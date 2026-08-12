@@ -1,88 +1,42 @@
 #pragma once
 #include "objs/item.hpp"
-#include "objs/player.hpp"
 #include <vector>
-
-// Constants
 
 constexpr inline int inventoryWidth  = 10;
 constexpr inline int inventoryHeight = 4;
-
-// Inventory
+constexpr inline int inventorySlots = inventoryWidth * inventoryHeight + 1; // trash included
+constexpr inline int trashSlot = inventorySlots - 1;
 
 struct Inventory {
-   Map &map;
-   Player &player;
-   std::vector<DroppedItem> &droppedItems;
-
-   Item items[inventoryHeight][inventoryWidth];
-   int selectedX = 0, selectedY = 0;
-   bool open = false;
-
-   bool anySelected = false;
-   SelectedItem selectedItem;
-   Item trashedItem;
-
-   // Constructors
-
-   Inventory(Map &map, Player &player, std::vector<DroppedItem> &droppedItems);
-
-   // Update functions
-
-   void update(bool canSwitchOnScroll);
-
-   // Placement functions
-
-   void tryToPlaceItemOrDropAtCoordinates(Item &item, int x, int y);
-   bool canPlaceBlock();
-   void placeBlock(int x, int y, bool playerFacingLeft);
-   void selectItem(int x, int y);
-   const Item &getSelected() const;
-
-   // Helper functions
-
-   void toggleInventoryOpen();
-   void switchOnKeyPress(int key, int hotbarX);
-   void switchOnMouseWheel();
-
-   void handleDiscarding();
-   void discardItem();
-
-   // Frame functions
-
-   Vector2 getFramePosition(float x, float y, bool isSelected) const;
-   Vector2 getFrameSize(bool isSelected) const;
-   bool mouseOnFrame(const Vector2 &position, const Vector2 &size);
-
-   const Texture& getFrameTexture(bool isSelected, bool isFavorite) const;
-   const Texture& getTrashTexture(bool trashOccupied) const;
-
-   // Item functions
+   // update
    
-   void dropSelectedItem();
+   void update(bool canSwitchOnScroll, std::vector<DroppedItem> &droppedItems, int dropX, int dropY);
+   void toggleInventoryOpen();
+   void switchOnKeyPress(int key, int hotbarX, std::vector<DroppedItem> &droppedItems, int dropX, int dropY);
+   void switchOnMouseWheel(std::vector<DroppedItem> &droppedItems, int dropX, int dropY);
+
+   // item functions
+
+   void discardSelection(std::vector<DroppedItem> &droppedItems, int dropX, int dropY);
+   void placeItemOrDrop(std::vector<DroppedItem> &droppedItems, Item &item, int dropX, int dropY);
+   void dropItem(std::vector<DroppedItem> &droppedItems, Item &item, int dropX, int dropY);
    bool placeItem(Item &item);
-   int getItemStackSize(const Item &item);
    int addItemCount(Item &item1, Item &item2);
 
-   int getBlockBreakingLevel();
-   float getBlockBreakingMultiplier();
-   Texture2D *getCurrentToolsTexture() const;
+   // frame functions
 
-   // Render functions
+   Texture getFrameTexture(int i) const;
+   Color getItemColor(Item item) const;
+
+   // render
    
-   void render() const;
+   void renderFrame(Font font, float fontSize, Vector2 position, Vector2 size, Item item, int i, bool externalSlot);
+   void render();
+
+   // members
+
+   Item items[inventorySlots];
+   SelectedItem selection;
+   int selected = 0;
+   bool open = false;
 };
-
-// size_t getItemCount();
-// size_t getToolCount();
-// size_t getPotionCount();
-
-// bool isItemNameValid(const std::string &name);
-// bool isEquipmentNameValid(const std::string &name);
-// bool isPotionNameValid(const std::string &name);
-
-// unsigned short getItemIdFromName(const std::string &name);
-// unsigned short getEquipmentIdFromName(const std::string &name);
-// unsigned short getPotionIdFromName(const std::string &name);
-
-void drawItem(ItemType type, unsigned short id, unsigned short count, bool isFurniture, bool isWall, const Vector2 &position, const Vector2 &size, bool isSelected, bool isworldspace = false);

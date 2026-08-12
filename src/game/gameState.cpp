@@ -29,8 +29,8 @@ constexpr float maxToolRange = 100.0f; // Squared
 
 // Constructors
 
-GameState::GameState(const std::string &worldName)
-: inventory(map, player, droppedItems), worldName(worldName) {
+GameState::GameState(const std::string &worldName) {
+   this->worldName = worldName;
    const Vector2 center = getScreenCenter();
    
    // Init world and camera
@@ -55,7 +55,7 @@ GameState::GameState(const std::string &worldName)
 }
 
 GameState::~GameState() {
-   inventory.discardItem();
+   inventory.discardSelection(droppedItems, std::clamp<int>(player.getCenter().x + (player.flipX ? 3 : -3), 0, map.sizeX - 1), player.getCenter().y);
    saveWorldData(worldName, player.spawnPos, player.position, player.creative, player.breath, player.hearts, player.maxHearts, camera.zoom, map, &console, &inventory, &droppedItems);
    resetBackground();
 }
@@ -201,7 +201,7 @@ void GameState::updatePlaying() {
    setInputBlocking(console.input.typing);
    player.blockInput = console.input.typing;
 
-   inventory.update(!console.input.typing);
+   inventory.update(!console.input.typing, droppedItems, std::clamp<int>(player.getCenter().x + (player.flipX ? 3 : -3), 0, map.sizeX - 1), player.getCenter().y);
    calculateCameraBounds();
 
    if (phase != Phase::playing) {
@@ -225,14 +225,14 @@ void GameState::updatePlaying() {
    int mouseY = mousePos.y;
 
    if (map.isPositionValid(mouseX, mouseY) && Vector2DistanceSqr(mousePos, playerCenter) <= maxToolRange) {
-      canDrawPreview = (inventory.canPlaceBlock() && (inventory.getSelected().isFurniture || !CheckCollisionRecs(player.getBounds(), {(float)mouseX, (float)mouseY, 1, 1})));
-      player.breakingBlock = (isMouseDownOutsideUI(MOUSE_BUTTON_LEFT) && (!map.isEmpty(mouseX, mouseY) || !map.isWall(mouseX, mouseY, BlockType::empty)));
+      // canDrawPreview = (inventory.canPlaceBlock() && (inventory.getSelected().isFurniture || !CheckCollisionRecs(player.getBounds(), {(float)mouseX, (float)mouseY, 1, 1})));
+      // player.breakingBlock = (isMouseDownOutsideUI(MOUSE_BUTTON_LEFT) && (!map.isEmpty(mouseX, mouseY) || !map.isWall(mouseX, mouseY, BlockType::empty)));
 
-      if (isMouseDownOutsideUI(MOUSE_BUTTON_RIGHT) && inventory.canPlaceBlock()) {
-         inventory.placeBlock(mouseX, mouseY, player.flipX);
-         canDrawPreview = canDrawPreview && inventory.canPlaceBlock(); // To avoid attempting to draw air on placing last block
-      } else if (isMousePressedOutsideUI(MOUSE_BUTTON_MIDDLE)) {
-         inventory.selectItem(mouseX, mouseY);
+      // if (isMouseDownOutsideUI(MOUSE_BUTTON_RIGHT) && inventory.canPlaceBlock()) {
+      //    inventory.placeBlock(mouseX, mouseY, player.flipX);
+      //    canDrawPreview = canDrawPreview && inventory.canPlaceBlock(); // To avoid attempting to draw air on placing last block
+      // } else if (isMousePressedOutsideUI(MOUSE_BUTTON_MIDDLE)) {
+      //    inventory.selectItem(mouseX, mouseY);
       // } else if (player.breakingBlock) {
       //    bool isWall = (map.blocks[mouseY][mouseX].type & BlockType::empty);
       //    bool isFurniture = (map.blocks[mouseY][mouseX].type & BlockType::furniture);
@@ -260,7 +260,7 @@ void GameState::updatePlaying() {
       //       }
       //       player.breakTime = 0;
       //    }
-      }
+      // }
    } else {
       canDrawPreview = false;
       player.breakingBlock = false;
@@ -273,10 +273,10 @@ void GameState::updatePlaying() {
       if (!droppedItem.inBounds || Vector2DistanceSqr(playerCenter, {(float)droppedItem.tileX, (float)droppedItem.tileY}) > maxPickupRange) {
          continue;
       }
-      Item item {droppedItem.type, droppedItem.id, droppedItem.count, droppedItem.isFurniture, droppedItem.isWall, false};
-      const int count = droppedItem.count;
-
+      int count = droppedItem.count;
+      Item item {droppedItem.count, droppedItem.id, false};
       droppedItem.count = (inventory.placeItem(item) ? 0 : item.count);
+
       if (count != droppedItem.count) {
          playSound("pickup");
       }
@@ -511,31 +511,31 @@ void GameState::render() {
       return;
    }
 
-   // Render block preview
-   if (canDrawPreview) {
-      Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
-      int mouseX = mousePos.x;
-      int mouseY = mousePos.y;
+   // // Render block preview
+   // if (canDrawPreview) {
+   //    Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
+   //    int mouseX = mousePos.x;
+   //    int mouseY = mousePos.y;
       
-      const Item &item = inventory.getSelected();
+   //    const Item &item = inventory.getSelected();
 
-      if (item.isFurniture) {
-         // BlockType below = (map.isPositionValid(mouseX, mouseY + furniturePreview.sizeY) ? map.blocks[mouseY + furniturePreview.sizeY][mouseX].type : BlockType::empty);
+   //    if (item.isFurniture) {
+   //       BlockType below = (map.isPositionValid(mouseX, mouseY + furniturePreview.sizeY) ? map.blocks[mouseY + furniturePreview.sizeY][mouseX].type : BlockType::empty);
 
-         // if (lastFurnitureType != getFurnitureType(item.id) || oldBlockBelowPreview != below || flippedPreviewX != player.flipX) {
-         //    furniturePreview = getFurniture(mouseX, mouseY, map, getFurnitureType(item.id), player.flipX, true);
-         // }
-         // flippedPreviewX = player.flipX;
-         // lastFurnitureType = furniturePreview.type;
-         // oldBlockBelowPreview = below;
+   //       if (lastFurnitureType != getFurnitureType(item.id) || oldBlockBelowPreview != below || flippedPreviewX != player.flipX) {
+   //          furniturePreview = getFurniture(mouseX, mouseY, map, getFurnitureType(item.id), player.flipX, true);
+   //       }
+   //       flippedPreviewX = player.flipX;
+   //       lastFurnitureType = furniturePreview.type;
+   //       oldBlockBelowPreview = below;
 
-         // furniturePreview.posX = mouseX;
-         // furniturePreview.posY = mouseY;
-         // furniturePreview.preview(map);
-      } else {
-         DrawTexturePro(getTexture(getBlockNameFromId(item.id)), {0, 0, 8, 8}, {(float)mouseX, (float)mouseY, 1, 1}, {0, 0}, 0, Fade(item.isWall ? wallTint : WHITE, previewAlpha));
-      }
-   }
+   //       furniturePreview.posX = mouseX;
+   //       furniturePreview.posY = mouseY;
+   //       furniturePreview.preview(map);
+   //    } else {
+   //       DrawTexturePro(getTexture(getBlockNameFromId(item.id)), {0, 0, 8, 8}, {(float)mouseX, (float)mouseY, 1, 1}, {0, 0}, 0, Fade(item.isWall ? wallTint : WHITE, previewAlpha));
+   //    }
+   // }
 
    // // Render block breaking preview
    // if (player.breakTime != 0.0f) {

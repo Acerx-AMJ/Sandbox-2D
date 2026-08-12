@@ -1,6 +1,7 @@
 #include "objs/console.hpp"
 #include "objs/inventory.hpp"
 #include "objs/parallax.hpp"
+#include "objs/player.hpp"
 #include "util/position.hpp"
 #include "SRU/assets.hpp"
 #include "SRU/render.hpp"
@@ -518,27 +519,9 @@ bool c_give(Console &console, const VArgs &args, Map&, Player &player, Inventory
    item.count = 1;
 
    try {
-      if (isBlockNameValid(args[1])) {
-         item.id = getBlockIdFromName(args[1]);
-         item.type = ItemType::block;
+      if (isItemNameValid(args[1])) {
+         item.id = getItemIdFromName(args[1]);
       }
-      // else if (isItemNameValid(args[1])) {
-      //    item.id = getItemIdFromName(args[1]);
-      //    item.type = ItemType::item;
-      // }
-      // else if (isEquipmentNameValid(args[1])) {
-      //    item.id = getEquipmentIdFromName(args[1]);
-      //    item.type = ItemType::equipment;
-      // }
-      // else if (isPotionNameValid(args[1])) {
-      //    item.id = getPotionIdFromName(args[1]);
-      //    item.type = ItemType::potion;
-      // }
-      // else if (isValidFurnitureName(args[1])) {
-      //    item.id = getFurnitureIdFromName(args[1]);
-      //    item.type = ItemType::block;
-      //    item.isFurniture = true;
-      // }
       else {
          console.output("give: invalid first argument, expected valid item name.", ConsoleColor::red);
          return false;
@@ -548,9 +531,9 @@ bool c_give(Console &console, const VArgs &args, Map&, Player &player, Inventory
          item.count = stoi(args[2]);
       }
 
-      if (item.count > 9999) {
-         console.output("give: invalid item count.", ConsoleColor::red);
-         return false;
+      if (item.count > getItemData(item.id).stackSize) {
+         console.output("give: invalid second argument, count exceeded stack size. Defaulting to stack size.", ConsoleColor::red);
+         item.count = getItemData(item.id).stackSize;
       }
    } catch (...) {
       console.output("give: expected second argument to be number.", ConsoleColor::red);
@@ -558,7 +541,9 @@ bool c_give(Console &console, const VArgs &args, Map&, Player &player, Inventory
    }
 
    console.output(TextFormat("give: gave %d of '%s'.", item.count, args[1].c_str()));
-   inventory.tryToPlaceItemOrDropAtCoordinates(item, player.position.x, player.position.y);
+   inventory.placeItem(item);
+   // inventory.placeItemOrDrop(item, player.position.x, player.position.y);
+   // TODO: fix all new console commands!
    return true;
 }
 
@@ -566,14 +551,10 @@ bool c_cinv(Console &console, const VArgs &args, Map&, Player&, Inventory &inven
    if (args.size() != 1) {
       console.output("cinv: expected no arguments. Executing anyway.", ConsoleColor::red);
    }
-   for (int y = 0; y < inventoryHeight; ++y) {
-      for (int x = 0; x < inventoryWidth; ++x) {
-         inventory.items[y][x] = Item{};
-      }
+   inventory.selection = {};
+   for (int i = 0; i < inventorySlots; ++i) {
+      inventory.items[i] = {};
    }
-   inventory.trashedItem = Item{};
-   inventory.anySelected = false;
-   inventory.selectedItem.reset();
    return true;
 }
 
@@ -727,10 +708,10 @@ void Console::init(Map &map, Player &player, Inventory &inventory) {
    // vars["timeToRespawn"] = Variable(&map.timeToRespawn);
 
    // Inventory
-   vars["inventory.selected.x"] = Variable(&inventory.selectedX);
-   vars["inventory.selected.y"] = Variable(&inventory.selectedY);
+   vars["inventory.selection.lastSelection"] = Variable(&inventory.selection.lastSelection);
+   vars["inventory.selection.selected"] = Variable(&inventory.selection.selected);
+   vars["inventory.selected"] = Variable(&inventory.selected);
    vars["inventory.open"] = Variable(&inventory.open);
-   vars["inventory.anySelected"] = Variable(&inventory.anySelected);
 }
 
 void Console::output(const std::string &string, ConsoleColor color) {

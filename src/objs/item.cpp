@@ -1,10 +1,18 @@
 #include "objs/item.hpp"
-#include "objs/inventory.hpp"
+#include "SRU/util.hpp"
+#include "SRU/render.hpp"
+#include "objs/map.hpp"
 #include <raylib.h>
 #include <raymath.h>
 #include <cmath>
+#include <unordered_map>
 
 // constants
+
+constexpr int droppedItemLifetime      = 60.0f * 15.0f;
+constexpr float droppedItemFloatSpeed  = 1.5f;
+constexpr float droppedItemFloatHeight = 0.25f;
+constexpr Vector2 droppedItemSize      = {0.8f, 0.8f};
 
 static const std::unordered_map<std::string, ItemActionType> itemActionTypeStrings {{
    {"none", ItemActionType::none}, {"place_block", ItemActionType::placeBlock}, {"place_wall", ItemActionType::placeWall},
@@ -37,6 +45,10 @@ ItemActionType getItemActionTypeFromString(const std::string &action) {
    return ItemActionType::none;
 }
 
+ItemData &getItemData(itemid_t id) {
+   return itemData[id];
+}
+
 itemid_t getItemIdFromName(const std::string &name) {
    return itemIds.at(name);
 }
@@ -47,6 +59,17 @@ std::string getItemNameFromId(itemid_t id) {
 
 size_t getItemCount() {
    return itemCount;
+}
+
+Texture getItemTexture(itemid_t id) {
+   return itemData[id].texture;
+}
+
+Vector2 getItemSize(itemid_t id, Vector2 size) {
+   Texture &texture = itemData[id].texture;
+   float ratioX = fminf(1.0f, (float)texture.width / texture.height);
+   float ratioY = fminf(1.0f, (float)texture.height / texture.width);
+   return size * V2(ratioX, ratioY);
 }
 
 void reserveItemContainers(size_t estimate) {
@@ -67,29 +90,13 @@ void setItem(const std::string &name, ItemData data) {
    itemData[id] = data;
 }
 
-// Constants
-
-constexpr int droppedItemLifetime      = 60.0f * 15.0f;
-constexpr float droppedItemFloatSpeed  = 1.5f;
-constexpr float droppedItemFloatHeight = 0.25f;
-constexpr Vector2 droppedItemSize      = {0.8f, 0.8f};
-
-// Selected item functions
-
-void SelectedItem::reset()  {
-   item = Item{};
-   address = nullptr;
-   fullSelect = true;
-   fromTrash = false;
-}
-
 // Dropped item functions
 
-DroppedItem::DroppedItem(ItemType type, unsigned short id, unsigned short count, bool isFurniture, bool isWall, int tileX, int tileY, float lifetime)
-   : type(type), id(id), count(count), lifetime(lifetime), tileX(tileX), tileY(tileY), isFurniture(isFurniture), isWall(isWall) {}
+DroppedItem::DroppedItem(int count, itemid_t id, float lifetime, int tileX, int tileY)
+   : count(count), id(id), lifetime(lifetime), tileX(tileX), tileY(tileY) {}
 
 DroppedItem::DroppedItem(Item &item, int tileX, int tileY)
-   : type(item.type), id(item.id), count(item.count), lifetime(0.0f), tileX(tileX), tileY(tileY), isFurniture(item.isFurniture), isWall(item.isWall) {}
+   : count(item.count), id(item.id), lifetime(0.0f), tileX(tileX), tileY(tileY) {}
 
 void DroppedItem::update(const Rectangle &cameraBounds, float dt) {
    lifetime += dt;
@@ -106,9 +113,15 @@ void DroppedItem::render() const {
    }
 
    float offsetY = std::sin(lifetime * droppedItemFloatSpeed) * droppedItemFloatHeight;
-   Vector2 position = {tileX + 0.5f, (tileY + 0.5f) - offsetY};
-   Vector2 size = droppedItemSize;
-   drawItem(type, id, count, isFurniture, isWall, position, size, false, true);
+   Vector2 position = V2(tileX, tileY - offsetY);
+   Vector2 size = getItemSize(id, droppedItemSize);
+   Color tint = (itemData[id].action == ItemActionType::placeWall && itemData[id].wall != 0 ? wallTint : WHITE);
+   drawTexture(getItemTexture(id), position, size, tint);
+
+   if (count > 1) {
+      Vector2 textPosition = position + V2(0.0f, 0.7f);
+      drawTextCentered("andy", textPosition, TextFormat("%d", count), 0.75f);
+   }
 }
 
 Rectangle DroppedItem::getBounds() const {

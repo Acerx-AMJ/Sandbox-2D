@@ -423,7 +423,7 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
 
    // Render the player
    if (player.hearts != 0) {
-      player.render(accumulator, inventory.getCurrentToolsTexture());
+      player.render(accumulator, nullptr);
    }
 
    for (const DroppedItem &droppedItem : droppedItems) {

@@ -8,19 +8,19 @@
 // data functions
 
 void loadData() {
-   printf("Loading block data from 'assets/blocks_list.txt'...\n");
+   printf("Loading block data from 'assets/config/blocks.txt'...\n");
    loadBlockData();
-   printf("Loading liquid data from 'assets/liquid_list.txt'...\n");
+   printf("Loading liquid data from 'assets/config/liquids.txt'...\n");
    loadLiquidData();
-   printf("Loading furniture data from 'assets/furniture_list.txt'...\n");
+   printf("Loading furniture data from 'assets/config/furniture.txt'...\n");
    loadFurnitureData();
-   printf("Loading item data from 'assets/item_list.txt'...\n");
+   printf("Loading item data from 'assets/config/items.txt'...\n");
    loadItemData();
    printf("Loading done!\n");
 }
 
 void loadBlockData() {
-   std::vector<Header> headers = getHeadersFromConfig("assets/blocks_list.txt", "#", "[", "]", '=');
+   std::vector<Header> headers = getHeadersFromConfig("assets/config/blocks.txt", "#", "[", "]", '=');
    reserveBlockContainers(headers.size());
 
    for (Header &header: headers) {
@@ -65,7 +65,7 @@ void loadBlockData() {
 }
 
 void loadLiquidData() {
-   std::vector<Header> headers = getHeadersFromConfig("assets/liquid_list.txt", "#", "[", "]", '=');
+   std::vector<Header> headers = getHeadersFromConfig("assets/config/liquids.txt", "#", "[", "]", '=');
    reserveLiquidContainers(headers.size());
 
    for (Header &header: headers) {
@@ -135,7 +135,7 @@ void loadLiquidData() {
 }
 
 void loadFurnitureData() {
-   std::vector<Header> headers = getHeadersFromConfig("assets/furniture_list.txt", "#", "[", "]", '=');
+   std::vector<Header> headers = getHeadersFromConfig("assets/config/furniture.txt", "#", "[", "]", '=');
    reserveFurnitureContainers(headers.size());
 
    for (Header &header: headers) {
@@ -237,7 +237,7 @@ void loadFurnitureData() {
 }
 
 void loadItemData() {
-   std::vector<Header> headers = getHeadersFromConfig("assets/item_list.txt", "#", "[", "]", '=');
+   std::vector<Header> headers = getHeadersFromConfig("assets/config/items.txt", "#", "[", "]", '=');
    reserveItemContainers(headers.size());
 
    for (Header &header: headers) {

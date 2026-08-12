@@ -1,7 +1,8 @@
+#include "SRU/text.hpp"
+#include "SRU/util.hpp"
 #include "mngr/input.hpp"
 #include "objs/inventory.hpp"
 #include "objs/map.hpp"
-#include "util/position.hpp"
 #include "SRU/audio.hpp"
 #include "SRU/assets.hpp"
 #include "SRU/render.hpp"
@@ -10,377 +11,158 @@
 
 // Constants
 
-constexpr Vector2 itemframeSize           = {60.0f, 60.0f};
-constexpr Vector2 itemframePadding        = {itemframeSize.x + 5.0f, itemframeSize.y + 5.0f};
-constexpr Vector2 itemframeTopLeft        = {15.0f, 15.0f};
-constexpr Vector2 itemframeIndexOffset    = {15.0f, 15.0f};
-constexpr Vector2 itemFrameCountOffset    = {0.0f, -itemframeSize.y / 2.0f + 10.0f};
-constexpr Vector2 itemframeItemSize       = {30.0f, 30.0f};
-constexpr Vector2 selectedItemFrameSize   = {65.0f, 65.0f};
-constexpr Vector2 selectedItemFrameOffset = {(selectedItemFrameSize.x - itemframeSize.x) / 2.0f, (selectedItemFrameSize.y - itemframeSize.y) / 2.0f};
+constexpr Vector2 inventoryGridPosition = {0.01f, 0.01f};
+constexpr Vector2 inventoryGridSize = {0.35f * (inventoryWidth / float(inventoryHeight + 1)), 0.35f};
+constexpr float slotScale = 0.95f;
+constexpr float itemScale = 0.5f;
+constexpr float itemFontSize = 25.0f;
 
-constexpr int itemStackSize      = 9999;
-constexpr int equipmentStackSize = 1;
-constexpr int potionStackSize    = 99;
+// update functions
 
-// constexpr size_t itemCount = 7;
-// constexpr static inline std::array<const char*, itemCount> itemTextures {{
-//    "coal",
-//    "iron_lump",
-//    "gold_lump",
-//    "mythril_lump",
-//    "iron_bar",
-//    "gold_bar",
-//    "mythril_bar"
-// }};
+void Inventory::update(bool canSwitchOnScroll, std::vector<DroppedItem> &droppedItems, int dropX, int dropY) {
+   int lastSelected = selected;
 
-// constexpr size_t toolCount = 5;
-// struct ToolInfo {
-//    const char *texture;
-//    float breakMultiplier;
-//    int breakLevel;
-// };
-
-// constexpr size_t potionCount = 0;
-
-// constexpr static inline std::array<ToolInfo, toolCount> toolInfo {{
-//    ToolInfo{"wooden_pickaxe",  1.3f, 1},
-//    ToolInfo{"stone_pickaxe",   1.6f, 2},
-//    ToolInfo{"iron_pickaxe",    2.0f, 3},
-//    ToolInfo{"gold_pickaxe",    2.2f, 3},
-//    ToolInfo{"mythril_pickaxe", 2.5f, 3},
-// }};
-
-// const static inline StrArray<std::string> itemNames {
-//    "", "coal", "iron_lump", "gold_lump", "mythril_lump", "iron_bar", "gold_bar", "mythril_bar"
-// };
-
-// const static inline StrArray<std::string> equipmentNames {
-//    "", "wooden_pickaxe", "stone_pickaxe", "iron_pickaxe", "gold_pickaxe", "mythril_pickaxe"
-// };
-
-// const static inline StrArray<std::string> potionNames {
-//    "",
-// };
-
-// Constructors
-
-Inventory::Inventory(Map &map, Player &player, std::vector<DroppedItem> &droppedItems)
-   : map(map), player(player), droppedItems(droppedItems) {}
-
-// Update functions
-
-void Inventory::update(bool canSwitchOnScroll) {
    toggleInventoryOpen();
-
-   // Handle switching
-   int lastSelectedX = selectedX;
-   int lastSelectedY = selectedY;
-
-   switchOnKeyPress(KEY_ONE,   0);
-   switchOnKeyPress(KEY_TWO,   1);
-   switchOnKeyPress(KEY_THREE, 2);
-   switchOnKeyPress(KEY_FOUR,  3);
-   switchOnKeyPress(KEY_FIVE,  4);
-   switchOnKeyPress(KEY_SIX,   5);
-   switchOnKeyPress(KEY_SEVEN, 6);
-   switchOnKeyPress(KEY_EIGHT, 7);
-   switchOnKeyPress(KEY_NINE,  8);
-   switchOnKeyPress(KEY_ZERO,  9);
+   switchOnKeyPress(KEY_ONE,   0, droppedItems, dropX, dropY);
+   switchOnKeyPress(KEY_TWO,   1, droppedItems, dropX, dropY);
+   switchOnKeyPress(KEY_THREE, 2, droppedItems, dropX, dropY);
+   switchOnKeyPress(KEY_FOUR,  3, droppedItems, dropX, dropY);
+   switchOnKeyPress(KEY_FIVE,  4, droppedItems, dropX, dropY);
+   switchOnKeyPress(KEY_SIX,   5, droppedItems, dropX, dropY);
+   switchOnKeyPress(KEY_SEVEN, 6, droppedItems, dropX, dropY);
+   switchOnKeyPress(KEY_EIGHT, 7, droppedItems, dropX, dropY);
+   switchOnKeyPress(KEY_NINE,  8, droppedItems, dropX, dropY);
+   switchOnKeyPress(KEY_ZERO,  9, droppedItems, dropX, dropY);
 
    if (canSwitchOnScroll) {
-      switchOnMouseWheel();
+      switchOnMouseWheel(droppedItems, dropX, dropY);
    }
 
-   if (selectedX != lastSelectedX || selectedY != lastSelectedY) {
+   if (selected != lastSelected) {
       playSound("hover");
    }
 
    // Handle item operations
-   int height = (open ? inventoryHeight : 1);
- 
-   for (int y = 0; y < height; ++y) {
-      for (int x = 0; x < inventoryWidth; ++x) {
-         bool isSelected = (x == selectedX && y == selectedY);
-         Item &item = items[y][x];
-         
-         Vector2 position = getFramePosition(x, y, isSelected);
-         Vector2 size = getFrameSize(isSelected);
+   Rectangle grid = mapCubicArea(inventoryGridPosition, inventoryGridSize);
+   int columns = inventoryWidth;
+   int rows = inventoryHeight + 1;
 
-         if (!mouseOnFrame(position, size)) {
-            continue;
-         }
-         setMouseOnUI(true);
-         bool mousePressed = isMousePressedUI(MOUSE_BUTTON_LEFT);
-         bool shouldReset = true;
+   Vector2 slotSize = getGridCellSize(grid, columns, rows) * slotScale;
+   Vector2 mousePos = GetMousePosition();
+   int amount = (open ? inventorySlots : inventoryWidth);
 
-         // Handle favoriting items
-         if (mousePressed && IsKeyDown(KEY_LEFT_ALT) && open && item.id != 0) {
-            playSound("click");
-            item.favorite = !item.favorite;
-            return;
-         }
-
-         // Handle trashing items
-         if (mousePressed && IsKeyDown(KEY_LEFT_CONTROL) && open && item.id != 0) {
-            if (item.favorite) {
-               return;
-            }
-
-            playSound("trash");
-            trashedItem = item;
-            item = Item{};
-            return;
-         }
-
-         // When pressing on frames while the inventory is closed, select the item
-         if (mousePressed && y == 0) {
-            if (!open) {
-               playSound("click");
-            }
-            selectedX = x;
-            selectedY = 0;
-            shouldReset = false;
-         }
-
-         // Handle swapping/discarding items
-         if (mousePressed && open && anySelected) {
-            playSound("click");
-
-            if (&item == selectedItem.address) {
-               discardItem();
-               return;
-            }
-
-            if (selectedItem.fullSelect) {
-               if (item.id == selectedItem.item.id) {
-                  addItemCount(item, *selectedItem.address);
-                  item.favorite = (item.favorite || selectedItem.item.favorite);
-               } else if (selectedItem.fromTrash && item.favorite) {
-                  discardItem();
-                  return;
-               } else {
-                  std::swap(item, *selectedItem.address);
-               }
-            } else {
-               if (item.id == 0) {
-                  selectedItem.item.favorite = false;
-                  item = selectedItem.item;
-               } else if (item.id != selectedItem.item.id) {
-                  discardItem();
-                  return;
-               } else if (addItemCount(item, selectedItem.item) > 0 && !placeItem(selectedItem.item)) {
-                  dropSelectedItem();
-                  return;
-               }
-            }
-            anySelected = false;
-            selectedItem.reset();
-            return;
-         }
-
-         // Handle dragging items around
-         if (mousePressed && open && !anySelected && item.id != 0) {
-            playSound("click");
-            anySelected = true;
-            selectedItem = {item, &item, true, false};
-            return;
-         }
-
-         if (shouldReset) {
-            resetMousePress(MOUSE_BUTTON_LEFT);
-         }
-
-         if (open && item.id != 0 && isMousePressedUI(MOUSE_BUTTON_RIGHT)) {
-            if (!anySelected) {
-               selectedItem = {item, &item, false, false};
-               selectedItem.item.count = 1;
-            } else if (item.id != selectedItem.item.id || getItemStackSize(selectedItem.item) <= selectedItem.item.count) {
-               return;
-            } else {
-               selectedItem.item.favorite = (selectedItem.item.favorite || item.favorite);
-               selectedItem.item.count += 1;
-            }
-
-            item.count -= 1;
-            if (item.count <= 0) {
-               item = Item{};
-            }
-
-            playSound("click");
-            anySelected = true;
-            return;
-         }
+   for (int i = 0; i < amount; ++i) {
+      if (!CheckCollisionPointRec(mousePos, R4(gridPosition(grid, columns, rows, i % inventoryWidth, i / inventoryWidth) - slotSize / 2.0f, slotSize))) {
+         continue;
       }
-   }
+      Item &item = items[i];
 
-   // Handle trash frame
-   if (open) {
-      Vector2 trashPosition = getFramePosition(inventoryWidth - 1, inventoryHeight, false);
-      Vector2 trashSize = getFrameSize(false);
-
-      if (!mouseOnFrame(trashPosition, trashSize)) {
-         handleDiscarding();
-         return;
-      }
       setMouseOnUI(true);
       bool mousePressed = isMousePressedUI(MOUSE_BUTTON_LEFT);
+      bool shouldResetClick = true;
+      bool isTrash = (i == trashSlot);
+      bool isValid = (open && item.id != 0);
 
-      // Handle shift-clicking
-      if (IsKeyDown(KEY_LEFT_SHIFT) && mousePressed && trashedItem.id != 0) {
-         if (placeItem(trashedItem)) {
-            trashedItem = Item{};
-         }
-         playSound("click");
-         return;
+      // select frames while inventory is closed
+      if (mousePressed && i < inventoryWidth) {
+         if (!open) playSound("click");
+         selected = i;
+         shouldResetClick = false;
       }
 
-      // Trash the item
-      if (mousePressed && anySelected) {
-         if (selectedItem.item.favorite) {
-            discardItem();
-            return;
-         }
-
-         if (selectedItem.fullSelect) {
-            *selectedItem.address = Item{};
-         }
-
+      // favoriting
+      if (mousePressed && (IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT)) && isValid && !isTrash) {
+         playSound("click");
+         item.favorite = !item.favorite;
+      }
+      // quick-trashing
+      else if (mousePressed && (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && isValid && !isTrash && !item.favorite) {
          playSound("trash");
-         trashedItem = selectedItem.item;
-         selectedItem.reset();
-         anySelected = false;
-         return;
+         items[trashSlot] = item;
+         item = {};
       }
-
-      // Un-trash the item
-      if (mousePressed && !anySelected && trashedItem.id != 0) {
+      // shift-clicking from trash
+      else if (mousePressed && (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) && open && isTrash) {
+         placeItem(item);
          playSound("click");
-         anySelected = true;
-         selectedItem = {trashedItem, &trashedItem, true, true};
-         return;
       }
-
-      resetMousePress(MOUSE_BUTTON_LEFT);
-      if (trashedItem.id != 0 && isMousePressedUI(MOUSE_BUTTON_RIGHT)) {
-         if (!anySelected) {
-            selectedItem = {trashedItem, &trashedItem, false, false};
-            selectedItem.item.count = 1;
-         } else if (trashedItem.id != selectedItem.item.id || getItemStackSize(selectedItem.item) <= selectedItem.item.count) {
-            return;
-         } else {
-            selectedItem.item.favorite = (selectedItem.item.favorite || trashedItem.favorite);
-            selectedItem.item.count += 1;
+      // swap/discard items
+      else if (mousePressed && open && selection.selected) {
+         playSound(i == trashSlot ? "trash" : "click");
+         if (i == selection.lastSelection) {
+            discardSelection(droppedItems, dropX, dropY);
+            break;
          }
 
-         trashedItem.count -= 1;
-         if (trashedItem.count <= 0) {
-            trashedItem = Item{};
+         if (item.id == 0) {
+            item = selection.item;
+            selection = {};
          }
-
-         playSound("click");
-         anySelected = true;
-         return;
-      }
-   }
-
-   // Discard the first row of items only if a hotbar item
-   // has been selected
-   if (!open && anySelected && 10 > (reinterpret_cast<unsigned long long>(selectedItem.address) - reinterpret_cast<unsigned long long>(items)) / sizeof(Item)) {
-      discardItem();
-   }
-}
-
-// Placement functions
-
-void Inventory::tryToPlaceItemOrDropAtCoordinates(Item &item, int x, int y) {
-   if (!placeItem(item)) {
-      DroppedItem droppedItem {item, x, y};
-      droppedItems.push_back(droppedItem);
-   }
-}
-
-bool Inventory::canPlaceBlock() {
-   const Item &selected = getSelected();
-   return selected.type == ItemType::block && selected.count > 0 && selected.id != 0;
-}
-
-void Inventory::placeBlock(int x, int y, bool playerFacingLeft) {
-   Item &item = (anySelected ? selectedItem.item : items[selectedY][selectedX]);
-
-   // if (item.isFurniture) {
-   //    Furniture furniture = getFurniture(x, y, map, getFurnitureType(item.id), playerFacingLeft);
-   //    if (furniture.type == FurnitureType::none) {
-   //       return;
-   //    }
-   //    map.addFurniture(furniture);
-   //    player.placedBlock = true;
-   // } else {
-   //    if (!((item.isWall && (map.walls[y][x].type & BlockType::empty)) || (!item.isWall && (map.blocks[y][x].type & BlockType::empty) && !(map.blocks[y][x].type & BlockType::furniture)))) {
-   //       return;
-   //    }
-   //    map.setBlock(x, y, item.id, item.isWall);
-   //    player.placedBlock = true;
-   // }
-
-   item.count -= 1;
-   if (anySelected && selectedItem.fullSelect) {
-      selectedItem.address->count -= 1;
-   }
-
-   if (item.count <= 0) {
-      if (anySelected) {
-         if (selectedItem.fullSelect) {
-            *selectedItem.address = Item{};
-         }
-         selectedItem.reset();
-         anySelected = false;
-      } else {
-         item = Item{};
-      }
-   }
-}
-
-void Inventory::selectItem(int x, int y) {
-   unsigned short id = 0;
-   bool furniture = false;
-   bool wall = false;
-
-   // if (map.blocks[y][x].type & BlockType::furniture) {
-   //    id = map.getFurnitureAtPosition(x, y).id;
-   //    furniture = true;
-   // } else if (!map.isEmpty(x, y)) {
-   //    id = map.blocks[y][x].id;
-   // } else if (!(map.walls[y][x].type & BlockType::empty)) {
-   //    id = map.walls[y][x].id;
-   //    wall = true;
-   // } else {
-   //    // Do not pick any elements
-   //    return;
-   // }
-
-   for (int y = 0; y < inventoryHeight; ++y) {
-      for (int x = 0; x < inventoryWidth; ++x) {
-         Item &item = items[y][x];
-
-         if (item.isFurniture == furniture && item.isWall == wall && item.id == id) {
-            if (y == 0) {
-               selectedX = x;
-               selectedY = 0;
-            } else {
-               std::swap(item, items[selectedY][selectedX]);
+         else if (item.id == selection.item.id) {
+            addItemCount(item, selection.item);
+            if (selection.item.count <= 0) {
+               selection = {};
             }
-            return;
          }
+         else if (i == trashSlot) {
+            items[trashSlot] = selection.item;
+            selection = {};
+         }
+         else if (items[selection.lastSelection].id == 0) {
+            items[selection.lastSelection] = item;
+            items[i] = selection.item;
+            selection = {};
+         }
+      }
+      // handle selection
+      else if (mousePressed && !selection.selected && isValid) {
+         playSound("click");
+         selection.lastSelection = i;
+         selection.selected = true;
+         selection.item = item;
+         item = {};
+      }
+      // handle right-click picking
+      else if (isValid && isMousePressedUI(MOUSE_BUTTON_RIGHT)) {
+         int amount = (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT) ? std::ceil(item.count / 2.0f) : 1);
+         if (!selection.selected) {
+            selection.lastSelection = i;
+            selection.selected = true;
+            selection.item = {amount, item.id, item.favorite};
+
+            item.count -= amount;
+            if (item.count <= 0) item = {};
+         }
+         else if (item.id == selection.item.id && getItemData(selection.item.id).stackSize > selection.item.count) {
+            int free = std::min(amount, getItemData(selection.item.id).stackSize - selection.item.count);
+            selection.item.count += free;
+
+            item.count -= free;
+            if (item.count <= 0) item = {};
+         }
+         playSound("click");
+      }
+
+      if (shouldResetClick) {
+         resetMousePress(MOUSE_BUTTON_LEFT);
+      }
+   }
+
+   if (!open && selection.selected && selection.lastSelection < inventoryWidth) {
+      discardSelection(droppedItems, dropX, dropY);
+   }
+
+   // Pressed outside of the inventory
+   if (selection.selected && open && isMousePressedOutsideUI(MOUSE_BUTTON_LEFT)) {
+      playSound("click");
+
+      if (!selection.item.favorite) {
+         dropItem(droppedItems, selection.item, dropX, dropY);
+         selection = {};
+         return;
       }
    }
 }
-
-const Item &Inventory::getSelected() const {
-   return anySelected ? selectedItem.item : items[selectedY][selectedX];
-}
-
-// Helper functions
 
 void Inventory::toggleInventoryOpen() {
    if (isKeyPressed(KEY_E)) {
@@ -389,341 +171,157 @@ void Inventory::toggleInventoryOpen() {
    }
 }
 
-void Inventory::switchOnKeyPress(int key, int hotbarX) {
+void Inventory::switchOnKeyPress(int key, int hotbarX, std::vector<DroppedItem> &droppedItems, int dropX, int dropY) {
    if (isKeyPressed(key)) {
-      if (!open && anySelected && selectedItem.address != &items[selectedY][selectedX]) {
-         discardItem();
+      if (!open && selection.selected && selection.lastSelection != selected) {
+         discardSelection(droppedItems, dropX, dropY);
       }
-      selectedX = hotbarX;
-      selectedY = 0;
+      selected = hotbarX;
    }
 }
 
-void Inventory::switchOnMouseWheel() {
+void Inventory::switchOnMouseWheel(std::vector<DroppedItem> &droppedItems, int dropX, int dropY) {
    float wheel = GetMouseWheelMove();
-   if (!open && anySelected && selectedItem.address != &items[selectedY][selectedX]) {
+   if (!open && selection.selected && selection.lastSelection != selected) {
       if (wheel >= 1.0f) {
-         selectedX = 0;
-         discardItem();
+         selected = 0;
+         discardSelection(droppedItems, dropX, dropY);
       } else if (wheel <= -1.0f) {
-         selectedX = inventoryWidth - 1;
-         discardItem();
-      }
-      return;
-   }
-
-   if (wheel >= 1.0f) {
-      selectedX = (selectedX + 1) % inventoryWidth;
-   } else if (wheel <= -1.0f) {
-      selectedX -= 1;
-      if (selectedX < 0) selectedX = inventoryWidth - 1;
-   }
-}
-
-void Inventory::handleDiscarding() {
-   // Pressed outside of the inventory
-   if (anySelected && open && isMousePressedOutsideUI(MOUSE_BUTTON_LEFT)) {
-      playSound("click");
-
-      if (!selectedItem.item.favorite) {
-         dropSelectedItem();
-         return;
+         selected = inventoryWidth - 1;
+         discardSelection(droppedItems, dropX, dropY);
       }
    }
-
-   if (anySelected && !open) {
-      discardItem();
-   }
-}
-
-void Inventory::discardItem() {
-   if (selectedItem.address == &trashedItem) {
-      if (selectedItem.fullSelect || trashedItem.id == 0) {
-         trashedItem = selectedItem.item;
-      } else if (addItemCount(trashedItem, selectedItem.item) && !placeItem(selectedItem.item)) {
-         dropSelectedItem();
-         return;
+   else {
+      if (wheel >= 1.0f) {
+         selected = (selected + 1) % inventoryWidth;
+      } else if (wheel <= -1.0f) {
+         selected = (selected <= 0 ? inventoryWidth -1 : selected - 1);
       }
-   } else if (!selectedItem.fullSelect && !placeItem(selectedItem.item)) {
-      dropSelectedItem();
-      return;
-   }
-
-   anySelected = false;
-   selectedItem.reset();
-}
-
-// Frame functions
-
-Vector2 Inventory::getFramePosition(float x, float y, bool isSelected) const {
-   Vector2 position = Vector2Add(Vector2Multiply(applyCubicResponsiveness(itemframePadding), {x, y}), applyCubicResponsiveness(itemframeTopLeft));
-
-   if (isSelected) {
-      return Vector2Subtract(position, applyCubicResponsiveness(selectedItemFrameOffset));
-   }
-   return position;
-}
-
-Vector2 Inventory::getFrameSize(bool isSelected) const {
-   return applyCubicResponsiveness(isSelected ? selectedItemFrameSize : itemframeSize);
-}
-
-bool Inventory::mouseOnFrame(const Vector2 &position, const Vector2 &size) {
-   Rectangle bounds {position.x, position.y, size.x, size.y};
-   return CheckCollisionPointRec(GetMousePosition(), bounds);
-}
-
-const Texture& Inventory::getFrameTexture(bool isSelected, bool isFavorite) const {
-   if (isSelected && isFavorite) {
-      return getTexture("small_frame_favorite_selected");
-   } else if (isSelected) {
-      return getTexture("small_frame_selected");
-   } else if (isFavorite) {
-      return getTexture("small_frame_favorite");
-   } else {
-      return getTexture("small_frame");
    }
 }
 
-const Texture& Inventory::getTrashTexture(bool trashOccupied) const {
-   return getTexture(trashOccupied ? "small_frame" : "small_frame_trash");
-}
+// item functions
 
-// Item functions
+void Inventory::discardSelection(std::vector<DroppedItem> &droppedItems, int x, int y) {
+   if (!selection.selected) return;
+   Item &target = items[selection.lastSelection];
 
-void Inventory::dropSelectedItem() {
-   Vector2 playerCenter = player.getCenter();
-   playerCenter.x += (player.flipX ? 3 : -3);
-   playerCenter.x = std::clamp<int>(playerCenter.x, 0, map.sizeX - 1);
-
-   DroppedItem droppedItem (selectedItem.item, playerCenter.x, playerCenter.y);
-   droppedItems.push_back(droppedItem);
-
-   if (selectedItem.fullSelect) {
-      *selectedItem.address = Item{};
+   if (target.id == 0) {
+      target = selection.item;
    }
-   selectedItem.reset();
-   anySelected = false;
+   else if (addItemCount(target, selection.item) > 0) {
+      placeItemOrDrop(droppedItems, selection.item, x, y);
+   }
+   selection = {};
 }
 
-bool Inventory::placeItem(Item &item) {
-   Item *firstAvailableSpot = nullptr;
-   
-   // Check for equal items
-   for (int y = 0; y < inventoryHeight; ++y) {
-      for (int x = 0; x < inventoryWidth; ++x) {
-         Item &it = items[y][x];
+void Inventory::placeItemOrDrop(std::vector<DroppedItem> &droppedItems, Item &item, int x, int y) {
+   if (!placeItem(item)) {
+      dropItem(droppedItems, item, x, y);
+   }
+}
 
-         if (it.id == item.id && it.type == item.type && it.isWall == item.isWall && it.isFurniture == item.isFurniture && addItemCount(it, item) <= 0) {
-            return true;
-         } else if (!firstAvailableSpot && it.id == 0) {
-            firstAvailableSpot = &it;
-         }
+void Inventory::dropItem(std::vector<DroppedItem> &droppedItems, Item &item, int x, int y) {
+   droppedItems.emplace_back(item, x, y);
+   item = {};
+}
+
+bool Inventory::placeItem(Item &item2) {
+   int firstAvailableSpot = inventorySlots;
+   for (int i = 0; i < inventorySlots - 1; ++i) {
+      Item &item1 = items[i];
+
+      if (item1.id == item2.id && addItemCount(item1, item2) <= 0) {
+         return true;
+      }
+      else if (firstAvailableSpot == inventorySlots && item1.id == 0) {
+         firstAvailableSpot = i;
       }
    }
 
-   // Place at the first available spot
-   if (firstAvailableSpot) {
-      *firstAvailableSpot = item;
+   if (firstAvailableSpot != inventorySlots) {
+      items[firstAvailableSpot] = item2;
+      item2 = {};
       return true;
    }
    return false;
 }
 
-int Inventory::getItemStackSize(const Item &item) {
-   if (item.type == ItemType::item || item.type == ItemType::block) {
-      return itemStackSize;
-   } else if (item.type == ItemType::equipment) {
-      return equipmentStackSize;
-   } else {
-      return potionStackSize;
-   }
-}
-
 int Inventory::addItemCount(Item &item1, Item &item2) {
-   int maximum = getItemStackSize(item1);
+   int stackSize = getItemData(item1.id).stackSize;
    int total = item1.count + item2.count;
+   int leftover = total - stackSize;
    int last = item1.count;
 
-   item1.count = std::min(total, maximum);
-   int leftover = total - maximum;
-
+   item1.count = std::min(total, stackSize);
    item2.count -= item1.count - last;
+
    if (item2.count <= 0) {
-      item2 = Item{};
+      item2 = {};
    }
    return leftover;
 }
 
-int Inventory::getBlockBreakingLevel() {
-   // if (anySelected && selectedItem.item.type == ItemType::equipment && selectedItem.item.id <= toolCount) {
-   //    return toolInfo.at(selectedItem.item.id - 1).breakLevel;
-   // } else if (items[selectedY][selectedX].type == ItemType::equipment && items[selectedY][selectedX].id <= toolCount) {
-   //    return toolInfo.at(items[selectedY][selectedX].id - 1).breakLevel;
-   // }
-   return 0;
+// frame functions
+
+Texture Inventory::getFrameTexture(int i) const {
+   if (i == trashSlot) {
+      return getTexture(items[trashSlot].id == 0 ? "small_frame_trash" : "small_frame");
+   }
+   return getTexture(i == selected && items[i].favorite ? "small_frame_favorite_selected" : (i == selected ? "small_frame_selected" : (items[i].favorite ? "small_frame_favorite" : "small_frame")));
 }
 
-float Inventory::getBlockBreakingMultiplier() {
-   // if (anySelected && selectedItem.item.type == ItemType::equipment && selectedItem.item.id <= toolCount) {
-   //    return toolInfo.at(selectedItem.item.id - 1).breakMultiplier;
-   // } else if (items[selectedY][selectedX].type == ItemType::equipment && items[selectedY][selectedX].id <= toolCount) {
-   //    return toolInfo.at(items[selectedY][selectedX].id - 1).breakMultiplier;
-   // }
-   return 1.0f;
+Color Inventory::getItemColor(Item item) const {
+   return (getItemData(item.id).action == ItemActionType::placeWall && getItemData(item.id).wall != 0 ? wallTint : WHITE);
 }
 
-Texture2D *Inventory::getCurrentToolsTexture() const {
-   // if (anySelected && selectedItem.item.type == ItemType::equipment && selectedItem.item.id <= toolCount) {
-   //    return &getTexture(toolInfo.at(selectedItem.item.id - 1).texture);
-   // } else if (items[selectedY][selectedX].type == ItemType::equipment && items[selectedY][selectedX].id <= toolCount) {
-   //    return &getTexture(toolInfo.at(items[selectedY][selectedX].id - 1).texture);
-   // }
-   return nullptr;
-}
+// render
 
-// Render functions
+void Inventory::renderFrame(Font font, float fontSize, Vector2 position, Vector2 size, Item item, int i, bool externalSlot) {
+   drawTextureCentered(getFrameTexture(i), position, size);
 
-void Inventory::render() const {
-   bool externalSlot = !open && anySelected && selectedItem.address != &items[selectedY][selectedX];
-
-   for (int y = 0; y < (open ? inventoryHeight : 1); ++y) {
-      for (int x = 0; x < inventoryWidth; ++x) {
-         const Item &item = items[y][x];
-         bool isSelected = (x == selectedX && y == selectedY && !externalSlot);
-         bool isFavorite = item.favorite;
-
-         Vector2 position = getFramePosition(x, y, isSelected);
-         Vector2 size = getFrameSize(isSelected);
-
-         drawTexture(getFrameTexture(isSelected, isFavorite), position, size);
-         if (item.id != 0 && (!anySelected || !selectedItem.fullSelect || selectedItem.address != &item)) {
-            drawItem(item.type, item.id, item.count, item.isFurniture, item.isWall, Vector2Add(position, size / 2), applyCubicResponsiveness(itemframeItemSize), false);
-         }
-
-         if (y == 0) {
-            Vector2 textPosition = Vector2Add(position, applyCubicResponsiveness(itemframeIndexOffset));
-            drawTextCentered("andy", textPosition, std::to_string(x + 1).c_str(), getFontSize(25));
-         }
-      }
+   if (item.id != 0) {
+      drawTextureCentered(getItemTexture(item.id), position, getItemSize(item.id, size * itemScale), getItemColor(item));
    }
 
-   // Render external slot
+   if (item.id != 0 && item.count > 1) {
+      Vector2 textPosition = {position.x, position.y + size.y / 3.0f};
+      drawTextCentered(font, textPosition, TextFormat("%d", item.count), fontSize);
+   }
+
+   if (i < inventoryWidth || externalSlot) {
+      Vector2 textPosition = position - size / 3.0f;
+      drawTextCentered(font, textPosition, (i == trashSlot ? "BIN" : TextFormat("%d", i)), fontSize);
+   }
+}
+
+void Inventory::render() {
+   Rectangle grid = mapCubicArea(inventoryGridPosition, inventoryGridSize);
+   int columns = inventoryWidth;
+   int rows = inventoryHeight + 1;
+
+   Font font = getFont("andy");
+   float fontSize = getFontSizeScaled(itemFontSize);
+
+   Vector2 size = getGridCellSize(grid, columns, rows) * slotScale;
+   int amount = (open ? inventorySlots : inventoryWidth);
+
+   for (int i = 0; i < amount; ++i) {
+      Vector2 position = gridPosition(grid, columns, rows, i % inventoryWidth, i / inventoryWidth);
+      renderFrame(font, fontSize, position, size, items[i], i, false);
+   }
+
+   bool externalSlot = !open && selection.selected && selection.lastSelection >= inventoryWidth;
    if (externalSlot) {
-      Vector2 position = getFramePosition(10, 0, true);
-      Vector2 size = getFrameSize(true);
-      drawTexture(getFrameTexture(true, selectedItem.address->favorite),position, size);
-      drawItem(selectedItem.item.type, selectedItem.item.id, selectedItem.item.count, selectedItem.item.isFurniture, selectedItem.item.isWall, Vector2Add(position, size / 2), applyCubicResponsiveness(itemframeItemSize), true);
+      Vector2 position = gridPosition(grid, columns, rows, inventoryWidth, 0);
+      renderFrame(font, fontSize, position, size, selection.item, selection.lastSelection, true);
+   }
 
-      Vector2 textPosition = Vector2Add(position, applyCubicResponsiveness(itemframeIndexOffset));
-      if (selectedItem.fromTrash) {
-         drawTextCentered("andy", textPosition, "BIN", getFontSize(25));
-      } else {
-         // Pointer arithmetic
-         int index = (reinterpret_cast<unsigned long long>(selectedItem.address) - reinterpret_cast<unsigned long long>(items)) / sizeof(Item);
-         drawTextCentered("andy", textPosition, std::to_string(index + 1).c_str(), getFontSize(25));
+   if (selection.selected && !externalSlot) {
+      drawTextureCentered(getItemTexture(selection.item.id), GetMousePosition(), getItemSize(selection.item.id, size * itemScale), getItemColor(selection.item));
+      if (selection.item.count > 1) {
+         Vector2 textPosition = V2(GetMouseX(), GetMouseY() + size.y / 3.0f);
+         drawTextCentered(font, textPosition, TextFormat("%d", selection.item.count), fontSize);
       }
-   }
-
-   // Render trash frame if inventory is open
-   if (open) {
-      bool trashOccupied = (trashedItem.id != 0 && (!anySelected || !selectedItem.fullSelect || selectedItem.address != &trashedItem));
-      Vector2 position = getFramePosition(inventoryWidth - 1, inventoryHeight, false);
-      Vector2 size = getFrameSize(false);
-
-      drawTexture(getTrashTexture(trashOccupied), position, size);
-      if (trashOccupied) {
-         drawItem(trashedItem.type, trashedItem.id, trashedItem.count, trashedItem.isFurniture, trashedItem.isWall, Vector2Add(position, size / 2), applyCubicResponsiveness(itemframeItemSize), false);
-      }
-   }
-
-   // Render selected item
-   if (anySelected && !externalSlot) {
-      drawItem(selectedItem.item.type, selectedItem.item.id, selectedItem.item.count, selectedItem.item.isFurniture, selectedItem.item.isWall, GetMousePosition(), applyCubicResponsiveness(itemframeItemSize), true);
-   }
-}
-
-// Get counts
-
-// size_t getItemCount() {
-//    return itemCount;
-// }
-
-// size_t getToolCount() {
-//    return toolCount;
-// }
-
-// size_t getPotionCount() {
-//    return potionCount;
-// }
-
-// bool isItemNameValid(const std::string &name) {
-//    return itemNames.map.count(name);
-// }
-
-// bool isEquipmentNameValid(const std::string &name) {
-//    return equipmentNames.map.count(name);
-// }
-
-// bool isPotionNameValid(const std::string &name) {
-//    return potionNames.map.count(name);
-// }
-
-// unsigned short getItemIdFromName(const std::string &name) {
-//    return itemNames.map.at(name);
-// }
-
-// unsigned short getEquipmentIdFromName(const std::string &name) {
-//    return equipmentNames.map.at(name);
-// }
-
-// unsigned short getPotionIdFromName(const std::string &name) {
-//    return potionNames.map.at(name);
-// }
-
-// Draw item
-
-void drawItem(ItemType type, unsigned short id, unsigned short count, bool isFurniture, bool isWall, const Vector2 &position, const Vector2 &size, bool isSelected, bool isworldspace) {
-   // if (type == ItemType::item && id <= itemCount) {
-   //    Texture2D &texture = getTexture(itemTextures.at(id - 1));
-   //    drawTexture(texture, position, size);
-
-   //    // fuck dry
-   //    if (count != 1) {
-   //       Color textColor = (isSelected ? Fade(WHITE, 0.75f) : WHITE);
-   //       Vector2 textPosition = Vector2Subtract(position, (isworldspace ? Vector2{0.0f, -0.7f} : applyCubicResponsiveness(itemFrameCountOffset)));
-   //       drawText(textPosition, std::to_string(count).c_str(), (isworldspace ? 0.75f : getFontSize(25.0f)), textColor, (isworldspace ? 0.1f : getFontSize(1.0f)));
-   //    }
-   //    return;
-   // }
-   
-   // if (type == ItemType::equipment && id <= toolCount) {
-   //    Texture2D &texture = getTexture(toolInfo[id - 1].texture);
-   //    drawTexture(texture, position, size);
-   //    return;
-   // }
-   
-   Color drawColor = Fade((isWall ? wallTint : WHITE), (isSelected ? 0.75f : 1.0f));
-
-   if (!isFurniture) {
-      Texture2D &texture = getTexture(getBlockNameFromId(id));
-      DrawTexturePro(texture, {0, 0, 8, 8}, {position.x, position.y, size.x, size.y}, size / 2, 0, drawColor);
-   // } else if (isFurniture) {
-   //    FurnitureTexture texture = getFurnitureIcon(id);
-   //    Vector2 newPos = position;//Vector2Add(position, Vector2Scale(itemframeSize, 0.5f));
-   //    Vector2 fSize = size;
-
-   //    if (texture.sizeX < texture.sizeY) {
-   //       fSize.x *= texture.sizeX / texture.sizeY;
-   //    } else if (texture.sizeX > texture.sizeY) {
-   //       fSize.y *= texture.sizeY / texture.sizeX;
-   //    }
-   //    DrawTexturePro(texture.texture, {0, 0, (float)texture.sizeX, (float)texture.sizeY}, {newPos.x, newPos.y, fSize.x, fSize.y}, Vector2Scale(fSize, 0.5f), 0, drawColor);
-   }
-
-   if (count != 1) {
-      Color textColor = (isSelected ? Fade(WHITE, 0.75f) : WHITE);
-      Vector2 textPosition = Vector2Subtract(position, (isworldspace ? Vector2{0.0f, -0.7f} : applyCubicResponsiveness(itemFrameCountOffset)));
-      drawTextCentered("andy", textPosition, std::to_string(count).c_str(), (isworldspace ? 0.75f : getFontSize(25.0f)), textColor);
    }
 }

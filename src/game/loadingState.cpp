@@ -18,7 +18,7 @@ constexpr float loadingTextFontSize = 80.0f;
 LoadingState::LoadingState() {
    loadFont("andy", "assets/fonts/andy.ttf");
    loadTexture("loading", "assets/sprites/ui/loading.png");
-   splashText = getRandomLineFromFile("assets/splash.txt");
+   splashText = getRandomLineFromFile("assets/config/splash.txt");
    wrapInPlace(splashText, getFont("andy"), mapRatioToX(0.9), getFontSizeScaled(splashFontSize));
 }
 

@@ -1,12 +1,12 @@
 #pragma once
-#include "types.hpp"
+#include "config.hpp"
 #include <raylib.h>
 #include <string>
 #include <vector>
 
 // Constants
 
-constexpr inline float previewAlpha = 0.75f;
+constexpr inline float furniturePreviewAlpha = 0.75f;
 
 // Furniture data
 

@@ -9,7 +9,7 @@
 
 // Please increment after any breaking changes to warn players
 // about corrupted worlds
-constexpr int fileVersion = 10;
+constexpr int fileVersion = 11;
 
 // World saving functions
 // Save and load functions must follow the same data arrangement
@@ -37,20 +37,16 @@ void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, 
 
    float timeOfDay = (inventory ? getTimeOfDay() : 0);
    int moonPhase = (inventory ? getMoonPhase() : 0);
-   int selectedX = (inventory ? inventory->selectedX : 0);
-   int selectedY = (inventory ? inventory->selectedY : 0);
 
    file.write(reinterpret_cast<const char*>(&timeOfDay), sizeof(timeOfDay));
    file.write(reinterpret_cast<const char*>(&moonPhase), sizeof(moonPhase));
-   file.write(reinterpret_cast<const char*>(&selectedX), sizeof(selectedX));
-   file.write(reinterpret_cast<const char*>(&selectedY), sizeof(selectedY));
 
    // Write inventory
    if (inventory) {
-      file.write(reinterpret_cast<const char*>(inventory->items[0]), inventoryHeight * inventoryWidth * sizeof(Item));
+      file.write(reinterpret_cast<const char*>(inventory->items), inventorySlots * sizeof(Item));
    } else {
       Item item;
-      for (int i = 0; i < inventoryHeight * inventoryWidth; ++i) {
+      for (int i = 0; i < inventorySlots; ++i) {
          file.write(reinterpret_cast<const char*>(&item), sizeof(Item));
       }
    }
@@ -143,13 +139,10 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
    file.read(reinterpret_cast<char*>(&moonPhase), sizeof(moonPhase));
    setTimeOfDay(timeofDay);
    setMoonPhase(moonPhase);
-
-   file.read(reinterpret_cast<char*>(&inventory.selectedX), sizeof(inventory.selectedX));
-   file.read(reinterpret_cast<char*>(&inventory.selectedY), sizeof(inventory.selectedY));
    map.init();
 
    // Read inventory
-   file.read(reinterpret_cast<char*>(&inventory.items[0]), inventoryHeight * inventoryWidth * sizeof(Item));
+   file.read(reinterpret_cast<char*>(&inventory.items), inventorySlots * sizeof(Item));
 
    // Read console
    size_t size = 0;

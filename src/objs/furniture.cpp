@@ -6,17 +6,15 @@
 #include <raymath.h>
 #include <unordered_map>
 
-// constants
+// furniture info
 
 constexpr int treeWidth = 3;
-constexpr int interactionRange = 8.0f;
+constexpr int furnitureInteractionRange = 8.0f;
 
 static const std::unordered_map<std::string, FurnitureType> furnitureTypeStrings {{
    {"none", FurnitureType::none}, {"tree", FurnitureType::tree}, {"sapling", FurnitureType::sapling}, {"table", FurnitureType::table},
    {"chair", FurnitureType::chair}, {"door", FurnitureType::door},
 }};
-
-// furniture info
 
 static size_t furnitureCount = 1; // 0 - nil
 static std::vector<std::string> furnitureNames {""};
@@ -222,7 +220,7 @@ void Furniture::update(Map &map, Player &player, const Vector2 &mousePos, float 
       }
    } break;
    case FurnitureType::door: {
-      Rectangle doorRect = {(float)x, (float)y, (float)width, (float)height};
+      Rectangle doorRect = R4(x, y, width, height);
       bool previousValue = ivalue1;
       bool previousValue2 = ivalue2;
 
@@ -233,7 +231,7 @@ void Furniture::update(Map &map, Player &player, const Vector2 &mousePos, float 
          ivalue1 = true; // Open the door
       }
 
-      if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionPointRec(mousePos, doorRect) && Vector2Distance({(float)x, (float)y}, player.getCenter()) < interactionRange) {
+      if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionPointRec(mousePos, doorRect) && Vector2Distance({(float)x, (float)y}, player.getCenter()) < furnitureInteractionRange) {
          player.placedBlock = true;
          ivalue1 = !ivalue1;
          ivalue2 = false;
@@ -272,7 +270,7 @@ void Furniture::preview(const Map &map) const {
          if (piece.nil) {
             continue;
          }
-         Color color = Fade((map.isNotSolid(dx, dy) && valid ? WHITE : RED), previewAlpha);
+         Color color = Fade((map.isNotSolid(dx, dy) && valid ? WHITE : RED), furniturePreviewAlpha);
          DrawTexturePro(data.texture, R4(piece.tx, piece.ty, data.textureSize, data.textureSize), R4(dx, dy, 1, 1), {0, 0}, 0, color);
       }
    }

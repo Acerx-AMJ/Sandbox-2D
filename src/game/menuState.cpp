@@ -409,7 +409,7 @@ void MenuState::updateLevelCreation() {
          }
       }
 
-      generationSplash = getRandomLineFromFile("assets/splash.txt");
+      generationSplash = getRandomLineFromFile("assets/config/splash.txt");
       wrapInPlace(generationSplash, getFont("andy"), GetScreenWidth() - 50.0f, 40.0f);
 
       worldName.typing = false;
@@ -666,8 +666,8 @@ void MenuState::selectButton(Button &button) {
 }
 
 std::string MenuState::generateRandomWorldName() const {
-   const std::string adjective = getRandomLineFromFile("assets/adjectives.txt");
-   const std::string noun      = getRandomLineFromFile("assets/nouns.txt");
+   const std::string adjective = getRandomLineFromFile("assets/config/adjectives.txt");
+   const std::string noun      = getRandomLineFromFile("assets/config/nouns.txt");
    return adjective + " " + noun;
 }
 
