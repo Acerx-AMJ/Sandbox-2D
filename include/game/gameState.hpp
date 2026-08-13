@@ -57,9 +57,8 @@ struct GameState: public State {
    Phase phaseBeforePausing = Phase::playing;
 
    Furniture furniturePreview;
-   FurnitureType lastFurnitureType = FurnitureType::none;
-   BlockType oldBlockBelowPreview = BlockType::empty;
-   bool canDrawPreview = false;
+   furnitureid_t lastFurnitureId = 0;
+   blockid_t oldBlockBelowPreview = 0;
    bool flippedPreviewX = false;
 
    std::vector<int> liquidCounters;

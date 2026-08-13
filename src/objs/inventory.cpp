@@ -289,16 +289,39 @@ void Inventory::pickItem(blockid_t blockId, blockid_t wallId, furnitureid_t furn
    }
 }
 
+bool Inventory::anyItemSelected() {
+   return selection.selected || items[selected].id != 0;
+}
+
+ItemData &Inventory::getSelectedItem() {
+   return getItemData(selection.selected ? selection.item.id : items[selected].id);
+}
+
+void Inventory::useSelectedItem() {
+   if (selection.selected) {
+      selection.item.count -= 1;
+      if (selection.item.count <= 0) {
+         selection = {};
+      }
+   }
+   else {
+      items[selected].count -= 1;
+      if (items[selected].count <= 0) {
+         items[selected] = {};
+      }
+   }
+}
+
 // frame functions
 
-Texture Inventory::getFrameTexture(int i) const {
+Texture Inventory::getFrameTexture(int i) {
    if (i == trashSlot) {
       return getTexture(items[trashSlot].id == 0 ? "small_frame_trash" : "small_frame");
    }
    return getTexture(i == selected && items[i].favorite ? "small_frame_favorite_selected" : (i == selected ? "small_frame_selected" : (items[i].favorite ? "small_frame_favorite" : "small_frame")));
 }
 
-Color Inventory::getItemColor(Item item) const {
+Color Inventory::getItemColor(Item item) {
    return (getItemData(item.id).action == ItemActionType::placeWall && getItemData(item.id).wall != 0 ? wallTint : WHITE);
 }
 

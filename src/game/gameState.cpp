@@ -9,6 +9,7 @@
 #include "SRU/assets.hpp"
 #include "SRU/random.hpp"
 #include "SRU/render.hpp"
+#include "SRU/util.hpp"
 #include <raymath.h>
 #include <algorithm>
 #include <cmath>
@@ -100,19 +101,6 @@ void GameState::fixedUpdate() {
       player.updatePlayer(map);
    }
 
-   // for (DamageIndicator &indicator: map.damageIndicators) {
-   //    indicator.velocity.y += 0.25f * fixedUpdateDT;
-   //    indicator.velocity.x *= 0.9f; // Drag
-
-   //    indicator.position.x += indicator.velocity.x;
-   //    indicator.position.y += indicator.velocity.y;
-   //    indicator.lifetime += fixedUpdateDT;
-   // }
-
-   // map.damageIndicators.erase(std::remove_if(map.damageIndicators.begin(), map.damageIndicators.end(), [](DamageIndicator &i) -> bool {
-   //    return i.lifetime >= damageIndicatorLifetime || i.damage <= 0.0f;
-   // }), map.damageIndicators.end());   
-
    // Update physics
    physicsCounter = (physicsCounter + 1) % physicsTicks;
    if (physicsCounter != 0) {
@@ -194,7 +182,6 @@ void GameState::updatePlaying() {
    if (IsKeyDown(KEY_LEFT_CONTROL) && isKeyPressed(KEY_TAB)) {
       console.input.typing = !console.input.typing;
    }
-
    console.update(dt, map, player, inventory);
 
    if (console.input.typing && IsKeyPressed(KEY_ESCAPE)) {
@@ -205,7 +192,6 @@ void GameState::updatePlaying() {
 
    inventory.update(!console.input.typing);
    pushPendingDroppedItems();
-
    calculateCameraBounds();
 
    if (phase != Phase::playing) {
@@ -227,14 +213,9 @@ void GameState::updatePlaying() {
    Vector2 playerCenter = player.getCenter();
    int mouseX = mousePos.x;
    int mouseY = mousePos.y;
+   player.breakingBlock = false;
 
    if (map.isPositionValid(mouseX, mouseY) && Vector2DistanceSqr(mousePos, playerCenter) <= maxToolRange) {
-      // canDrawPreview = (inventory.canPlaceBlock() && (inventory.getSelected().isFurniture || !CheckCollisionRecs(player.getBounds(), {(float)mouseX, (float)mouseY, 1, 1})));
-      // player.breakingBlock = (isMouseDownOutsideUI(MOUSE_BUTTON_LEFT) && (!map.isEmpty(mouseX, mouseY) || !map.isWall(mouseX, mouseY, BlockType::empty)));
-
-      // if (isMouseDownOutsideUI(MOUSE_BUTTON_RIGHT) && inventory.canPlaceBlock()) {
-      //    inventory.placeBlock(mouseX, mouseY, player.flipX);
-      //    canDrawPreview = canDrawPreview && inventory.canPlaceBlock(); // To avoid attempting to draw air on placing last block
       if (isMousePressedOutsideUI(MOUSE_BUTTON_MIDDLE)) {
          const Block &block = map.getBlock(mouseX, mouseY);
          blockid_t blockId = (block.tile == TileType::root) * block.id;
@@ -243,6 +224,33 @@ void GameState::updatePlaying() {
          liquidid_t liquidId = map.isNotSolid(mouseX, mouseY) * map.getLiquidId(mouseX, mouseY);
 
          inventory.pickItem(blockId, wallId, furnitureId, liquidId);
+      }
+      else if (isMouseDownOutsideUI(MOUSE_BUTTON_RIGHT) && inventory.anyItemSelected()) {
+         ItemData &data = inventory.getSelectedItem();
+
+         if (data.action == ItemActionType::placeBlock && map.isNotSolid(mouseX, mouseY)) {
+            map.setBlock(mouseX, mouseY, data.block);
+            inventory.useSelectedItem();
+            player.placedBlock = true;
+         }
+         else if (data.action == ItemActionType::placeWall && map.isWall(mouseX, mouseY, BlockType::empty)) {
+            map.setWall(mouseX, mouseY, data.wall);
+            inventory.useSelectedItem();
+            player.placedBlock = true;
+         }
+         else if (data.action == ItemActionType::placeFurniture) {
+            Furniture furniture = getFurniture(mouseX, mouseY, map, data.furniture, player.flipX);
+            if (furniture.id != 0) {
+               map.addFurniture(furniture);
+               inventory.useSelectedItem();
+               player.placedBlock = true;
+            }
+         }
+         else if (data.action == ItemActionType::placeLiquid && map.isEmpty(mouseX, mouseY)) {
+            map.setLiquid(mouseX, mouseY, data.liquid, maxLiquidLayers);
+            inventory.useSelectedItem();
+            player.placedBlock = true;
+         }
       }
       // else if (player.breakingBlock) {
       //    bool isWall = (map.blocks[mouseY][mouseX].type & BlockType::empty);
@@ -272,9 +280,6 @@ void GameState::updatePlaying() {
       //       player.breakTime = 0;
       //    }
       // }
-   } else {
-      canDrawPreview = false;
-      player.breakingBlock = false;
    }
 
    // Update dropped items
@@ -504,11 +509,7 @@ void GameState::render() {
 
    BeginMode2D(camera);
    map.render(droppedItems, player, accumulator, cameraBounds, camera, inventory);
-
    drawParticleCluster(deathParticles);
-   // for (const DamageIndicator &indicator: map.damageIndicators) {
-   //    drawText(indicator.position, std::to_string(indicator.damage).c_str(), 1.0f, (indicator.critical ? YELLOW : RED), 0.1f);
-   // }
 
    // Render effects
    if (!player.creative && player.hearts != player.maxHearts) {
@@ -522,31 +523,45 @@ void GameState::render() {
       return;
    }
 
-   // // Render block preview
-   // if (canDrawPreview) {
-   //    Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
-   //    int mouseX = mousePos.x;
-   //    int mouseY = mousePos.y;
-      
-   //    const Item &item = inventory.getSelected();
+   // Render block preview
+   if (inventory.anyItemSelected()) {
+      ItemData &data = inventory.getSelectedItem();
+      Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
+      int mouseX = mousePos.x;
+      int mouseY = mousePos.y;
 
-   //    if (item.isFurniture) {
-   //       BlockType below = (map.isPositionValid(mouseX, mouseY + furniturePreview.sizeY) ? map.blocks[mouseY + furniturePreview.sizeY][mouseX].type : BlockType::empty);
+      if (data.action == ItemActionType::placeBlock) {
+         Color tint = (map.isNotSolid(mouseX, mouseY) ? WHITE : RED);
+         drawTexture(getBlockTexture(data.block), V2(mouseX, mouseY), {1.0f, 1.0f}, Fade(tint, furniturePreviewAlpha));
+      }
+      else if (data.action == ItemActionType::placeWall && map.isWall(mouseX, mouseY, BlockType::empty)) {
+         Color tint = (map.isNotSolid(mouseX, mouseY) ? wallTint : MAROON);
+         drawTexture(getBlockTexture(data.wall), V2(mouseX, mouseY), {1.0f, 1.0f}, Fade(tint, furniturePreviewAlpha));
+      }
+      else if (data.action == ItemActionType::placeFurniture) {
+         blockid_t below = (map.isPositionValid(mouseX, mouseY + furniturePreview.height) ? map.getBlock(mouseX, mouseY + furniturePreview.height).id : 0);
+         if (lastFurnitureId != furniturePreview.id || oldBlockBelowPreview != below || flippedPreviewX != player.flipX) {
+            furniturePreview = getFurniture(mouseX, mouseY, map, data.furniture, player.flipX, true);
+         }
+         flippedPreviewX = player.flipX;
+         lastFurnitureId = data.furniture;
+         oldBlockBelowPreview = below;
 
-   //       if (lastFurnitureType != getFurnitureType(item.id) || oldBlockBelowPreview != below || flippedPreviewX != player.flipX) {
-   //          furniturePreview = getFurniture(mouseX, mouseY, map, getFurnitureType(item.id), player.flipX, true);
-   //       }
-   //       flippedPreviewX = player.flipX;
-   //       lastFurnitureType = furniturePreview.type;
-   //       oldBlockBelowPreview = below;
+         furniturePreview.x = mouseX;
+         furniturePreview.y = mouseY;
+         furniturePreview.preview(map);
+      }
+      else if (data.action == ItemActionType::placeLiquid) {
+         Color tint = (map.isEmpty(mouseX, mouseY) ? WHITE : RED);
+         Shader shader = getShader("water_preview");
+         float time = GetTime();
 
-   //       furniturePreview.posX = mouseX;
-   //       furniturePreview.posY = mouseY;
-   //       furniturePreview.preview(map);
-   //    } else {
-   //       DrawTexturePro(getTexture(getBlockNameFromId(item.id)), {0, 0, 8, 8}, {(float)mouseX, (float)mouseY, 1, 1}, {0, 0}, 0, Fade(item.isWall ? wallTint : WHITE, previewAlpha));
-   //    }
-   // }
+         SetShaderValue(shader, GetShaderLocation(shader, "time"), &time, SHADER_UNIFORM_FLOAT);
+         BeginShaderMode(shader);
+         drawTexture(getLiquidData(data.liquid).texture, V2(mouseX, mouseY), {1.0f, 1.0f}, Fade(tint, furniturePreviewAlpha));
+         EndShaderMode();
+      }
+   }
 
    // // Render block breaking preview
    // if (player.breakTime != 0.0f) {

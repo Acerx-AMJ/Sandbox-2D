@@ -354,11 +354,6 @@ void Player::updateCollisions(Map &map) {
 }
 
 void Player::updateAnimation() {
-   if (creative) {
-      frameX = 1;
-      return;
-   }
-
    if (breakingBlock || placedBlock) {
       breakAnimationTimer += fixedUpdateDT;
       if (breakAnimationTimer >= 0.1f) {
@@ -368,6 +363,11 @@ void Player::updateAnimation() {
       }
    } else {
       breakAnimation = 0;
+   }
+
+   if (creative) {
+      frameX = 1;
+      return;
    }
 
    if (!onGround) {

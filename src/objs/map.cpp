@@ -58,6 +58,10 @@ std::string getBlockNameFromId(blockid_t id) {
    return blockNames[id];
 }
 
+Texture getBlockTexture(blockid_t id) {
+   return blockTextures[id];
+}
+
 size_t getBlockCount() {
    return blockCount;
 }
@@ -211,7 +215,7 @@ void Map::setBlock(int x, int y, blockid_t id) {
    block.value2 = 0;
    block.platformOverride = false;
 
-   if (!BlockTypeHas(blockAttributes[id], BlockType::flowable)) {
+   if (!BlockTypeHas(block.type, BlockType::flowable)) {
       liquidHeights[i] = 0;
       liquidTypes[i] = 0;
    }
@@ -311,7 +315,7 @@ bool Map::is(int x, int y, BlockType type) const {
 }
 
 bool Map::isWall(int x, int y, BlockType type) const {
-   return isPositionValid(x, y) && BlockTypeHas(blocks[y * sizeX + x].type, type);
+   return isPositionValid(x, y) && BlockTypeHas(walls[y * sizeX + x].type, type);
 }
 
 bool Map::isSoil(int x, int y) const {

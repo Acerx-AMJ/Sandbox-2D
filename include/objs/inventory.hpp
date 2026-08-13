@@ -24,10 +24,14 @@ struct Inventory {
    int addItemCount(Item &item1, Item &item2);
    void pickItem(blockid_t blockId, blockid_t wallId, furnitureid_t furnitureId, liquidid_t liquidId);
 
+   bool anyItemSelected();
+   ItemData &getSelectedItem();
+   void useSelectedItem();
+
    // frame functions
 
-   Texture getFrameTexture(int i) const;
-   Color getItemColor(Item item) const;
+   Texture getFrameTexture(int i);
+   Color getItemColor(Item item);
 
    // render
    

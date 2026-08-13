@@ -142,7 +142,7 @@ bool Furniture::isSolidUnderneath(const Map &map, FurnitureData &data, bool prev
       return true;
    }
    for (int dx = x; dx < x + width; ++dx) {
-      if (map.is(dx, y + height, BlockType::solid)) {
+      if (!map.is(dx, y + height, BlockType::solid)) {
          return false;
       }
    }

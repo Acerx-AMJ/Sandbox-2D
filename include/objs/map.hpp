@@ -67,6 +67,7 @@ bool isBlockIdValid(blockid_t id);
 BlockType getBlockTypeFromString(const std::string &name);
 blockid_t getBlockIdFromName(const std::string &name);
 std::string getBlockNameFromId(blockid_t id);
+Texture getBlockTexture(blockid_t texture);
 size_t getBlockCount();
 
 void reserveBlockContainers(size_t estimate);
