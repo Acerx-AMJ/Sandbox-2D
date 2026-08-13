@@ -689,9 +689,6 @@ void Console::init(Map &map, Player &player, Inventory &inventory) {
    vars["breakAnimation"] = Variable(&player.breakAnimation);
    vars["lastBreakingX"] = Variable(&player.lastBreakingX);
    vars["lastBreakingY"] = Variable(&player.lastBreakingY);
-   vars["breakingWall"] = Variable(&player.breakingWall);
-   vars["breakingFurniture"] = Variable(&player.breakingFurniture);
-   vars["placedBlock"] = Variable(&player.placedBlock);
    vars["breakingBlock"] = Variable(&player.breakingBlock);
    vars["breakTime"] = Variable(&player.breakTime);
    vars["breakAnimationTimer"] = Variable(&player.breakAnimationTimer);

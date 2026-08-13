@@ -232,7 +232,7 @@ void Furniture::update(Map &map, Player &player, const Vector2 &mousePos, float 
       }
 
       if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionPointRec(mousePos, doorRect) && Vector2Distance({(float)x, (float)y}, player.getCenter()) < furnitureInteractionRange) {
-         player.placedBlock = true;
+         player.placeBlock();
          ivalue1 = !ivalue1;
          ivalue2 = false;
       }

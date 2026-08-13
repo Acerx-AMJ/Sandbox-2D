@@ -1,10 +1,7 @@
 ### Right Now
-- platformed furniture
-- bring back damage indicators (and don't couple with map)
 - backgrounds
 - lightmap, light color, range in liquid config
 - remove position.hpp, rendering overhaul
-- fix console commands with the new features
 
 - add drops back to furniture and blocks
 - inventory fixes
@@ -13,7 +10,6 @@
 ### Furniture
 - Add furniture with chest logic.
 - Add all of the inventory quirks to chests.
-- Add tables, chests and so on.
 
 ### Inventory
 - Make new blocks light up until hovered on
@@ -52,4 +48,3 @@
 - make backgrounds fade
 - fix only some inputs having visible cursor
 - use that Raylib UI corner feature for dynamic UI elements
-- fix inventory right click. inventory also doesn't feel as good as it should

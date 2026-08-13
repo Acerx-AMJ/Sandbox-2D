@@ -7,28 +7,29 @@ constexpr int maxBreath = 100;
 struct Player {
    void init();
 
-   // Update
+   // update
 
    void updatePlayer(Map &map);
    void updateMovement();
    void updateCollisions(Map &map);
    void updateAnimation();
 
-   // Health functions
+   // interaction
 
-   void takeDamage(Map &map, int damage, int critChance = 0, float critDamage = 0.0f);
+   void takeDamage(int damage, int critChance = 0, float critDamage = 0.0f);
    void handleRegeneration();
+   void placeBlock();
 
-   // Render
+   // render
 
-   void render(float accumulator, Texture2D *itemTexture) const;
+   void render(float accumulator) const;
 
-   // Getter functions
+   // getters functions
 
    Vector2 getCenter() const;
    Rectangle getBounds() const;
 
-   // Members
+   // Mmembers
 
    std::vector<int> liquidCounts;
    Vector2 position, spawnPos, velocity, previousPosition, delta;
@@ -71,12 +72,14 @@ struct Player {
    float displayHearts = 100;
    float displayBreath = 100;
 
+   bool placedBlockAnimation = false;
+   bool canPlaceBlock = true;
+   float blockPlacementSpeed = 0.1f;
+   float blockPlacementTimer = 0.0f;
+
    int breakAnimation = 0;
    int lastBreakingX = 0;
    int lastBreakingY = 0;
-   bool breakingWall = false;
-   bool breakingFurniture = false;
-   bool placedBlock = false;
    bool breakingBlock = false;
    float breakTime = 0.0f;
    float breakAnimationTimer = 0.0f;

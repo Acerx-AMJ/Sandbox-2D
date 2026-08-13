@@ -334,6 +334,12 @@ bool Map::isStable(int x, int y) const {
    return is(x, y, BlockType::solid) && !is(x, y, BlockType::platform);
 }
 
+bool Map::blockNear(int x, int y) const {
+   return x == 0 || x == sizeX - 1 || y == 0 || y == sizeY - 1 || !isNotSolid(x, y) || !isWall(x, y, BlockType::empty)
+      || !isNotSolid(x + 1, y) || !isNotSolid(x - 1, y) || !isNotSolid(x, y + 1) || !isNotSolid(x, y - 1)
+      || !isWall(x + 1, y, BlockType::empty) || !isWall(x - 1, y, BlockType::empty) || !isWall(x, y + 1, BlockType::empty) || !isWall(x, y - 1, BlockType::empty);
+}
+
 bool Map::isLiquid(int x, int y) const {
    int i = y * sizeX + x;
    return isPositionValid(x, y) && liquidTypes[i] != 0 && liquidHeights[i] > minLiquidLayers;
@@ -427,7 +433,7 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
 
    // Render the player
    if (player.hearts != 0) {
-      player.render(accumulator, nullptr);
+      player.render(accumulator);
    }
 
    for (const DroppedItem &droppedItem : droppedItems) {

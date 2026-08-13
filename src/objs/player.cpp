@@ -66,6 +66,9 @@ void Player::updatePlayer(Map &map) {
    immunityFrame -= fixedUpdateDT;
    timeSinceLastDamage += fixedUpdateDT * regenSpeedMultiplier;
 
+   blockPlacementTimer -= fixedUpdateDT;
+   canPlaceBlock = (blockPlacementTimer <= 0.0f);
+
    displayHearts = Lerp(displayHearts, float(hearts), 0.3f);
    displayBreath = Lerp(displayBreath, float(breath), 0.3f);
 }
@@ -205,7 +208,7 @@ void Player::updateCollisions(Map &map) {
          }
          honeyTileCount += map.is(x, y, BlockType::sticky);
 
-         if (!map.is(x, y, BlockType::solid) || ((map.is(x, y, BlockType::platform) || map.blocks[y * map.sizeX + x].platformOverride) && (!blockInput && IsKeyDown(KEY_S)))) {
+         if (((map.getBlock(x, y).platformOverride || map.is(x, y, BlockType::platform)) && (!blockInput && IsKeyDown(KEY_S))) || (!map.getBlock(x, y).platformOverride && !map.is(x, y, BlockType::solid))) {
             continue;
          }
 
@@ -259,17 +262,13 @@ void Player::updateCollisions(Map &map) {
          }
          honeyTileCount += map.is(x, y, BlockType::sticky);
 
-         if (!map.is(x, y, BlockType::solid) || ((map.is(x, y, BlockType::platform) || map.blocks[y * map.sizeX + x].platformOverride))) {
+         if (!map.is(x, y, BlockType::solid) || map.is(x, y, BlockType::platform)) {
             continue;
          }
 
          if (canGoUpSlopes && !feetCollision && CheckCollisionRecs(feet, {(float)x, (float)y, 1.f, 1.f})) {
             feetCollision = true;
             feetCollisionY = y;
-         }
-
-         if (map.is(x, y, BlockType::platform) || map.blocks[y * map.sizeX + x].platformOverride) {
-            continue;
          }
 
          if (!torsoCollision && (CheckCollisionRecs(torso, {(float)x, (float)y, 1.f, 1.f}) || position.y <= 0.f)) {
@@ -310,7 +309,7 @@ void Player::updateCollisions(Map &map) {
       }
 
       if (count > 0 && !creative && data.damagePlayer) {
-         takeDamage(map, randomInt(data.damageMin, data.damageMax), 25, 1.2f);
+         takeDamage(randomInt(data.damageMin, data.damageMax), 25, 1.2f);
       }
    }
 
@@ -321,7 +320,7 @@ void Player::updateCollisions(Map &map) {
    // Ignore fall damage if player is touching liquids or didn't fall
    // from that great of a height
    if (!creative && !wasOnGround && onGround && !shouldBounce && !inAnyLiquid && position.y - maximumY >= minimumFallHeight) {
-      takeDamage(map, std::min(1.0f, ((position.y - maximumY) - minimumFallHeight) / (maximumFallHeight - minimumFallHeight)) * maximumFallDamage, 0, 0.0f);
+      takeDamage(std::min(1.0f, ((position.y - maximumY) - minimumFallHeight) / (maximumFallHeight - minimumFallHeight)) * maximumFallDamage, 0, 0.0f);
    }
 
    breathFrameCounter = (breathFrameCounter + 1) % framesToUpdateBreath;
@@ -333,7 +332,7 @@ void Player::updateCollisions(Map &map) {
       }
 
       if (breath == 0) {
-         takeDamage(map, randomInt(1, 6), 0, 0.0f);
+         takeDamage(randomInt(1, 6), 0, 0.0f);
       }
    }
 
@@ -354,12 +353,12 @@ void Player::updateCollisions(Map &map) {
 }
 
 void Player::updateAnimation() {
-   if (breakingBlock || placedBlock) {
+   if (breakingBlock || placedBlockAnimation) {
       breakAnimationTimer += fixedUpdateDT;
       if (breakAnimationTimer >= 0.1f) {
          breakAnimationTimer -= 0.1f;
          breakAnimation = (breakAnimation + 1) % 3;
-         placedBlock = placedBlock && breakAnimation != 0;
+         placedBlockAnimation = placedBlockAnimation && breakAnimation != 0;
       }
    } else {
       breakAnimation = 0;
@@ -401,9 +400,9 @@ void Player::updateAnimation() {
    }
 }
 
-// Health functions
+// interaction
 
-void Player::takeDamage(Map &map, int damage, int critChance, float critDamage) {
+void Player::takeDamage(int damage, int critChance, float critDamage) {
    if (immunityFrame > 0.0f) {
       return;
    }
@@ -414,7 +413,6 @@ void Player::takeDamage(Map &map, int damage, int critChance, float critDamage) 
    hearts = std::max(0, hearts - damageApplied);
    immunityFrame = immunityTime;
    timeSinceLastDamage = timeSpentRegenerating = 0.0f;
-   // map.addDamageIndicator(getCenter(), damageApplied, critical);
 }
 
 void Player::handleRegeneration() {
@@ -435,25 +433,33 @@ void Player::handleRegeneration() {
    hearts = std::min<int>(maxHearts, hearts + regeneration * std::min(1.0f, timeSpentRegenerating / timeToRampUpRegeneration));
 }
 
-// Render functions
+void Player::placeBlock() {
+   if (canPlaceBlock) {
+      placedBlockAnimation = true;
+      canPlaceBlock = false;
+      blockPlacementTimer = blockPlacementSpeed;
+   }
+}
 
-void Player::render(float accumulator, Texture2D *itemTexture) const {
+// render functions
+
+void Player::render(float accumulator) const {
    Texture2D &texture = getTexture("player");
    const Vector2 drawPos = Vector2Lerp(previousPosition, position, accumulator / fixedUpdateDT);
 
    DrawTexturePro(texture, {frameX * playerFrameSizeX, 0.f, (flipX ? -playerFrameSizeX : playerFrameSizeX), playerFrameSizeY}, {drawPos.x, drawPos.y, playerSize.x, playerSize.y}, {0, 0}, 0, (timeSinceLastDamage <= 0.3f ? RED : WHITE));
-   DrawTexturePro(texture, {playerFrameSizeX * (breakingBlock || placedBlock ? 16 + breakAnimation : frameX), playerFrameSizeY, (flipX ? -playerFrameSizeX : playerFrameSizeX), playerFrameSizeY}, {drawPos.x, drawPos.y, playerSize.x, playerSize.y}, {0, 0}, 0, (timeSinceLastDamage <= 0.3f ? RED : WHITE));
+   DrawTexturePro(texture, {playerFrameSizeX * (breakingBlock || placedBlockAnimation ? 16 + breakAnimation : frameX), playerFrameSizeY, (flipX ? -playerFrameSizeX : playerFrameSizeX), playerFrameSizeY}, {drawPos.x, drawPos.y, playerSize.x, playerSize.y}, {0, 0}, 0, (timeSinceLastDamage <= 0.3f ? RED : WHITE));
 
    // Hard-coded tool animation 
-   if (breakingBlock && itemTexture) {
-      if (breakAnimation == 0) {
-         DrawTexturePro(*itemTexture, {0, 0, (float)itemTexture->width, (float)itemTexture->height}, {drawPos.x + ((flipX ? 12.0f : 13.0f) / 8.0f) - flipX, drawPos.y + (5.5f / 8.0f), 1.0f, 1.0f}, {1.0f, 1.0f}, 45.0f, WHITE);
-      } else if (breakAnimation == 1) {
-         DrawTexturePro(*itemTexture, {0, 0, (float)itemTexture->width, (float)itemTexture->height}, {drawPos.x + ((flipX ? 15.0f : 10.0f) / 8.0f) - flipX, drawPos.y + (8.0f / 8.0f) - flipX, 1.0f, 1.0f}, {(float)!flipX, 1.0f}, (flipX ? 90.0f : 0.0f), WHITE);
-      } else {
-         DrawTexturePro(*itemTexture, {0, 0, (float)itemTexture->width, (float)itemTexture->height}, {drawPos.x + ((flipX ? 20.0f : 7.0f) / 8.0f) - flipX, drawPos.y + (16.0f / 8.0f) - (flipX * 0.7f), 1.0f, 1.0f}, {(float)!flipX, 1.0f}, (flipX ? 135.0f : -45.0f), WHITE);
-      }
-   }
+   // if (breakingBlock && itemTexture) {
+   //    if (breakAnimation == 0) {
+   //       DrawTexturePro(*itemTexture, {0, 0, (float)itemTexture->width, (float)itemTexture->height}, {drawPos.x + ((flipX ? 12.0f : 13.0f) / 8.0f) - flipX, drawPos.y + (5.5f / 8.0f), 1.0f, 1.0f}, {1.0f, 1.0f}, 45.0f, WHITE);
+   //    } else if (breakAnimation == 1) {
+   //       DrawTexturePro(*itemTexture, {0, 0, (float)itemTexture->width, (float)itemTexture->height}, {drawPos.x + ((flipX ? 15.0f : 10.0f) / 8.0f) - flipX, drawPos.y + (8.0f / 8.0f) - flipX, 1.0f, 1.0f}, {(float)!flipX, 1.0f}, (flipX ? 90.0f : 0.0f), WHITE);
+   //    } else {
+   //       DrawTexturePro(*itemTexture, {0, 0, (float)itemTexture->width, (float)itemTexture->height}, {drawPos.x + ((flipX ? 20.0f : 7.0f) / 8.0f) - flipX, drawPos.y + (16.0f / 8.0f) - (flipX * 0.7f), 1.0f, 1.0f}, {(float)!flipX, 1.0f}, (flipX ? 135.0f : -45.0f), WHITE);
+   //    }
+   // }
 }
 
 // Getter functions

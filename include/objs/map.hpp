@@ -143,6 +143,7 @@ struct Map {
    bool isEmpty(int x, int y) const;
    bool isNotSolid(int x, int y) const;
    bool isStable(int x, int y) const;
+   bool blockNear(int x, int y) const;
 
    bool isLiquid(int x, int y) const;
    bool isAnyLiquid(int x, int y) const;

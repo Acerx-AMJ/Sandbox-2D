@@ -225,31 +225,31 @@ void GameState::updatePlaying() {
 
          inventory.pickItem(blockId, wallId, furnitureId, liquidId);
       }
-      else if (isMouseDownOutsideUI(MOUSE_BUTTON_RIGHT) && inventory.anyItemSelected()) {
+      else if (isMouseDownOutsideUI(MOUSE_BUTTON_RIGHT) && inventory.anyItemSelected() && player.canPlaceBlock) {
          ItemData &data = inventory.getSelectedItem();
 
-         if (data.action == ItemActionType::placeBlock && map.isNotSolid(mouseX, mouseY)) {
+         if (data.action == ItemActionType::placeBlock && map.isNotSolid(mouseX, mouseY) && map.blockNear(mouseX, mouseY)) {
             map.setBlock(mouseX, mouseY, data.block);
             inventory.useSelectedItem();
-            player.placedBlock = true;
+            player.placeBlock();
          }
-         else if (data.action == ItemActionType::placeWall && map.isWall(mouseX, mouseY, BlockType::empty)) {
+         else if (data.action == ItemActionType::placeWall && map.isWall(mouseX, mouseY, BlockType::empty) && map.blockNear(mouseX, mouseY)) {
             map.setWall(mouseX, mouseY, data.wall);
             inventory.useSelectedItem();
-            player.placedBlock = true;
+            player.placeBlock();
          }
          else if (data.action == ItemActionType::placeFurniture) {
             Furniture furniture = getFurniture(mouseX, mouseY, map, data.furniture, player.flipX);
             if (furniture.id != 0) {
                map.addFurniture(furniture);
                inventory.useSelectedItem();
-               player.placedBlock = true;
+               player.placeBlock();
             }
          }
-         else if (data.action == ItemActionType::placeLiquid && map.isEmpty(mouseX, mouseY)) {
+         else if (data.action == ItemActionType::placeLiquid && (map.getBlock(mouseX, mouseY).tile != TileType::root || map.isEmpty(mouseX, mouseY))) {
             map.setLiquid(mouseX, mouseY, data.liquid, maxLiquidLayers);
             inventory.useSelectedItem();
-            player.placedBlock = true;
+            player.placeBlock();
          }
       }
       // else if (player.breakingBlock) {
@@ -531,11 +531,11 @@ void GameState::render() {
       int mouseY = mousePos.y;
 
       if (data.action == ItemActionType::placeBlock) {
-         Color tint = (map.isNotSolid(mouseX, mouseY) ? WHITE : RED);
+         Color tint = (map.isNotSolid(mouseX, mouseY) && map.blockNear(mouseX, mouseY) ? WHITE : RED);
          drawTexture(getBlockTexture(data.block), V2(mouseX, mouseY), {1.0f, 1.0f}, Fade(tint, furniturePreviewAlpha));
       }
       else if (data.action == ItemActionType::placeWall && map.isWall(mouseX, mouseY, BlockType::empty)) {
-         Color tint = (map.isNotSolid(mouseX, mouseY) ? wallTint : MAROON);
+         Color tint = (map.isNotSolid(mouseX, mouseY) && map.blockNear(mouseX, mouseY) ? wallTint : MAROON);
          drawTexture(getBlockTexture(data.wall), V2(mouseX, mouseY), {1.0f, 1.0f}, Fade(tint, furniturePreviewAlpha));
       }
       else if (data.action == ItemActionType::placeFurniture) {
@@ -552,7 +552,7 @@ void GameState::render() {
          furniturePreview.preview(map);
       }
       else if (data.action == ItemActionType::placeLiquid) {
-         Color tint = (map.isEmpty(mouseX, mouseY) ? WHITE : RED);
+         Color tint = (map.getBlock(mouseX, mouseY).tile != TileType::root || map.isEmpty(mouseX, mouseY) ? WHITE : RED);
          Shader shader = getShader("water_preview");
          float time = GetTime();
 
