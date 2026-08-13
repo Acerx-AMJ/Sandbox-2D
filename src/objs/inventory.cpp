@@ -19,23 +19,23 @@ constexpr float itemFontSize = 25.0f;
 
 // update functions
 
-void Inventory::update(bool canSwitchOnScroll, std::vector<DroppedItem> &droppedItems, int dropX, int dropY) {
+void Inventory::update(bool canSwitchOnScroll) {
    int lastSelected = selected;
 
    toggleInventoryOpen();
-   switchOnKeyPress(KEY_ONE,   0, droppedItems, dropX, dropY);
-   switchOnKeyPress(KEY_TWO,   1, droppedItems, dropX, dropY);
-   switchOnKeyPress(KEY_THREE, 2, droppedItems, dropX, dropY);
-   switchOnKeyPress(KEY_FOUR,  3, droppedItems, dropX, dropY);
-   switchOnKeyPress(KEY_FIVE,  4, droppedItems, dropX, dropY);
-   switchOnKeyPress(KEY_SIX,   5, droppedItems, dropX, dropY);
-   switchOnKeyPress(KEY_SEVEN, 6, droppedItems, dropX, dropY);
-   switchOnKeyPress(KEY_EIGHT, 7, droppedItems, dropX, dropY);
-   switchOnKeyPress(KEY_NINE,  8, droppedItems, dropX, dropY);
-   switchOnKeyPress(KEY_ZERO,  9, droppedItems, dropX, dropY);
+   switchOnKeyPress(KEY_ONE,   0);
+   switchOnKeyPress(KEY_TWO,   1);
+   switchOnKeyPress(KEY_THREE, 2);
+   switchOnKeyPress(KEY_FOUR,  3);
+   switchOnKeyPress(KEY_FIVE,  4);
+   switchOnKeyPress(KEY_SIX,   5);
+   switchOnKeyPress(KEY_SEVEN, 6);
+   switchOnKeyPress(KEY_EIGHT, 7);
+   switchOnKeyPress(KEY_NINE,  8);
+   switchOnKeyPress(KEY_ZERO,  9);
 
    if (canSwitchOnScroll) {
-      switchOnMouseWheel(droppedItems, dropX, dropY);
+      switchOnMouseWheel();
    }
 
    if (selected != lastSelected) {
@@ -90,7 +90,7 @@ void Inventory::update(bool canSwitchOnScroll, std::vector<DroppedItem> &dropped
       else if (mousePressed && open && selection.selected) {
          playSound(i == trashSlot ? "trash" : "click");
          if (i == selection.lastSelection) {
-            discardSelection(droppedItems, dropX, dropY);
+            discardSelection();
             break;
          }
 
@@ -149,7 +149,7 @@ void Inventory::update(bool canSwitchOnScroll, std::vector<DroppedItem> &dropped
    }
 
    if (!open && selection.selected && selection.lastSelection < inventoryWidth) {
-      discardSelection(droppedItems, dropX, dropY);
+      discardSelection();
    }
 
    // Pressed outside of the inventory
@@ -157,7 +157,7 @@ void Inventory::update(bool canSwitchOnScroll, std::vector<DroppedItem> &dropped
       playSound("click");
 
       if (!selection.item.favorite) {
-         dropItem(droppedItems, selection.item, dropX, dropY);
+         dropItem(selection.item);
          selection = {};
          return;
       }
@@ -171,24 +171,24 @@ void Inventory::toggleInventoryOpen() {
    }
 }
 
-void Inventory::switchOnKeyPress(int key, int hotbarX, std::vector<DroppedItem> &droppedItems, int dropX, int dropY) {
+void Inventory::switchOnKeyPress(int key, int hotbarX) {
    if (isKeyPressed(key)) {
       if (!open && selection.selected && selection.lastSelection != selected) {
-         discardSelection(droppedItems, dropX, dropY);
+         discardSelection();
       }
       selected = hotbarX;
    }
 }
 
-void Inventory::switchOnMouseWheel(std::vector<DroppedItem> &droppedItems, int dropX, int dropY) {
+void Inventory::switchOnMouseWheel() {
    float wheel = GetMouseWheelMove();
    if (!open && selection.selected && selection.lastSelection != selected) {
       if (wheel >= 1.0f) {
          selected = 0;
-         discardSelection(droppedItems, dropX, dropY);
+         discardSelection();
       } else if (wheel <= -1.0f) {
          selected = inventoryWidth - 1;
-         discardSelection(droppedItems, dropX, dropY);
+         discardSelection();
       }
    }
    else {
@@ -202,7 +202,7 @@ void Inventory::switchOnMouseWheel(std::vector<DroppedItem> &droppedItems, int d
 
 // item functions
 
-void Inventory::discardSelection(std::vector<DroppedItem> &droppedItems, int x, int y) {
+void Inventory::discardSelection() {
    if (!selection.selected) return;
    Item &target = items[selection.lastSelection];
 
@@ -210,19 +210,19 @@ void Inventory::discardSelection(std::vector<DroppedItem> &droppedItems, int x, 
       target = selection.item;
    }
    else if (addItemCount(target, selection.item) > 0) {
-      placeItemOrDrop(droppedItems, selection.item, x, y);
+      placeItemOrDrop(selection.item);
    }
    selection = {};
 }
 
-void Inventory::placeItemOrDrop(std::vector<DroppedItem> &droppedItems, Item &item, int x, int y) {
+void Inventory::placeItemOrDrop(Item &item) {
    if (!placeItem(item)) {
-      dropItem(droppedItems, item, x, y);
+      dropItem(item);
    }
 }
 
-void Inventory::dropItem(std::vector<DroppedItem> &droppedItems, Item &item, int x, int y) {
-   droppedItems.emplace_back(item, x, y);
+void Inventory::dropItem(Item &item) {
+   pendingDrops.push_back(item);
    item = {};
 }
 

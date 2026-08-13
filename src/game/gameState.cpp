@@ -55,7 +55,9 @@ GameState::GameState(const std::string &worldName) {
 }
 
 GameState::~GameState() {
-   inventory.discardSelection(droppedItems, std::clamp<int>(player.getCenter().x + (player.flipX ? 3 : -3), 0, map.sizeX - 1), player.getCenter().y);
+   inventory.discardSelection();
+   pushPendingDroppedItems();
+
    saveWorldData(worldName, player.spawnPos, player.position, player.creative, player.breath, player.hearts, player.maxHearts, camera.zoom, map, &console, &inventory, &droppedItems);
    resetBackground();
 }
@@ -201,7 +203,9 @@ void GameState::updatePlaying() {
    setInputBlocking(console.input.typing);
    player.blockInput = console.input.typing;
 
-   inventory.update(!console.input.typing, droppedItems, std::clamp<int>(player.getCenter().x + (player.flipX ? 3 : -3), 0, map.sizeX - 1), player.getCenter().y);
+   inventory.update(!console.input.typing);
+   pushPendingDroppedItems();
+
    calculateCameraBounds();
 
    if (phase != Phase::playing) {
@@ -639,4 +643,13 @@ void GameState::calculateCameraBounds() {
    cameraBounds.y = std::max(0, int(cameraBounds.y));
    cameraBounds.width = std::min(map.sizeX - 1, int(cameraBounds.x + cameraBounds.width) + 1);
    cameraBounds.height = std::min(map.sizeY - 1, int(cameraBounds.y + cameraBounds.height) + 1);
+}
+
+void GameState::pushPendingDroppedItems() {
+   Vector2 center = player.getCenter();
+   Vector2 dropPosition = {std::clamp<float>(center.x + (player.flipX ? 3 : -3), 0, map.sizeX - 1), center.y};
+   for (Item &item: inventory.pendingDrops) {
+      droppedItems.emplace_back(item, dropPosition.x, dropPosition.y);
+   }
+   inventory.pendingDrops.clear();
 }

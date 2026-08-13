@@ -10,16 +10,16 @@ constexpr inline int trashSlot = inventorySlots - 1;
 struct Inventory {
    // update
    
-   void update(bool canSwitchOnScroll, std::vector<DroppedItem> &droppedItems, int dropX, int dropY);
+   void update(bool canSwitchOnScroll);
    void toggleInventoryOpen();
-   void switchOnKeyPress(int key, int hotbarX, std::vector<DroppedItem> &droppedItems, int dropX, int dropY);
-   void switchOnMouseWheel(std::vector<DroppedItem> &droppedItems, int dropX, int dropY);
+   void switchOnKeyPress(int key, int hotbarX);
+   void switchOnMouseWheel();
 
    // item functions
 
-   void discardSelection(std::vector<DroppedItem> &droppedItems, int dropX, int dropY);
-   void placeItemOrDrop(std::vector<DroppedItem> &droppedItems, Item &item, int dropX, int dropY);
-   void dropItem(std::vector<DroppedItem> &droppedItems, Item &item, int dropX, int dropY);
+   void discardSelection();
+   void placeItemOrDrop(Item &item);
+   void dropItem(Item &item);
    bool placeItem(Item &item);
    int addItemCount(Item &item1, Item &item2);
 
@@ -35,6 +35,7 @@ struct Inventory {
 
    // members
 
+   std::vector<Item> pendingDrops;
    Item items[inventorySlots];
    SelectedItem selection;
    int selected = 0;

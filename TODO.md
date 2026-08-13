@@ -1,15 +1,14 @@
 ### Right Now
 - platformed furniture
 - bring back damage indicators (and don't couple with map)
-- bring back block breaking
 - backgrounds
 - lightmap, light color, range in liquid config
 - remove position.hpp, rendering overhaul
 - fix console commands with the new features
 
-- load all items from file
 - add drops back to furniture and blocks
 - inventory fixes
+- bring back block breaking/placement
 
 ### Furniture
 - Add furniture with chest logic.
