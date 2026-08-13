@@ -541,9 +541,7 @@ bool c_give(Console &console, const VArgs &args, Map&, Player &player, Inventory
    }
 
    console.output(TextFormat("give: gave %d of '%s'.", item.count, args[1].c_str()));
-   inventory.placeItem(item);
-   // inventory.placeItemOrDrop(item, player.position.x, player.position.y);
-   // TODO: fix all new console commands!
+   inventory.placeItemOrDrop(item);
    return true;
 }
 

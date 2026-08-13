@@ -22,6 +22,7 @@ struct Inventory {
    void dropItem(Item &item);
    bool placeItem(Item &item);
    int addItemCount(Item &item1, Item &item2);
+   void pickItem(blockid_t blockId, blockid_t wallId, furnitureid_t furnitureId, liquidid_t liquidId);
 
    // frame functions
 

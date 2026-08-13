@@ -235,9 +235,16 @@ void GameState::updatePlaying() {
       // if (isMouseDownOutsideUI(MOUSE_BUTTON_RIGHT) && inventory.canPlaceBlock()) {
       //    inventory.placeBlock(mouseX, mouseY, player.flipX);
       //    canDrawPreview = canDrawPreview && inventory.canPlaceBlock(); // To avoid attempting to draw air on placing last block
-      // } else if (isMousePressedOutsideUI(MOUSE_BUTTON_MIDDLE)) {
-      //    inventory.selectItem(mouseX, mouseY);
-      // } else if (player.breakingBlock) {
+      if (isMousePressedOutsideUI(MOUSE_BUTTON_MIDDLE)) {
+         const Block &block = map.getBlock(mouseX, mouseY);
+         blockid_t blockId = (block.tile == TileType::root) * block.id;
+         blockid_t wallId = map.isEmpty(mouseX, mouseY) * map.getWall(mouseX, mouseY).id;
+         furnitureid_t furnitureId = (block.tile == TileType::ghost) * block.id;
+         liquidid_t liquidId = map.isNotSolid(mouseX, mouseY) * map.getLiquidId(mouseX, mouseY);
+
+         inventory.pickItem(blockId, wallId, furnitureId, liquidId);
+      }
+      // else if (player.breakingBlock) {
       //    bool isWall = (map.blocks[mouseY][mouseX].type & BlockType::empty);
       //    bool isFurniture = (map.blocks[mouseY][mouseX].type & BlockType::furniture);
       //    Block &block = (isWall ? map.walls : map.blocks)[mouseY][mouseX];

@@ -262,6 +262,33 @@ int Inventory::addItemCount(Item &item1, Item &item2) {
    return leftover;
 }
 
+void Inventory::pickItem(blockid_t blockId, blockid_t wallId, furnitureid_t furnitureId, liquidid_t liquidId) {
+   itemid_t target = 0;
+
+   for (itemid_t i = 1; i < getItemCount(); ++i) {
+      ItemData &data = getItemData(i);
+      if ((data.action == ItemActionType::placeBlock && data.block == blockId)
+       || (data.action == ItemActionType::placeWall && data.wall == wallId)
+       || (data.action == ItemActionType::placeFurniture && data.furniture == furnitureId)
+       || (data.action == ItemActionType::placeLiquid && data.liquid == liquidId)) {
+         target = i;
+         break;
+      }
+   }
+
+   if (target == 0) return;
+   for (int i = 0; i < inventorySlots - 1; ++i) {
+      if (items[i].id == target && i < inventoryWidth) {
+         selected = i;
+         break;
+      }
+      else if (items[i].id == target && i >= inventoryWidth) {
+         std::swap(items[selected], items[i]);
+         break;
+      }
+   }
+}
+
 // frame functions
 
 Texture Inventory::getFrameTexture(int i) const {
