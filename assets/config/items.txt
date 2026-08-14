@@ -184,6 +184,27 @@ block=gold_ore
 action=place_block
 block=mythril_ore
 
+[coal]
+action=none
+
+[iron_lump]
+action=none
+
+[iron_bar]
+action=none
+
+[gold_lump]
+action=none
+
+[gold_bar]
+action=none
+
+[mythril_lump]
+action=none
+
+[mythril_bar]
+action=none
+
 [sapling]
 action=place_furniture
 furniture=sapling

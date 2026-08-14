@@ -2,7 +2,9 @@
 
 using liquidlayer_t = unsigned char;
 
-using blockid_t = unsigned short;
-using furnitureid_t = unsigned short;
-using liquidid_t = unsigned short;
-using itemid_t = unsigned short;
+using id_t = unsigned short;
+using blockid_t = id_t;
+using furnitureid_t = id_t;
+using liquidid_t = id_t;
+using itemid_t = id_t;
+using droptableid_t = id_t;

@@ -24,6 +24,15 @@ static std::vector<std::string> itemNames {""};
 static std::vector<ItemData> itemData {{}};
 static std::unordered_map<std::string, itemid_t> itemIds;
 
+static const std::unordered_map<std::string, ToolType> toolTypeStrings {{
+   {"pickaxe", ToolType::pickaxe}, {"axe", ToolType::axe}, {"hammer", ToolType::hammer}
+}};
+
+static size_t dropTableCount = 1; // 0 - nil
+static std::vector<std::string> dropTableNames {""};
+static std::vector<DropTable> dropTables {{}};
+static std::unordered_map<std::string, droptableid_t> dropTableIds;
+
 // item getter functions
 
 bool isItemActionValid(const std::string &action) {
@@ -86,11 +95,11 @@ void pushItem(const std::string &name) {
 }
 
 void setItem(const std::string &name, ItemData data) {
-   itemid_t id = itemIds[name];
+   itemid_t id = itemIds.at(name);
    itemData[id] = data;
 }
 
-// Dropped item functions
+// dropped items
 
 DroppedItem::DroppedItem(int count, itemid_t id, float lifetime, int tileX, int tileY)
    : count(count), id(id), lifetime(lifetime), tileX(tileX), tileY(tileY) {}
@@ -126,4 +135,59 @@ void DroppedItem::render() const {
 
 Rectangle DroppedItem::getBounds() const {
    return {(float)tileX, (float)tileY, 1.0f, 1.0f};
+}
+
+// drop table data
+
+bool isToolTypeValid(const std::string &type) {
+   return toolTypeStrings.find(type) != toolTypeStrings.end();
+}
+
+bool isDropTableNameValid(const std::string &name) {
+   return dropTableIds.find(name) != dropTableIds.end();
+}
+
+bool isDropTableIdValid(droptableid_t id) {
+   return id >= 0 && id < dropTableCount;
+}
+
+ToolType getToolTypeFromString(const std::string &type) {
+   if (auto it = toolTypeStrings.find(type); it != toolTypeStrings.end()) {
+      return it->second;
+   }
+   return ToolType::pickaxe;
+}
+
+DropTable &getDropTable(droptableid_t id) {
+   return dropTables[id];
+}
+
+droptableid_t getDropTableIdFromName(const std::string &name) {
+   return dropTableIds.at(name);
+}
+
+std::string getDropTableNameFromId(droptableid_t id) {
+   return dropTableNames[id];
+}
+
+size_t getDropTableCount() {
+   return dropTableCount;
+}
+
+void reserveDropTableContainers(size_t estimate) {
+   dropTableNames.reserve(estimate + 1);
+   dropTableIds.reserve(estimate + 1);
+   dropTables.reserve(estimate + 1);
+}
+
+void pushDropTable(const std::string &name) {
+   dropTables.push_back({});
+   dropTableNames.push_back(name);
+   dropTableIds[name] = dropTableCount;
+   dropTableCount += 1;
+}
+
+void setDropTable(const std::string &name, DropTable &table) {
+   droptableid_t id = dropTableIds.at(name);
+   dropTables[id] = table;
 }

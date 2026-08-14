@@ -1,8 +1,5 @@
 #pragma once
-#include "config.hpp"
-#include <raylib.h>
-#include <string>
-#include <vector>
+#include "objs/item.hpp"
 
 // Constants
 
@@ -34,6 +31,11 @@ struct FurnitureData {
    float saplingGrowSpeedMax = 0.0f;
    Vector2 furnitureSize = {0, 0};
    bool shouldFacePlayer = false;
+   droptableid_t dropTable = 0;
+   float breakSpeed = 0.0f;
+   int toolPower = 0;
+   bool toolPowerRequired = false;
+   ToolType toolType = ToolType::pickaxe;
 };
 
 struct FurniturePiece {
@@ -92,6 +94,7 @@ struct Furniture {
    // Members
 
    furnitureid_t id = 0;
+   size_t mapIdentifier = 0;
    std::vector<FurniturePiece> pieces;
 
    int x = 0;
@@ -103,7 +106,6 @@ struct Furniture {
    int ivalue2 = 0;
    float fvalue1 = 0;
    float fvalue2 = 0;
-   bool deleted = false;
 };
 
 // Furniture generation functions

@@ -2,10 +2,11 @@
 - backgrounds
 - lightmap, light color, range in liquid config
 - remove position.hpp, rendering overhaul
+- do something about furniture sprite duplication if data.shouldFacePlayer
+- furniture drops on destroy
 
 - add drops back to furniture and blocks
 - inventory fixes
-- bring back block breaking/placement
 
 ### Furniture
 - Add furniture with chest logic.

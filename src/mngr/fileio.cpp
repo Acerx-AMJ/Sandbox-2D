@@ -43,10 +43,10 @@ void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, 
 
    // Write inventory
    if (inventory) {
-      file.write(reinterpret_cast<const char*>(inventory->items), inventorySlots * sizeof(Item));
+      file.write(reinterpret_cast<const char*>(inventory->items), realInventorySlots * sizeof(Item));
    } else {
       Item item;
-      for (int i = 0; i < inventorySlots; ++i) {
+      for (int i = 0; i < realInventorySlots; ++i) {
          file.write(reinterpret_cast<const char*>(&item), sizeof(Item));
       }
    }
@@ -142,7 +142,7 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
    map.init();
 
    // Read inventory
-   file.read(reinterpret_cast<char*>(&inventory.items), inventorySlots * sizeof(Item));
+   file.read(reinterpret_cast<char*>(&inventory.items), realInventorySlots * sizeof(Item));
 
    // Read console
    size_t size = 0;

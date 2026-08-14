@@ -73,10 +73,6 @@ std::vector<furnitureid_t> &getTreesFromSoil(blockid_t id) {
    return treeSoils.at(id);;
 }
 
-furnitureid_t getFurnitureIdFromName(const std::string &name) {
-   return furnitureIds.at(name);
-}
-
 bool isFurnitureIdValid(furnitureid_t id) {
    return id >= 0 && id < furnitureCount;
 }
@@ -87,6 +83,10 @@ bool isFurnitureNameValid(const std::string &name) {
 
 std::string getFurnitureNameFromId(furnitureid_t id) {
    return furnitureNames[id];
+}
+
+furnitureid_t getFurnitureIdFromName(const std::string &name) {
+   return furnitureIds.at(name);
 }
 
 FurnitureType getFurnitureType(furnitureid_t id) {
@@ -115,9 +115,9 @@ void pushFurniture(const std::string &name) {
 }
 
 void setFurniture(const std::string &name, FurnitureData data, const std::vector<blockid_t> &saplingSoils, const std::vector<blockid_t> &treeSoils) {
-   furnitureid_t id = furnitureIds[name];
-
+   furnitureid_t id = furnitureIds.at(name);
    furnitureData[id] = data;
+
    for (blockid_t soil: saplingSoils) {
       ::saplingSoils[soil].push_back(id);
    }
@@ -207,7 +207,7 @@ void Furniture::destroy(Map &map) {
 void Furniture::update(Map &map, Player &player, const Vector2 &mousePos, float dt) {
    FurnitureData &data = furnitureData[id];
    if (!isValid(data, map)) {
-      map.removeFurniture(*this);
+      destroy(map);
       return;
    }
    
@@ -215,7 +215,7 @@ void Furniture::update(Map &map, Player &player, const Vector2 &mousePos, float 
    case FurnitureType::sapling: {
       fvalue2 += dt;
       if (fvalue2 >= fvalue1) {
-         map.removeFurniture(*this);
+         destroy(map);
          generateFurniture(x + (width - 1) / 2, y + (height - 1), map, data.saplingGrowsInto, false);
       }
    } break;
@@ -237,8 +237,10 @@ void Furniture::update(Map &map, Player &player, const Vector2 &mousePos, float 
          ivalue2 = false;
       }
 
-      for (int i = 0; ivalue1 != previousValue && i < height; ++i) {
-         pieces[i * width].ty = (ivalue1 * height) * data.textureSize;
+      for (int x = 0; x < width; ++x) {
+         for (int i = 0; ivalue1 != previousValue && i < height; ++i) {
+            pieces[i * width + x].ty = ivalue1 * height * data.textureSize;
+         }
       }
    } break;
    default: break;
@@ -278,6 +280,9 @@ void Furniture::preview(const Map &map) const {
 
 void Furniture::render(const Rectangle &cameraBounds) const {
    FurnitureData &data = furnitureData[id];
+   DrawRectanglePro(R4(x, y, width, height), {0, 0}, 0, Fade(RED, 0.5));
+   DrawTextPro(GetFontDefault(), TextFormat("%d %d", id, mapIdentifier), V2(x, y), {0, 0}, 0, 0.5, 0, WHITE);
+
    for (int dy = y; dy <= cameraBounds.height && dy - y < height; ++dy) {
       for (int dx = x; dx <= cameraBounds.width && dx - x < width; ++dx) {
          const FurniturePiece &piece = pieces[(dy - y) * width + (dx - x)];

@@ -37,6 +37,7 @@ struct GameState: public State {
    State* change() override;
 
    void calculateCameraBounds();
+   void pushDropTable(droptableid_t id);
    void pushPendingDroppedItems();
 
    // Members

@@ -18,15 +18,15 @@
 
 constexpr float timeToRespawn = 10.0f;
 constexpr float cameraFollowSpeed = 0.416f;
-constexpr float minCameraZoom     = 12.5f;
-constexpr float maxCameraZoom     = 200.0f;
+constexpr float minCameraZoom = 12.5f;
+constexpr float maxCameraZoom = 200.0f;
 
-constexpr int physicsTicks      = 8;
+constexpr int physicsTicks = 8;
 constexpr int grassGrowSpeedMin = 100;
 constexpr int grassGrowSpeedMax = 255;
 
-constexpr float maxPickupRange = 4.0f; // Squared
-constexpr float maxToolRange = 100.0f; // Squared
+constexpr float maxPickupRange = 2.0f;
+constexpr float maxToolRange = 10.0f;
 
 // Constructors
 
@@ -191,7 +191,6 @@ void GameState::updatePlaying() {
    player.blockInput = console.input.typing;
 
    inventory.update(!console.input.typing);
-   pushPendingDroppedItems();
    calculateCameraBounds();
 
    if (phase != Phase::playing) {
@@ -199,94 +198,108 @@ void GameState::updatePlaying() {
    }
 
    // Update furniture
-   const Vector2 translatedMousePos = GetScreenToWorld2D(GetMousePosition(), camera);
-   for (Furniture &obj: map.furniture) {
-      obj.update(map, player, translatedMousePos, dt);
-   }
-
-   map.furniture.erase(std::remove_if(map.furniture.begin(), map.furniture.end(), [](Furniture &f) -> bool {
-      return f.deleted;
-   }), map.furniture.end());
-
-   // Place and destroy blocks
    Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
    Vector2 playerCenter = player.getCenter();
    int mouseX = mousePos.x;
    int mouseY = mousePos.y;
+
+   map.updateFurniture(player, mousePos, dt);
+
+   // Place and destroy blocks
+   bool actionPossible = map.isPositionValid(mouseX, mouseY) && Vector2Distance(mousePos, playerCenter) <= maxToolRange;
    player.breakingBlock = false;
 
-   if (map.isPositionValid(mouseX, mouseY) && Vector2DistanceSqr(mousePos, playerCenter) <= maxToolRange) {
-      if (isMousePressedOutsideUI(MOUSE_BUTTON_MIDDLE)) {
-         const Block &block = map.getBlock(mouseX, mouseY);
-         blockid_t blockId = (block.tile == TileType::root) * block.id;
-         blockid_t wallId = map.isEmpty(mouseX, mouseY) * map.getWall(mouseX, mouseY).id;
-         furnitureid_t furnitureId = (block.tile == TileType::ghost) * block.id;
-         liquidid_t liquidId = map.isNotSolid(mouseX, mouseY) * map.getLiquidId(mouseX, mouseY);
+   if (actionPossible && isMousePressedOutsideUI(MOUSE_BUTTON_MIDDLE)) {
+      const Block &block = map.getBlock(mouseX, mouseY);
+      blockid_t blockId = (block.tile == TileType::root) * block.id;
+      blockid_t wallId = map.isEmpty(mouseX, mouseY) * map.getWall(mouseX, mouseY).id;
+      furnitureid_t furnitureId = (block.tile == TileType::ghost) * block.id;
+      liquidid_t liquidId = map.isNotSolid(mouseX, mouseY) * map.getLiquidId(mouseX, mouseY);
 
-         inventory.pickItem(blockId, wallId, furnitureId, liquidId);
+      inventory.pickItem(blockId, wallId, furnitureId, liquidId);
+   }
+   else if (actionPossible && isMouseDownOutsideUI(MOUSE_BUTTON_RIGHT) && inventory.anyItemSelected() && player.canPlaceBlock) {
+      ItemData &data = inventory.getSelectedItem();
+
+      if (data.action == ItemActionType::placeBlock && map.isNotSolid(mouseX, mouseY) && map.blockNear(mouseX, mouseY)) {
+         map.setBlock(mouseX, mouseY, data.block);
+         inventory.useSelectedItem();
+         player.placeBlock();
       }
-      else if (isMouseDownOutsideUI(MOUSE_BUTTON_RIGHT) && inventory.anyItemSelected() && player.canPlaceBlock) {
-         ItemData &data = inventory.getSelectedItem();
-
-         if (data.action == ItemActionType::placeBlock && map.isNotSolid(mouseX, mouseY) && map.blockNear(mouseX, mouseY)) {
-            map.setBlock(mouseX, mouseY, data.block);
-            inventory.useSelectedItem();
-            player.placeBlock();
-         }
-         else if (data.action == ItemActionType::placeWall && map.isWall(mouseX, mouseY, BlockType::empty) && map.blockNear(mouseX, mouseY)) {
-            map.setWall(mouseX, mouseY, data.wall);
-            inventory.useSelectedItem();
-            player.placeBlock();
-         }
-         else if (data.action == ItemActionType::placeFurniture) {
-            Furniture furniture = getFurniture(mouseX, mouseY, map, data.furniture, player.flipX);
-            if (furniture.id != 0) {
-               map.addFurniture(furniture);
-               inventory.useSelectedItem();
-               player.placeBlock();
-            }
-         }
-         else if (data.action == ItemActionType::placeLiquid && (map.getBlock(mouseX, mouseY).tile != TileType::root || map.isEmpty(mouseX, mouseY))) {
-            map.setLiquid(mouseX, mouseY, data.liquid, maxLiquidLayers);
+      else if (data.action == ItemActionType::placeWall && map.isWall(mouseX, mouseY, BlockType::empty) && map.blockNear(mouseX, mouseY)) {
+         map.setWall(mouseX, mouseY, data.wall);
+         inventory.useSelectedItem();
+         player.placeBlock();
+      }
+      else if (data.action == ItemActionType::placeFurniture) {
+         Furniture furniture = getFurniture(mouseX, mouseY, map, data.furniture, player.flipX);
+         if (furniture.id != 0) {
+            map.addFurniture(furniture);
             inventory.useSelectedItem();
             player.placeBlock();
          }
       }
-      // else if (player.breakingBlock) {
-      //    bool isWall = (map.blocks[mouseY][mouseX].type & BlockType::empty);
-      //    bool isFurniture = (map.blocks[mouseY][mouseX].type & BlockType::furniture);
-      //    Block &block = (isWall ? map.walls : map.blocks)[mouseY][mouseX];
+      else if (data.action == ItemActionType::placeLiquid && (map.getBlock(mouseX, mouseY).tile != TileType::root || map.isEmpty(mouseX, mouseY))) {
+         map.setLiquid(mouseX, mouseY, data.liquid, maxLiquidLayers);
+         inventory.useSelectedItem();
+         player.placeBlock();
+      }
+   }
+   else if (actionPossible && isMouseDownOutsideUI(MOUSE_BUTTON_LEFT)) {
+      const Block &block = map.getBlock(mouseX, mouseY);
+      bool breakingFurniture = (block.tile == TileType::ghost);
+      bool breakingWall = (!breakingFurniture && map.isNotSolid(mouseX, mouseY));
+      float breakSpeed = 0.0f;
+      
+      if (breakingFurniture) {
+         FurnitureData &data = getFurnitureData(block.id);
+         breakSpeed = data.breakSpeed;
+      }
+      else if (breakingWall) {
+         BlockData &data = getBlockData(map.getWall(mouseX, mouseY).id);
+         breakSpeed = data.wallBreakSpeed;
+      }
+      else {
+         BlockData &data = getBlockData(block.id);
+         breakSpeed = data.breakSpeed;
+      }
 
-      //    if (mouseX != player.lastBreakingX || mouseY != player.lastBreakingY || isWall != player.breakingWall || isFurniture != player.breakingFurniture) {
-      //       player.breakTime = 0;
-      //    }
+      if (mouseX != player.lastBreakingX || mouseY != player.lastBreakingY || breakingFurniture != player.breakingFurniture || breakingWall != player.breakingWall) {
+         player.breakTime = 0.0f;
+      }
 
-      //    player.breakTime += realDt * inventory.getBlockBreakingMultiplier();
-      //    player.breakingWall = isWall;
-      //    player.breakingFurniture = isFurniture;
-      //    player.lastBreakingX = mouseX;
-      //    player.lastBreakingY = mouseY;
+      player.breakTime += realDt;
+      player.breakSpeed = breakSpeed;
+      player.lastBreakingX = mouseX;
+      player.lastBreakingY = mouseY;
+      player.breakingFurniture = breakingFurniture;
+      player.breakingWall = breakingWall;
+      player.breakingBlock = true;
 
-      //    if (player.breakTime >= (player.breakingFurniture ? getFurnitureBreakingTime(map.getFurnitureAtPosition(mouseX, mouseY).id) : getBlockBreakingTime(block.id))) {
-      //       if (player.breakingFurniture) {
-      //          map.getFurnitureAtPosition(mouseX, mouseY).destroy(map, inventory, mouseX, mouseY, inventory.getBlockBreakingLevel());
-      //       } else {
-      //          if (getBlockBreakingLevel(block.id) <= inventory.getBlockBreakingLevel()) {
-      //             Item item = getBlockDropId(block.id, player.breakingWall);
-      //             inventory.tryToPlaceItemOrDropAtCoordinates(item, mouseX, mouseY);
-      //          }
-      //          map.deleteBlockWithoutDeletingLiquids(mouseX, mouseY, player.breakingWall);
-      //       }
-      //       player.breakTime = 0;
-      //    }
-      // }
+      if (player.breakTime >= breakSpeed) {
+         if (breakingFurniture) {
+            pushDropTable(getFurnitureData(block.id).dropTable);
+            map.furniture[block.ghostId].destroy(map);
+         }
+         else if (breakingWall) {
+            pushDropTable(getBlockData(map.getWall(mouseX, mouseY).id).wallDropTable);
+            map.deleteWall(mouseX, mouseY);
+         }
+         else {
+            pushDropTable(getBlockData(block.id).dropTable);
+            map.deleteBlockWithoutDeletingLiquids(mouseX, mouseY);
+         }
+         player.breakTime = 0.0f;
+      }
    }
 
    // Update dropped items
+   pushPendingDroppedItems();
+
    for (auto &droppedItem: droppedItems) {
       droppedItem.update(cameraBounds, dt);
 
-      if (!droppedItem.inBounds || Vector2DistanceSqr(playerCenter, {(float)droppedItem.tileX, (float)droppedItem.tileY}) > maxPickupRange) {
+      if (!droppedItem.inBounds || Vector2Distance(playerCenter, {(float)droppedItem.tileX, (float)droppedItem.tileY}) > maxPickupRange) {
          continue;
       }
       int count = droppedItem.count;
@@ -490,7 +503,7 @@ void GameState::updateTorchPhysics(int x, int y) {
       block.value2 = 2;
    } else if (downEmpty && map.isStable(x + 1, y)) {
       block.value2 = 3;
-   } else if (downEmpty && map.isWall(x, y, BlockType::empty)) {
+   } else if (downEmpty && !map.isWall(x, y, BlockType::empty)) {
       block.value2 = 4;
    } else if (!downEmpty && map.isStable(x, y - 1)) {
       block.value2 = 1;
@@ -523,20 +536,22 @@ void GameState::render() {
       return;
    }
 
+   Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
+   Vector2 playerCenter = player.getCenter();
+
    // Render block preview
-   if (inventory.anyItemSelected()) {
+   if (inventory.anyItemSelected() && Vector2Distance(mousePos, playerCenter) <= maxToolRange) {
       ItemData &data = inventory.getSelectedItem();
-      Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
       int mouseX = mousePos.x;
       int mouseY = mousePos.y;
 
       if (data.action == ItemActionType::placeBlock) {
          Color tint = (map.isNotSolid(mouseX, mouseY) && map.blockNear(mouseX, mouseY) ? WHITE : RED);
-         drawTexture(getBlockTexture(data.block), V2(mouseX, mouseY), {1.0f, 1.0f}, Fade(tint, furniturePreviewAlpha));
+         drawTexture(getBlockData(data.block).texture, V2(mouseX, mouseY), {1.0f, 1.0f}, Fade(tint, furniturePreviewAlpha));
       }
       else if (data.action == ItemActionType::placeWall && map.isWall(mouseX, mouseY, BlockType::empty)) {
          Color tint = (map.isNotSolid(mouseX, mouseY) && map.blockNear(mouseX, mouseY) ? wallTint : MAROON);
-         drawTexture(getBlockTexture(data.wall), V2(mouseX, mouseY), {1.0f, 1.0f}, Fade(tint, furniturePreviewAlpha));
+         drawTexture(getBlockData(data.wall).texture, V2(mouseX, mouseY), {1.0f, 1.0f}, Fade(tint, furniturePreviewAlpha));
       }
       else if (data.action == ItemActionType::placeFurniture) {
          blockid_t below = (map.isPositionValid(mouseX, mouseY + furniturePreview.height) ? map.getBlock(mouseX, mouseY + furniturePreview.height).id : 0);
@@ -563,14 +578,11 @@ void GameState::render() {
       }
    }
 
-   // // Render block breaking preview
-   // if (player.breakTime != 0.0f) {
-   //    // TODO: Change this in the future, shit logic
-   //    float breakTime = (player.breakingFurniture ? getFurnitureBreakingTime(map.getFurnitureAtPosition(player.lastBreakingX, player.lastBreakingY).id) : getBlockBreakingTime((player.breakingWall ? map.walls : map.blocks)[player.lastBreakingY][player.lastBreakingX].id));
-   //    int textureX = (player.breakTime / breakTime) * 5;
-   //    Texture2D &texture = getTexture("breaking");
-   //    DrawTexturePro(texture, {textureX * 8.0f, 0, 8, 8}, {(float)player.lastBreakingX, (float)player.lastBreakingY, 1, 1}, {0, 0}, 0, (player.breakingWall ? wallTint : WHITE));
-   // }
+   // Render block breaking preview
+   if (player.breakTime != 0.0f) {
+      int textureX = (player.breakTime / player.breakSpeed) * 5;
+      DrawTexturePro(getTexture("breaking"), {textureX * 8.0f, 0, 8, 8}, {(float)player.lastBreakingX, (float)player.lastBreakingY, 1, 1}, {0, 0}, 0, (player.breakingWall ? wallTint : WHITE));
+   }
 
    // Render breath dynamically
    if (!player.creative && player.breath != maxBreath) {
@@ -674,4 +686,14 @@ void GameState::pushPendingDroppedItems() {
       droppedItems.emplace_back(item, dropPosition.x, dropPosition.y);
    }
    inventory.pendingDrops.clear();
+}
+
+void GameState::pushDropTable(droptableid_t id) {
+   DropTable &table = getDropTable(id);
+   for (Drop &drop: table.drops) {
+      if (drop.dropChance == 1.0f || chancePrecise(drop.dropChance)) {
+         Item item {randomInt(drop.dropMin, drop.dropMax), drop.item};
+         inventory.placeItemOrDrop(item);
+      }
+   }
 }

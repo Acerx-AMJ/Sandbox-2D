@@ -1,5 +1,6 @@
 #include "mngr/data.hpp"
 #include "SRU/assets.hpp"
+#include "SRU/text.hpp"
 #include "objs/item.hpp"
 #include "objs/map.hpp"
 #include <SRU/file.hpp>
@@ -8,39 +9,118 @@
 // data functions
 
 void loadData() {
+   printf("Reading all config files...\n");
+   std::vector<Header> blockHeaders = getHeadersFromConfig("assets/config/blocks.txt", "#", "[", "]", '=');
+   std::vector<Header> liquidHeaders = getHeadersFromConfig("assets/config/liquids.txt", "#", "[", "]", '=');
+   std::vector<Header> furnitureHeaders = getHeadersFromConfig("assets/config/furniture.txt", "#", "[", "]", '=');
+   std::vector<Header> itemHeaders = getHeadersFromConfig("assets/config/items.txt", "#", "[", "]", '=');
+   std::vector<Header> dropHeaders = getHeadersFromConfig("assets/config/drop_tables.txt", "#", "[", "]", '=');
+
+   printf("Sizing all containers...\n");
+   reserveBlockContainers(blockHeaders.size());
+   reserveLiquidContainers(liquidHeaders.size());
+   reserveFurnitureContainers(furnitureHeaders.size());
+   reserveItemContainers(itemHeaders.size());
+   reserveDropTableContainers(dropHeaders.size());
+
+   printf("Running pre-pass for all files...\n");
+   loadPrepass(blockHeaders, liquidHeaders, furnitureHeaders, itemHeaders, dropHeaders);
+
    printf("Loading block data from 'assets/config/blocks.txt'...\n");
-   loadBlockData();
+   loadBlockData(blockHeaders);
    printf("Loading liquid data from 'assets/config/liquids.txt'...\n");
-   loadLiquidData();
+   loadLiquidData(liquidHeaders);
    printf("Loading furniture data from 'assets/config/furniture.txt'...\n");
-   loadFurnitureData();
+   loadFurnitureData(furnitureHeaders);
    printf("Loading item data from 'assets/config/items.txt'...\n");
-   loadItemData();
+   loadItemData(itemHeaders);
+   printf("Loading drop table data from 'assets/config/drop_tables.txt'...\n");
+   loadDropTableData(dropHeaders);
    printf("Loading done!\n");
 }
 
-void loadBlockData() {
-   std::vector<Header> headers = getHeadersFromConfig("assets/config/blocks.txt", "#", "[", "]", '=');
-   reserveBlockContainers(headers.size());
-
-   for (Header &header: headers) {
+void loadPrepass(std::vector<Header> &blockHeaders, std::vector<Header> &liquidHeaders, std::vector<Header> &furnitureHeaders, std::vector<Header> &itemHeaders, std::vector<Header> &dropHeaders) {
+   for (Header &header: blockHeaders) {
       pushBlock(header.name);
    }
 
+   for (Header &header: liquidHeaders) {
+      pushLiquid(header.name);
+   }
+
+   for (Header &header: furnitureHeaders) {
+      pushFurniture(header.name);
+   }
+
+   for (Header &header: itemHeaders) {
+      pushItem(header.name);
+   }
+
+   for (Header &header: dropHeaders) {
+      pushDropTable(header.name);
+   }
+}
+
+void loadBlockData(std::vector<Header> &headers) {
    for (Header &header: headers) {
-      Texture texture {0};
-      BlockType types {};
+      BlockData data;
       bool noTexture = false;
 
       for (auto &[field, value]: header.lines) {
          if (field == "texture") {
             if (value.empty()) {
-               texture.id = 0;
+               data.texture.id = 0;
                noTexture = true;
             }
             else {
-               texture = getTexture(value);
+               data.texture = getTexture(value);
             }
+         }
+         else if (field == "drop_table") {
+            if (!isDropTableNameValid(value)) {
+               printf("loadBlockData: Drop table '%s' does not exist.\n", value.c_str());
+               continue;
+            }
+            data.dropTable = getDropTableIdFromName(value);
+         }
+         else if (field == "break_speed") {
+            data.breakSpeed = getFloatValue(value);
+         }
+         else if (field == "tool_power") {
+            data.toolPower = getIntValue(value);
+         }
+         else if (field == "tool_power_required") {
+            data.toolPowerRequired = getBoolValue(value);
+         }
+         else if (field == "tool_type") {
+            if (!isToolTypeValid(value)) {
+               printf("loadBlockData: Tool type '%s' does not exist.\n", value.c_str());
+               continue;
+            }
+            data.toolType = getToolTypeFromString(value);
+         }
+         else if (field == "drop_table_wall") {
+            if (!isDropTableNameValid(value)) {
+               printf("loadBlockData: Drop table '%s' does not exist.\n", value.c_str());
+               continue;
+            }
+            data.wallDropTable = getDropTableIdFromName(value);
+         }
+         else if (field == "break_speed_wall") {
+            data.wallBreakSpeed = getFloatValue(value);
+         }
+         else if (field == "tool_power_wall") {
+            data.wallToolPower = getIntValue(value);
+         }
+         else if (field == "tool_power_required_wall") {
+            data.wallToolPowerRequired = getBoolValue(value);
+         }
+         else if (field == "tool_type_wall") {
+            if (!isToolTypeValid(value)) {
+               printf("loadBlockData: Tool type '%s' does not exist.\n", value.c_str());
+               continue;
+            }
+            data.wallToolType = getToolTypeFromString(value);
          }
          else if (field == "attributes") {
             std::vector<std::string> attributes = getArrayValue(value);
@@ -49,7 +129,7 @@ void loadBlockData() {
                   printf("loadBlockData: Invalid block attribute '%s'.\n", attribute.c_str());
                   continue;
                }
-               types = types | getBlockTypeFromString(attribute);
+               data.attributes = data.attributes | getBlockTypeFromString(attribute);
             }
          }
          else {
@@ -57,21 +137,14 @@ void loadBlockData() {
          }
       }
 
-      if (!noTexture && texture.id == 0) {
-         texture = getTexture(header.name);
+      if (!noTexture && data.texture.id == 0) {
+         data.texture = getTexture(header.name);
       }
-      setBlock(header.name, types, texture);
+      setBlock(header.name, data);
    }
 }
 
-void loadLiquidData() {
-   std::vector<Header> headers = getHeadersFromConfig("assets/config/liquids.txt", "#", "[", "]", '=');
-   reserveLiquidContainers(headers.size());
-
-   for (Header &header: headers) {
-      pushLiquid(header.name);
-   }
-
+void loadLiquidData(std::vector<Header> &headers) {
    for (Header &header: headers) {
       LiquidData data;
       bool noTexture = false;
@@ -134,14 +207,7 @@ void loadLiquidData() {
    }
 }
 
-void loadFurnitureData() {
-   std::vector<Header> headers = getHeadersFromConfig("assets/config/furniture.txt", "#", "[", "]", '=');
-   reserveFurnitureContainers(headers.size());
-
-   for (Header &header: headers) {
-      pushFurniture(header.name);
-   }
-
+void loadFurnitureData(std::vector<Header> &headers) {
    for (Header &header: headers) {
       FurnitureData data;
       bool noTexture = false;
@@ -224,6 +290,29 @@ void loadFurnitureData() {
                treeSoils.push_back(getBlockIdFromName(soil));
             }
          }
+         else if (field == "drop_table") {
+            if (!isDropTableNameValid(value)) {
+               printf("loadFurnitureData: Drop table '%s' does not exist.\n", value.c_str());
+               continue;
+            }
+            data.dropTable = getDropTableIdFromName(value);
+         }
+         else if (field == "break_speed") {
+            data.breakSpeed = getFloatValue(value);
+         }
+         else if (field == "tool_power") {
+            data.toolPower = getIntValue(value);
+         }
+         else if (field == "tool_power_required") {
+            data.toolPowerRequired = getBoolValue(value);
+         }
+         else if (field == "tool_type") {
+            if (!isToolTypeValid(value)) {
+               printf("loadFurnitureData: Tool type '%s' does not exist.\n", value.c_str());
+               continue;
+            }
+            data.toolType = getToolTypeFromString(value);
+         }
          else {
             printf("loadFurnitureData: Invalid field '%s'.\n", field.c_str());
          }
@@ -236,14 +325,7 @@ void loadFurnitureData() {
    }
 }
 
-void loadItemData() {
-   std::vector<Header> headers = getHeadersFromConfig("assets/config/items.txt", "#", "[", "]", '=');
-   reserveItemContainers(headers.size());
-
-   for (Header &header: headers) {
-      pushItem(header.name);
-   }
-
+void loadItemData(std::vector<Header> &headers) {
    for (Header &header: headers) {
       ItemData data;
       bool noTexture = false;
@@ -305,5 +387,39 @@ void loadItemData() {
          data.texture = getTexture(header.name);
       }
       setItem(header.name, data);
+   }
+}
+
+void loadDropTableData(std::vector<Header> &headers) {
+   for (Header &header: headers) {
+      DropTable data;
+
+      for (auto &[field, value]: header.lines) {
+         if (field == "table") {
+            std::vector<Line> dictionary = getDictionaryValue(value, '=');
+            data.drops.reserve(data.drops.size() + dictionary.size()); // in case someone defines table multiple times
+            
+            for (auto &[item, values]: dictionary) {
+               std::vector<std::string> array = clean(split(values, ';'));
+               if (array.size() > 3) {
+                  printf("loadDropTableData: Too many values for drop table '%s=%s'.\n", item.c_str(), values.c_str());
+                  continue;
+               }
+               if (!isItemNameValid(item)) {
+                  printf("loadDropTableData: Item '%s' does not exist.\n", item.c_str());
+                  continue;
+               }
+               itemid_t id = getItemIdFromName(item);
+               float dropChance = (array.size() > 0 ? getFloatValue(array[0]) : 1.0f);
+               int dropMin = (array.size() > 1 ? getIntValue(array[1]) : 1);
+               int dropMax = (array.size() > 2 ? getIntValue(array[2]) : 1);
+               data.drops.emplace_back(id, dropChance, dropMin, dropMax);
+            }
+         }
+         else {
+            printf("loadDropTableData: Invalid field '%s'.\n", field.c_str());
+         }
+      }
+      setDropTable(header.name, data);
    }
 }

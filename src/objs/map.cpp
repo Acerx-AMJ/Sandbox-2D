@@ -20,8 +20,7 @@ static const std::unordered_map<std::string, BlockType> blockAttributeStrings {{
 
 static size_t blockCount = 0;
 static std::vector<std::string> blockNames;
-static std::vector<BlockType> blockAttributes;
-static std::vector<Texture> blockTextures;
+static std::vector<BlockData> blockData;
 static std::unordered_map<std::string, blockid_t> blockIds;
 
 static size_t liquidCount = 1; // 1 - nil
@@ -50,6 +49,10 @@ BlockType getBlockTypeFromString(const std::string &name) {
    return BlockType::empty;
 }
 
+BlockData &getBlockData(blockid_t id) {
+   return blockData[id];
+}
+
 blockid_t getBlockIdFromName(const std::string &name) {
    return blockIds.at(name);
 }
@@ -58,32 +61,26 @@ std::string getBlockNameFromId(blockid_t id) {
    return blockNames[id];
 }
 
-Texture getBlockTexture(blockid_t id) {
-   return blockTextures[id];
-}
-
 size_t getBlockCount() {
    return blockCount;
 }
 
 void reserveBlockContainers(size_t estimate) {
    blockNames.reserve(estimate + 1);
-   blockAttributes.reserve(estimate + 1);
+   blockData.reserve(estimate + 1);
    blockIds.reserve(estimate + 1);
 }
 
 void pushBlock(const std::string &name) {
+   blockData.push_back({});
    blockNames.push_back(name);
-   blockAttributes.push_back({});
-   blockTextures.push_back({});
    blockIds[name] = blockCount;
    blockCount += 1;
 }
 
-void setBlock(const std::string &name, BlockType attributes, Texture texture) {
+void setBlock(const std::string &name, BlockData data) {
    blockid_t id = blockIds.at(name);
-   blockAttributes[id] = attributes;
-   blockTextures[id] = texture;
+   blockData[id] = data;
 }
 
 // liquid getter functions
@@ -158,13 +155,13 @@ Map::~Map() {
 
 void Map::setRow(int y, const std::string &name) {
    blockid_t id = getBlockIdFromName(name);
-   Block block = {id, TileType::root, blockAttributes[id]};
+   Block block = {id, 0, TileType::root, blockData[id].attributes};
    std::fill_n(&blocks[y * sizeX], sizeX, block);
 }
 
 void Map::setWallRow(int y, const std::string &name) {
    blockid_t id = getBlockIdFromName(name);
-   Wall wall = {id, blockAttributes[id]};
+   Wall wall = {id, blockData[id].attributes};
    std::fill_n(&walls[y * sizeX], sizeX, wall);
 }
 
@@ -173,7 +170,7 @@ void Map::setRow(int y, blockid_t *ids) {
    for (int i = 0; i < sizeX; ++i) {
       Block &block = blocks[start + i];
       block.id = ids[i];
-      block.type = blockAttributes[block.id];
+      block.type = blockData[block.id].attributes;
    }
 }
 
@@ -182,15 +179,15 @@ void Map::setWallRow(int y, blockid_t *ids) {
    for (int i = 0; i < sizeX; ++i) {
       Wall &wall = walls[start + i];
       wall.id = ids[i];
-      wall.type = blockAttributes[wall.id];
+      wall.type = blockData[wall.id].attributes;
    }
 }
 
 void Map::setColumnFromPoint(int x, int y, const std::string &name) {
    blockid_t id = getBlockIdFromName(name);
-   BlockType type = blockAttributes[id];
+   BlockType type = blockData[id].attributes;
 
-   Block block {id, TileType::root, type};
+   Block block {id, 0, TileType::root, type};
    Wall wall {id, type};
 
    int start = y * sizeX + x;
@@ -210,7 +207,9 @@ void Map::setBlock(int x, int y, blockid_t id) {
    int i = y * sizeX + x;
    Block &block = blocks[i];
    block.id = id;
-   block.type = blockAttributes[id];
+   block.ghostId = 0;
+   block.tile = TileType::root;
+   block.type = blockData[id].attributes;
    block.value = 0;
    block.value2 = 0;
    block.platformOverride = false;
@@ -228,7 +227,7 @@ void Map::setWall(int x, int y, const std::string &name) {
 void Map::setWall(int x, int y, blockid_t id) {
    int i = y * sizeX + x;
    walls[i].id = id;
-   walls[i].type = blockAttributes[id];
+   walls[i].type = blockData[id].attributes;
 }
 
 void Map::setLiquid(int x, int y, liquidid_t id, liquidlayer_t height) {
@@ -260,7 +259,19 @@ void Map::swapBlocks(int oldX, int oldY, int newX, int newY) {
    std::swap(liquidTypes[oldI], liquidTypes[newI]);
 }
 
+void Map::updateFurniture(Player &player, Vector2 mousePos, float dt) {
+   for (Furniture &object: furniture) {
+      if (object.id != 0) {
+         object.update(*this, player, mousePos, dt);
+      }
+   }
+}
+
 void Map::addFurniture(Furniture &object) {
+   if (object.id == 0) return;
+   size_t identifier = (furnitureEmptySlots.empty() ? furniture.size() : furnitureEmptySlots.back());
+   object.mapIdentifier = identifier;
+
    for (int y = object.y; y < object.y + object.height; ++y) {
       for (int x = object.x; x < object.x + object.width; ++x) {
          FurniturePiece &piece = object.pieces[(y - object.y) * object.width + (x - object.x)];
@@ -270,11 +281,19 @@ void Map::addFurniture(Furniture &object) {
          int i = y * sizeX + x;
          blocks[i].tile = TileType::ghost;
          blocks[i].id = object.id;
-         blocks[i].type = blockAttributes[0];
+         blocks[i].ghostId = identifier;
+         blocks[i].type = blockData[0].attributes;
          blocks[i].platformOverride = piece.walkable;
       }
    }
-   furniture.push_back(object);
+
+   if (furnitureEmptySlots.empty()) {
+      furniture.push_back(object);
+   }
+   else {
+      furniture[identifier] = object;
+      furnitureEmptySlots.pop_back();
+   }
 }
 
 void Map::removeFurniture(Furniture &object) {
@@ -284,11 +303,13 @@ void Map::removeFurniture(Furniture &object) {
             int i = y * sizeX + x;
             blocks[i].tile = TileType::root;
             blocks[i].id = 0;
+            blocks[i].ghostId = 0;
             blocks[i].platformOverride = false;
          }
       }
    }
-   object.deleted = true;
+   furnitureEmptySlots.push_back(object.mapIdentifier);
+   furniture[object.mapIdentifier].id = 0;
 }
 
 // getters
@@ -387,7 +408,7 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
             x += 1;
          }
 
-         Texture texture = blockTextures[wall.id];
+         Texture texture = blockData[wall.id].texture;
          Rectangle source = R4(0, 0, texture.width * (x - oldX), texture.height);
          drawTexture(texture, V2(oldX, y), V2(x - oldX, 1), wallTint, 0.0f, source);
          x -= 1;
@@ -396,7 +417,9 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
 
    // Render furniture
    for (const Furniture &obj: furniture) {
-      obj.render(cameraBounds);
+      if (obj.id != 0) {
+         obj.render(cameraBounds);
+      }
    }
 
    // Render blocks
@@ -409,7 +432,7 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
             continue;
          }
          
-         Texture texture = blockTextures[block.id];
+         Texture texture = blockData[block.id].texture;
          if (BlockTypeHas(block.type, BlockType::torch)) {
             constexpr static float torchLightOffsetsY[] = {-1.0f, -1.0f * (5.0f / 8.0f), -0.75f, -0.75f, -1.0f * (5.0f / 8.0f)};
 

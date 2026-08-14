@@ -45,8 +45,24 @@ constexpr inline bool BlockTypeHas(BlockType lhs, BlockType rhs) {
    return (static_cast<unsigned short>(lhs) & static_cast<unsigned short>(rhs)) != 0;
 }
 
+struct BlockData {
+   BlockType attributes {};
+   Texture texture {0};
+   droptableid_t dropTable = 0;
+   float breakSpeed = 0.0f;
+   int toolPower = 0;
+   bool toolPowerRequired = false;
+   ToolType toolType = ToolType::pickaxe;
+   droptableid_t wallDropTable = 0;
+   float wallBreakSpeed = 0.0f;
+   int wallToolPower = 0;
+   bool wallToolPowerRequired = false;
+   ToolType wallToolType = ToolType::hammer;
+};
+
 struct Block {
    blockid_t id = 0;
+   furnitureid_t ghostId = 0;
    TileType tile = TileType::root;
    BlockType type = BlockType::empty | BlockType::translucent | BlockType::flowable;
 
@@ -65,14 +81,14 @@ bool isBlockTypeValid(const std::string &name);
 bool isBlockNameValid(const std::string &name);
 bool isBlockIdValid(blockid_t id);
 BlockType getBlockTypeFromString(const std::string &name);
+BlockData &getBlockData(blockid_t id);
 blockid_t getBlockIdFromName(const std::string &name);
 std::string getBlockNameFromId(blockid_t id);
-Texture getBlockTexture(blockid_t texture);
 size_t getBlockCount();
 
 void reserveBlockContainers(size_t estimate);
 void pushBlock(const std::string &name);
-void setBlock(const std::string &name, BlockType attributes, Texture texture);
+void setBlock(const std::string &name, BlockData data);
 
 // Liquids
 
@@ -126,6 +142,9 @@ struct Map {
    void deleteBlockWithoutDeletingLiquids(int x, int y);
    void swapBlocks(int oldX, int oldY, int newX, int newY);
 
+   // furniture
+
+   void updateFurniture(Player &player, Vector2 mousePos, float dt);
    void addFurniture(Furniture &object);
    void removeFurniture(Furniture &object);
 
@@ -165,6 +184,7 @@ struct Map {
    std::vector<liquidlayer_t> liquidHeights;
    std::vector<liquidid_t> liquidTypes;
    std::vector<Furniture> furniture;
+   std::vector<size_t> furnitureEmptySlots;
 
    int sizeX = 0;
    int sizeY = 0;

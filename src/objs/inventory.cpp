@@ -228,7 +228,7 @@ void Inventory::dropItem(Item &item) {
 
 bool Inventory::placeItem(Item &item2) {
    int firstAvailableSpot = inventorySlots;
-   for (int i = 0; i < inventorySlots - 1; ++i) {
+   for (int i = 0; i < realInventorySlots; ++i) {
       Item &item1 = items[i];
 
       if (item1.id == item2.id && addItemCount(item1, item2) <= 0) {
@@ -277,7 +277,7 @@ void Inventory::pickItem(blockid_t blockId, blockid_t wallId, furnitureid_t furn
    }
 
    if (target == 0) return;
-   for (int i = 0; i < inventorySlots - 1; ++i) {
+   for (int i = 0; i < realInventorySlots; ++i) {
       if (items[i].id == target && i < inventoryWidth) {
          selected = i;
          break;

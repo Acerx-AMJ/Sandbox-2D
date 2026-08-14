@@ -2,9 +2,14 @@
 # [FURNITURE_NAME]
 # type=TYPE # none,tree,sapling,table,chair,door
 # texture=TEXTURE_NAME # name of texture (assets/sprites/blocks/dirt.png -> dirt) or empty for none. defaults to furniture name
-# texture_size=8 # texture size of a single block. default is 8
+# texture_size=NUMBER # texture size of a single block. default is 8
 # size=NUMBER,NUMBER # size of furniture (supported types: sapling,table,chair,door)
 # face_player=true/false # should furniture face player when placing (supported types: sapling,table,chair,door)
+# drop_table=DROP_TABLE_NAME # name of drop table (assets/config/drop_tables.txt). defaults to no drop
+# break_speed=NUMBER # time to break
+# tool_power=NUMBER # tool power required for drop
+# tool_power_required=true/false # whether or not tool power is required for breaking the furniture at all
+# tool_type=pickaxe/axe/hammer # type of tool required to break furniture. furniure breakable with pickaxe are also breakable by hand
 
 # tree_size_min=NUMBER # minimum size of tree in blocks
 # tree_size_max=NUMBER # maximum size of tree in blocks
@@ -26,6 +31,9 @@ tree_size_max=18
 tree_root_chance=25
 tree_branch_chance=15
 tree_soil=grass,dirt
+drop_table=tree
+break_speed=2.0
+tool_type=axe
 
 [palm]
 type=tree
@@ -34,6 +42,9 @@ tree_size_max=22
 tree_root_chance=0
 tree_branch_chance=0
 tree_soil=sand
+drop_table=tree
+break_speed=2.0
+tool_type=axe
 
 [pine]
 type=tree
@@ -42,6 +53,9 @@ tree_size_max=18
 tree_root_chance=25
 tree_branch_chance=15
 tree_soil=snow
+drop_table=tree
+break_speed=2.0
+tool_type=axe
 
 [jungle_tree]
 type=tree
@@ -50,6 +64,9 @@ tree_size_max=18
 tree_root_chance=25
 tree_branch_chance=15
 tree_soil=jungle_grass,mud
+drop_table=tree
+break_speed=2.0
+tool_type=axe
 
 [cactus]
 type=tree
@@ -60,6 +77,9 @@ tree_branch_chance=50
 tree_is_cactus=true
 tree_cactus_flower_chance=10
 tree_soil=sand
+drop_table=cactus
+break_speed=1.6
+tool_type=axe
 
 [sapling]
 type=sapling
@@ -68,6 +88,7 @@ sapling_grows_into=tree
 sapling_grow_speed_min=30
 sapling_grow_speed_max=200
 sapling_soil=grass,dirt
+break_speed=0.3
 
 [palm_sapling]
 type=sapling
@@ -76,6 +97,7 @@ sapling_grows_into=palm
 sapling_grow_speed_min=30
 sapling_grow_speed_max=200
 sapling_soil=sand
+break_speed=0.3
 
 [pine_sapling]
 type=sapling
@@ -84,6 +106,7 @@ sapling_grows_into=pine
 sapling_grow_speed_min=30
 sapling_grow_speed_max=200
 sapling_soil=snow
+break_speed=0.3
 
 [jungle_sapling]
 type=sapling
@@ -92,6 +115,7 @@ sapling_grows_into=jungle_tree
 sapling_grow_speed_min=30
 sapling_grow_speed_max=200
 sapling_soil=jungle_grass,mud
+break_speed=0.3
 
 [cactus_seed]
 type=sapling
@@ -100,17 +124,24 @@ sapling_grows_into=cactus
 sapling_grow_speed_min=45
 sapling_grow_speed_max=240
 sapling_soil=sand
+break_speed=0.3
 
 [table]
 type=table
 size=3,2
+drop_table=table
+break_speed=0.5
 
 [chair]
 type=chair
 size=1,2
 face_player=true
+drop_table=chair
+break_speed=0.5
 
 [door]
 type=door
 size=1,3
 face_player=true
+drop_table=door
+break_speed=0.5

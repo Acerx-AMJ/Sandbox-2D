@@ -2,6 +2,16 @@
 # [BLOCK_NAME]
 # attributes=ATTRIBUTE1,ATTRIBUTE2,... # empty,grass,dirt,sand,ice,solid,platform,translucent,lightsource,torch,flowable,sticky,bouncy
 # texture=TEXTURE_NAME # name of texture (assets/sprites/blocks/dirt.png -> dirt) or empty for none. defaults to block name
+# drop_table=DROP_TABLE_NAME # name of drop table (assets/config/drop_tables.txt). defaults to no drop
+# break_speed=NUMBER # time to break
+# tool_power=NUMBER # tool power required for drop
+# tool_power_required=true/false # whether or not tool power is required for breaking the block at all
+# tool_type=pickaxe/axe/hammer # type of tool required to break block. not recommended to change this but leaving this here for consistency with furniture. default is pickaxe for blocks and hammer for walls
+# drop_table_wall=DROP_TABLE_NAME
+# break_speed_wall=NUMBER
+# tool_power_wall=NUMBER
+# tool_power_required_wall=true/false
+# tool_type_wall=pickaxe/axe/hammer
 
 [air]
 attributes=empty,translucent,flowable
@@ -9,87 +19,190 @@ texture=
 
 [grass]
 attributes=solid,grass
+drop_table=dirt
+break_speed=0.5
 
 [dirt]
 attributes=solid,dirt
+drop_table=dirt
+break_speed=0.5
+drop_table_wall=dirt_wall
+break_speed_wall=0.5
 
 [clay]
 attributes=solid
+drop_table=clay
+break_speed=0.5
+drop_table_wall=clay_wall
+break_speed_wall=0.5
 
 [stone]
 attributes=solid
+drop_table=stone
+break_speed=1.5
+tool_power=1
+tool_power_required=true
+drop_table_wall=stone_wall
+break_speed_wall=1.5
 
 [sand]
 attributes=solid,sand
+drop_table=sand
+break_speed=0.5
 
 [sandstone]
 attributes=solid
+drop_table=sandstone
+break_speed=1.2
+tool_power=1
+tool_power_required=true
+drop_table_wall=sandstone_wall
+break_speed_wall=1.2
 
 [bricks]
 attributes=solid
+drop_table=bricks
+break_speed=1.5
+tool_power=1
+tool_power_required=true
+drop_table_wall=brick_wall
+break_speed_wall=1.5
 
 [glass]
 attributes=solid
+drop_table=glass
+break_speed=0.2
+drop_table_wall=glass_wall
+break_speed_wall=0.2
 
 [planks]
 attributes=solid
+drop_table=planks
+break_speed=0.5
+drop_table_wall=plank_wall
+break_speed_wall=0.5
 
 [stone_bricks]
 attributes=solid
+drop_table=stone_bricks
+break_speed=1.5
+tool_power=1
+tool_power_required=true
+drop_table_wall=stone_brick_wall
+break_speed_wall=1.5
 
 [tiles]
 attributes=solid
+drop_table=tiles
+break_speed=1.5
+tool_power=1
+tool_power_required=true
+drop_table_wall=tile_wall
+break_speed_wall=1.5
 
 [obsidian]
 attributes=solid
+drop_table=obsidian
+break_speed=2.3
+tool_power=1
+tool_power_required=true
 
 [platform]
 attributes=solid,platform,translucent,flowable
+drop_table=platform
+break_speed=0.5
 
 [snow]
 attributes=solid,sand
+drop_table=snow
+break_speed=0.5
 
 [ice]
 attributes=solid,ice
+drop_table=ice
+break_speed=0.5
+tool_power=1
+drop_table_wall=ice_wall
+break_speed_wall=0.5
 
 [jungle_grass]
 attributes=solid,grass
+drop_table=mud
+break_speed=0.5
 
 [mud]
 attributes=solid,dirt
+drop_table=mud
+break_speed=0.5
+drop_table_wall=mud_wall
+break_speed_wall=0.5
 
 [lamp]
 attributes=solid,lightsource
+drop_table=lamp
+break_speed=0.5
 
 [torch]
 attributes=translucent,lightsource,torch,flowable
+drop_table=torch
+break_speed=0.2
 
 [honey_block]
 attributes=solid,sticky
+drop_table=honey_block
+break_speed=0.5
 
 [crispy_honey_block]
 attributes=solid
+drop_table=crispy_honey_block
+break_speed=0.9
 
 [slime_block]
 attributes=solid,bouncy,translucent
+drop_table=slime_block
+break_speed=0.5
 
 [bubble_block]
 attributes=translucent
+drop_table=bubble_block
+break_speed=0.2
 
 [slime_platform]
 attributes=platform,translucent,solid,flowable,bouncy
+drop_table=slime_platform
+break_speed=0.5
 
 [cactus_block]
 attributes=solid
+drop_table=cactus_block
+break_speed=0.5
+drop_table_wall=cactus_wall
+break_speed_wall=0.5
 
 [coal_ore]
 attributes=solid
+drop_table=coal
+break_speed=1.8
+tool_power=1
+tool_power_required=true
 
 [iron_ore]
 attributes=solid
+drop_table=iron_lump
+break_speed=2.3
+tool_power=1
+tool_power_required=true
 
 [gold_ore]
 attributes=solid
+drop_table=gold_lump
+break_speed=2.6
+tool_power=1
+tool_power_required=true
 
 [mythril_ore]
 attributes=solid
+drop_table=mythril_lump
+break_speed=3.1
+tool_power=1
+tool_power_required=true

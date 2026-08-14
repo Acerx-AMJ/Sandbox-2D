@@ -4,7 +4,9 @@
 
 constexpr inline int inventoryWidth  = 10;
 constexpr inline int inventoryHeight = 4;
+
 constexpr inline int inventorySlots = inventoryWidth * inventoryHeight + 1; // trash included
+constexpr inline int realInventorySlots = inventorySlots - 1; // trash excluded
 constexpr inline int trashSlot = inventorySlots - 1;
 
 struct Inventory {

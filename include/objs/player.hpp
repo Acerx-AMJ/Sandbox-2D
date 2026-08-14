@@ -77,11 +77,14 @@ struct Player {
    float blockPlacementSpeed = 0.1f;
    float blockPlacementTimer = 0.0f;
 
+   bool breakingFurniture = false;
+   bool breakingWall = false;
    int breakAnimation = 0;
    int lastBreakingX = 0;
    int lastBreakingY = 0;
    bool breakingBlock = false;
    float breakTime = 0.0f;
+   float breakSpeed = 0.0f;
    float breakAnimationTimer = 0.0f;
 
    bool creative = false;

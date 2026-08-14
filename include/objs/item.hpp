@@ -2,6 +2,9 @@
 #include "config.hpp"
 #include <raylib.h>
 #include <string>
+#include <vector>
+
+// item data
 
 enum class ItemActionType: unsigned char {
    none,
@@ -70,3 +73,38 @@ struct DroppedItem {
 
    Rectangle getBounds() const;
 };
+
+// drop data
+
+enum class ToolType: unsigned char {
+   pickaxe,
+   axe,
+   hammer,
+};
+
+struct Drop {
+   Drop(itemid_t item, float dropChance, int dropMin, int dropMax)
+      : item(item), dropChance(dropChance), dropMin(dropMin), dropMax(dropMax) {}
+
+   itemid_t item = 0;
+   float dropChance = 1.0f;
+   int dropMin = 1;
+   int dropMax = 1;
+};
+
+struct DropTable {
+   std::vector<Drop> drops;
+};
+
+bool isToolTypeValid(const std::string &type);
+bool isDropTableNameValid(const std::string &name);
+bool isDropTableIdValid(droptableid_t id);
+ToolType getToolTypeFromString(const std::string &type);
+DropTable &getDropTable(droptableid_t id);
+droptableid_t getDropTableIdFromName(const std::string &name);
+std::string getDropTableNameFromId(droptableid_t id);
+size_t getDropTableCount();
+
+void reserveDropTableContainers(size_t estimate);
+void pushDropTable(const std::string &name);
+void setDropTable(const std::string &name, DropTable &table);
