@@ -1,3 +1,4 @@
+#include "SRU/util.hpp"
 #include "game/gameState.hpp"
 #include "game/menuState.hpp"
 #include "mngr/input.hpp"
@@ -44,7 +45,7 @@ MenuState::MenuState() {
    deleteButton.keybind = "D";
    deleteButton.disabled = true;
    renameButton.text = "Rename World";
-   renameButton.keybind = "R";
+   renameButton.keybind = "F2";
    renameButton.disabled = true;
    backButton.text = "Back";
    favoriteButton.text = "Favorite";
@@ -314,7 +315,7 @@ void MenuState::updateLevelSelection() {
    }
    deleteClicked = false;
 
-   if (renameButton.clicked || (!renameButton.disabled && handleKeyPressWithSound(KEY_R))) {
+   if (renameButton.clicked || (!renameButton.disabled && handleKeyPressWithSound(KEY_F2))) {
       worldSearchBar.typing = false;
       
       phase = Phase::levelRenaming;
@@ -505,7 +506,7 @@ void MenuState::render() {
 // Render title
 
 void MenuState::renderTitle() {
-   drawTextCentered("andy", getScreenCenter({0.f, -200.0f * getHeightRatio()}), "SANDBOX 2D", getFontSize(180));
+   drawTextureCenteredResponsiveCubic("title", V2(0.5f, 0.3f), V2(1.0f, 0.167f));
    playButton.render();
    optionsButton.render();
    quitButton.render();
@@ -536,7 +537,7 @@ void MenuState::renderLevelSelection() {
       }
 
       Vector2 position = {button.rectangle.x + (button.rectangle.width * button.scale) / 2.f - (button.rectangle.height * button.scale) / 2.f, button.rectangle.y - offsetY};
-      drawTexture(getTexture("star"), position, applyCubicResponsiveness({50.0f * button.scale, 50.0f * button.scale}));
+      drawTextureCentered("star", position, applyCubicResponsiveness({50.0f * button.scale, 50.0f * button.scale}));
    }
 }
 
@@ -605,10 +606,8 @@ void MenuState::loadWorldButtons() {
          continue;
       }
 
-      std::string copyA = button.text;
-      std::string copyB = worldSearchBar.text;
-      std::transform(copyA.begin(), copyA.end(), copyA.begin(), ::tolower);
-      std::transform(copyB.begin(), copyB.end(), copyB.begin(), ::tolower);
+      std::string copyA = toLower(button.text);
+      std::string copyB = toLower(worldSearchBar.text);
 
       if (copyA.find(copyB) != std::string::npos) {
          worldButtons.push_back(button);
@@ -622,12 +621,7 @@ void MenuState::sortWorldButtonsByFavorites() {
       if (a.favorite != b.favorite) {
          return a.favorite && !b.favorite;
       }
-
-      std::string copyA = a.text;
-      std::string copyB = b.text;
-      std::transform(copyA.begin(), copyA.end(), copyA.begin(), ::tolower);
-      std::transform(copyB.begin(), copyB.end(), copyB.begin(), ::tolower);
-      return copyA < copyB;
+      return toLower(a.text) < toLower(b.text);
    });
 
    float wr = getWidthRatio();

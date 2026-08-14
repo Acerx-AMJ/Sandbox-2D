@@ -16,6 +16,10 @@ void State::updateStateLogic() {
    updateInput();
    updatePopups(realDt);
 
+   if (IsKeyPressed(KEY_F11)) {
+      ToggleBorderlessWindowed();
+   }
+
    int width = GetScreenWidth();
    int height = GetScreenHeight();
 

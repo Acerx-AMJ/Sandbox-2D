@@ -1,7 +1,7 @@
-# Sandbox-2D
-Build whatever your heart desires, survive the environment or simply play around - it's up to you. Sandbox-2D is a sandbox survival game where you can build, destroy and explore. Ready for the laid-back experience? Download it now for free on [Itch.io](https://acerxamj.itch.io/sandbox-2d).
+<img src="assets/sprites/ui/title.png"/>
 
-![Main Menu Screenshot](assets/screenshots/2026-03-11_13-53.png)
+---
+Sandbox-2D is an open-source 2D sandbox survival game where you can build, destroy and explore. You can download it for free on [Itch.io](https://acerxamj.itch.io/sandbox-2d).
 
 ## Table of Contents
 - [Features](#features)
@@ -38,18 +38,17 @@ The game is a WIP, so stay tuned for new features! Currently it includes;
 - EQUAL - zoom out
 - CTRL+TAB - open console
 
-## Installation
-This project only depends on Raylib 5.5 and it uses C++ standard 17.
+- F11 - toggle fullscreen
 
-#### Prerequisites
-You must have git, cmake, a C++ compiler and raylib installed. On Unix you must install Raylib through apt/homebrew or a different package manager (or edit the CMake). On Windows you must install Raylib through [Github Releases](https://github.com/raysan5/raylib/releases) and place all header files in lib folder and all raylib.dll and raylibdll.lib in the project directory.
+## Installation
+This project depends on Raylib 5.5 and SRU-Lib, which are fetched by CMake, and it uses C++17 standard. You must have CMake and a C++17 compiler installed to build this game.
 
 #### Installation
-1. Clone the repository:
+1. Clone the repository (or download as ZIP if not using git):
 ```bash
 git clone https://github.com/Acerx-AMJ/Sandbox-2D.git
 ```
-2. Navigate in the repository:
+2. Navigate in the directory (or manually):
 ```bash
 cd Sandbox-2D
 ```
@@ -58,11 +57,14 @@ cd Sandbox-2D
 cmake -B build
 cmake --build build
 ```
-The executable will be found in `build/sandbox`. If something didn't work, feel free to open an issue.
+The executable will be found in `build/sandbox`. If something didn't work as expected, feel free to open an issue.
 
 ## Usage
 
-Simply run the executable after [building](#installation). Assets folder must be in the same directory in which the executable is ran.
+Simply run the executable after building. Assets folder must be in the same directory in which the executable is ran. CMake does not place assets in the build folder and if you run it from there it will throw an error. That's why you must run from the project directory (Sandbox-2D/):
+```bash
+./build/sandbox
+```
 
 ## Contributing
 
@@ -85,8 +87,8 @@ git push origin [feature-name]
 This project owes its success to the following people and organizations:
 
 ### Contributors
-- The code was written by and sprites were made by Acerx-AMJ.
-- Windows builds were made by Jhyde927.
+- The code was written by and sprites were made by Daniel Vishnevsky.
+- Windows builds were made by Joseph Hyde.
 - SFX by DTChords.
 
 ### Assets
@@ -94,7 +96,8 @@ This project owes its success to the following people and organizations:
 - Thanks to Google for creating the "Roboto" font!
 
 ### Third-party Libraries
-- [Raylib](https://www.raylib.com/), which is used in everything from rendering to playing sounds.
+- [Raylib](https://www.raylib.com/), which is used in everything from input and rendering to playing sounds and doing math.
+- [SRU-Lib](https://github.com/Acerx-AMJ/SRU-Library), which is used for utilities for Raylib.
 - [siv::PerlinNoise](https://github.com/Reputeless/PerlinNoise), which is used to generate worlds.
 
 ### License
