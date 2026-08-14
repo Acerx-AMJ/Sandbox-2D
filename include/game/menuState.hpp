@@ -17,7 +17,6 @@ struct MenuState: public State {
    // Update
 
    void update() override;
-   void fixedUpdate() override;
    void updateResponsiveness() override;
 
    void updateTitle();

@@ -280,9 +280,6 @@ void Furniture::preview(const Map &map) const {
 
 void Furniture::render(const Rectangle &cameraBounds) const {
    FurnitureData &data = furnitureData[id];
-   DrawRectanglePro(R4(x, y, width, height), {0, 0}, 0, Fade(RED, 0.5));
-   DrawTextPro(GetFontDefault(), TextFormat("%d %d", id, mapIdentifier), V2(x, y), {0, 0}, 0, 0.5, 0, WHITE);
-
    for (int dy = y; dy <= cameraBounds.height && dy - y < height; ++dy) {
       for (int dx = x; dx <= cameraBounds.width && dx - x < width; ++dx) {
          const FurniturePiece &piece = pieces[(dy - y) * width + (dx - x)];

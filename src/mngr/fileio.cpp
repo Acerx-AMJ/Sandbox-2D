@@ -9,13 +9,15 @@
 
 // Please increment after any breaking changes to warn players
 // about corrupted worlds
-constexpr int fileVersion = 11;
+constexpr int fileVersion = 12;
 
 // World saving functions
 // Save and load functions must follow the same data arrangement
 
 void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, const Vector2 &position, bool creative, int breath, int hearts, int maxHearts, float zoom, const Map &map, const Console *console, const Inventory *inventory, const std::vector<DroppedItem> *droppedItems) {
+   auto begin = std::chrono::steady_clock::now();
    std::ofstream file ("data/worlds/" + name + ".bin", std::ios::binary);
+
    if (!file.is_open()) {
       printf("saveWorldData: Failed to save world 'data/worlds/%s.bin'.\n", name.c_str());
       return;
@@ -89,6 +91,7 @@ void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, 
    file.write(reinterpret_cast<const char*>(&furnitureCount), sizeof(furnitureCount));
 
    for (const Furniture &obj: map.furniture) {
+      if (obj.id == 0) continue;
       file.write(reinterpret_cast<const char*>(&obj.id), sizeof(obj.id));
       file.write(reinterpret_cast<const char*>(&obj.x), sizeof(obj.x));
       file.write(reinterpret_cast<const char*>(&obj.y), sizeof(obj.y));
@@ -107,12 +110,18 @@ void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, 
    if (droppedItems) {
       file.write(reinterpret_cast<const char*>(droppedItems->data()), droppedItems->size() * sizeof(DroppedItem));
    }
+
+   auto end = std::chrono::steady_clock::now();
+   size_t writeSize = file.tellp();
+   printf("Successfully wrote %lluB (%lluMB) to 'data/worlds/%s.bin'. Took %lldms.\n", writeSize, writeSize / 1'000'000, name.c_str(), std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
 }
 
 // World loading functions
 
 void loadWorldData(const std::string &name, Player &player, float &zoom, Map &map, Console &console, Inventory &inventory, std::vector<DroppedItem> &droppedItems) {
+   auto begin = std::chrono::steady_clock::now();
    std::ifstream file ("data/worlds/" + name + ".bin", std::ios::binary);
+
    if (!file.is_open()) {
       printf("loadWorldData: Failed to load world 'data/worlds/%s.bin'.\n", name.c_str());
       return;
@@ -145,18 +154,18 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
    file.read(reinterpret_cast<char*>(&inventory.items), realInventorySlots * sizeof(Item));
 
    // Read console
-   size_t size = 0;
-   file.read(reinterpret_cast<char*>(&size), sizeof(size));
-   console.history.resize(size);
+   size_t historySize = 0;
+   file.read(reinterpret_cast<char*>(&historySize), sizeof(historySize));
+   console.history.resize(historySize);
 
-   for (size_t i = 0; i < size; ++i) {
-      size_t ssize = 0;
-      file.read(reinterpret_cast<char*>(&ssize), sizeof(ssize));
+   for (size_t i = 0; i < historySize; ++i) {
+      size_t lineSize = 0;
+      file.read(reinterpret_cast<char*>(&lineSize), sizeof(lineSize));
       
-      std::string history;
-      history.resize(ssize);
-      file.read(reinterpret_cast<char*>(history.data()), ssize);
-      console.history[i] = history;
+      std::string line;
+      line.resize(lineSize);
+      file.read(reinterpret_cast<char*>(line.data()), lineSize);
+      console.history[i] = line;
    }
 
    // Read map
@@ -207,6 +216,11 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
       file.read(reinterpret_cast<char*>(droppedItems.data()), droppedItemCount * sizeof(DroppedItem));
    }
    player.init();
+
+   auto end = std::chrono::steady_clock::now();
+   file.seekg(0, std::ios::end);
+   size_t writeSize = file.tellg();
+   printf("Successfully read %lluB (%lluMB) from 'data/worlds/%s.bin'. Took %lldms.\n", writeSize, writeSize / 1'000'000, name.c_str(), std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
 }
 
 int getFileVersion(const std::string &name) {

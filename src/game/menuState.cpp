@@ -94,10 +94,6 @@ void MenuState::update() {
    }
 }
 
-void MenuState::fixedUpdate() {
-   // Menu state does not require any physics
-}
-
 void MenuState::updateResponsiveness() {
    const Vector2 center = getScreenCenter();
 
