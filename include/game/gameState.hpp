@@ -47,6 +47,9 @@ struct GameState: public State {
 
    Camera2D camera;
    Rectangle cameraBounds;
+   float cameraFollowSpeed = 0.416f;
+   float minCameraZoom = 12.5f;
+   float maxCameraZoom = 200.0f;
 
    Console console;
    Inventory inventory;
@@ -63,8 +66,13 @@ struct GameState: public State {
    bool flippedPreviewX = false;
 
    std::vector<int> liquidCounters;
-   float deathTimer = 0.0f;
    int physicsCounter = 0;
-   int lavaCounter = 0;
-   int honeyCounter = 0;
+   int physicsTicks = 8;
+   int grassGrowSpeedMin = 100;
+   int grassGrowSpeedMax = 255;
+
+   float deathTimer = 0.0f;
+   float timeToRespawn = 10.0f;
+   float maxPickupRange = 2.0f;
+   float maxToolRange = 10.0f;
 };

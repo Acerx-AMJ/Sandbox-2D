@@ -1,22 +1,38 @@
 #pragma once
 #include "ui/input.hpp"
 #include <unordered_map>
-#include <variant>
 #include <vector>
 
-using VArgs = std::vector<std::string>;
-using Variable = std::variant<bool*, int*, float*>;
+enum class VariableType: unsigned char {
+   none, boolean, integer, floating, string
+};
+
+struct Variable {
+   VariableType type = VariableType::none;
+   union {
+      bool *bvalue;
+      int *ivalue;
+      float *fvalue;
+      std::string *svalue;
+   };
+};
+
+Variable createVariable(bool *value);
+Variable createVariable(int *value);
+Variable createVariable(float *value);
+Variable createVariable(std::string *value);
 
 struct Console {
-   void init(struct Map & map, struct Player &player, struct Inventory &inventory);
-   void update(float dt, struct Map &map, struct Player &player, struct Inventory &inventory);
+   void init(struct GameState &state);
+   void update(float dt, struct GameState &state);
    void updateResponsiveness();
-   
    void render();
 
+   // Commands
+
    void output(const std::string &string, Color color = WHITE);
-   void lex(struct Map &map, struct Player &player, struct Inventory &inventory);
-   bool handleCommand(VArgs &args, struct Map &map, struct Player &player, struct Inventory &inventory);
+   void lex(struct GameState &state);
+   bool handleCommand(std::vector<std::string> &args, struct GameState &state);
 
    // Members
 

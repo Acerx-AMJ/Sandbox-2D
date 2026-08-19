@@ -1,14 +1,16 @@
 ### Right Now
 - backgrounds
 - lightmap, light color, range in liquid config
-- do something about furniture sprite duplication if data.shouldFacePlayer
 - file compression
 - add tools and fix tool config for drops
+
+- do something about furniture sprite duplication if data.shouldFacePlayer
 - add sprites for broken items
-- fix weird goto logic in console.cpp
 - fix tree tops resetting ghost tiles when overlapping
 - water shader is a bit broken?
 - load fonts/textures once
+- fix spawning on water
+- remove scrollframe UI
 
 ### Furniture
 - Add furniture with chest logic.

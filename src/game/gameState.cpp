@@ -13,20 +13,6 @@
 #include <algorithm>
 #include <cmath>
 
-// Constants
-
-constexpr float timeToRespawn = 10.0f;
-constexpr float cameraFollowSpeed = 0.416f;
-constexpr float minCameraZoom = 12.5f;
-constexpr float maxCameraZoom = 200.0f;
-
-constexpr int physicsTicks = 8;
-constexpr int grassGrowSpeedMin = 100;
-constexpr int grassGrowSpeedMax = 255;
-
-constexpr float maxPickupRange = 2.0f;
-constexpr float maxToolRange = 10.0f;
-
 // Constructors
 
 GameState::GameState(const std::string &worldName) {
@@ -49,7 +35,7 @@ GameState::GameState(const std::string &worldName) {
    pauseButton.init(font, {0}, CENTER, "Pause");
 
    liquidCounters.resize(getLiquidCount());
-   console.init(map, player, inventory);
+   console.init(*this);
    updateResponsiveness();
 }
 
@@ -174,7 +160,7 @@ void GameState::updatePlaying() {
    if (IsKeyDown(KEY_LEFT_CONTROL) && isKeyPressed(KEY_TAB)) {
       console.input.typing = !console.input.typing;
    }
-   console.update(dt, map, player, inventory);
+   console.update(dt, *this);
 
    if (console.input.typing && IsKeyPressed(KEY_ESCAPE)) {
       console.input.typing = false;
@@ -612,7 +598,7 @@ void GameState::render() {
       int heartValue = 20;
       int heartsPerRow = 10;
       int heartCount = player.maxHearts / heartValue;
-      int rows = heartCount / heartsPerRow;
+      int rows = (heartCount / heartsPerRow) + 1;
       Rectangle area = mapRatioToArea(R4(0.99f, 0.035f, heartsPerRow * 0.025f, rows * 0.025f), TOP_RIGHT, WINDOW_AREA, CUBIC_RATIO);
       Vector2 size = mapRatioToArea(0.023f, 0.023f, WINDOW_AREA, CUBIC_RATIO) - V2(sine);
 
