@@ -26,6 +26,7 @@ void State::updateStateLogic() {
    if (width != lastWidth || height != lastHeight) {
       lastWidth = width;
       lastHeight = height;
+      updatePopupResponsiveness();
       updateResponsiveness();
    }
 

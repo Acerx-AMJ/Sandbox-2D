@@ -2,4 +2,4 @@
 #include <raylib.h>
 #include <string>
 
-void drawKeybindIndicator(const std::string &keybind, const Vector2 &center, const Color &tint = WHITE);
+void drawKeybindIndicator(Font font, const std::string &keybind, Vector2 center, Color tint = WHITE);

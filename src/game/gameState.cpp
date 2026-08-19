@@ -4,7 +4,6 @@
 #include "mngr/input.hpp"
 #include "mngr/fileio.hpp"
 #include "objs/parallax.hpp"
-#include "util/position.hpp"
 #include "SRU/audio.hpp"
 #include "SRU/assets.hpp"
 #include "SRU/random.hpp"
@@ -32,25 +31,24 @@ constexpr float maxToolRange = 10.0f;
 
 GameState::GameState(const std::string &worldName) {
    this->worldName = worldName;
-   const Vector2 center = getScreenCenter();
    
    // Init world and camera
    loadWorldData(worldName, player, camera.zoom, map, console, inventory, droppedItems);
 
    camera.zoom = std::clamp(camera.zoom, minCameraZoom, maxCameraZoom);
    camera.target = player.getCenter();
-   camera.offset = center;
+   camera.offset = getWindowCenter();
    camera.rotation = 0.0f;
    calculateCameraBounds();
 
    // Init UI
-   continueButton.text = "Continue";
-   menuButton.text = "Save & Quit";
-   pauseButton.text = "Pause";
-   continueButton.texture = menuButton.texture = &getTexture("button");
+   Font font = getFont("andy");
+   Texture button = getTexture("button");
+   continueButton.init(font, button, CENTER, "Continue");
+   menuButton.init(font, button, CENTER, "Save & Quit");
+   pauseButton.init(font, {0}, CENTER, "Pause");
 
    liquidCounters.resize(getLiquidCount());
-
    console.init(map, player, inventory);
    updateResponsiveness();
 }
@@ -148,24 +146,18 @@ void GameState::fixedUpdate() {
 }
 
 void GameState::updateResponsiveness() {
-   const Vector2 center = getScreenCenter();
-
-   float wr = getWidthRatio();
-   float hr = getHeightRatio();
-   float btnWidth = buttonWidth * wr;
-   float btnHeight = buttonHeight * hr;
-   
-   camera.offset = center;
-   continueButton.rectangle = {center.x, center.y, btnWidth, btnHeight};
-   menuButton.rectangle = {continueButton.rectangle.x, continueButton.rectangle.y + buttonPaddingY * hr, btnWidth, btnHeight};
-   pauseButton.rectangle = {GetScreenWidth() - btnWidth / 2.f + 10.0f * wr, GetScreenHeight() - btnHeight / 2.f, btnWidth, btnHeight};
-
+   camera.offset = getWindowCenter();
    console.updateResponsiveness();
 
+   Vector2 padding = convertRatio(buttonPadding, CUBIC_RATIO, RATIO);
+   Vector2 rawPadding = convertRatio(rawButtonPadding, CUBIC_RATIO, RATIO);
+
+   continueButton.rect = mapRatioToArea(R4(V2(0.5f, 0.5f), buttonSize), TOP_LEFT, WINDOW_AREA, CUBIC_RATIO);
+   menuButton.rect = mapRatioToArea(R4(V2(0.5f, 0.5f + padding.y), buttonSize), TOP_LEFT, WINDOW_AREA, CUBIC_RATIO);
+   pauseButton.rect = mapRatioToArea(R4(V2(1.0f, 1.0f) - rawPadding, buttonSize), CENTER, WINDOW_AREA, CUBIC_RATIO);
+
    // must update map's lightmap due to the render texture being fixed to the screen size
-   if (map.lightmap.id != 0) {
-      UnloadRenderTexture(map.lightmap);
-   }
+   if (map.lightmap.id != 0) UnloadRenderTexture(map.lightmap);
    map.lightmap = LoadRenderTexture(GetScreenWidth() / 2, GetScreenHeight() / 2);
 }
 
@@ -517,6 +509,7 @@ void GameState::updateTorchPhysics(int x, int y) {
 // Render
 
 void GameState::render() {
+   Font font = getFont("andy");
    const float delta = (phase != Phase::playing ? 0 : player.delta.x * dt);
    drawBackground(delta, delta, (phase == Phase::paused ? 0.0f : 1.0f) * dt);
 
@@ -526,13 +519,13 @@ void GameState::render() {
 
    // Render effects
    if (!player.creative && player.hearts != player.maxHearts) {
-      drawTexture("vignette", {0, 0}, getScreenSize(), Fade(WHITE, 1.0f - float(player.hearts) / player.maxHearts));
+      drawTexture("vignette", getWindowArea(), TOP_LEFT, Fade(WHITE, 1.0f - float(player.hearts) / player.maxHearts));
    }
 
    if (phase == Phase::died) {
       EndMode2D();
-      drawTextCentered("andy", getScreenCenter({0, -30.0f}), "YOU'VE DIED!", 120, RED);
-      drawTextCentered("andy", getScreenCenter({0, 30.0f}), TextFormat("RESPAWN IN %d...", int(timeToRespawn - deathTimer)), 50, RED);
+      drawTextResponsive(font, V2(0.5f, 0.5f - 0.0278f), "YOU'VE DIED!", 120, CENTER, RED);
+      drawTextResponsive(font, V2(0.5f, 0.5f + 0.0278f), TextFormat("RESPAWN IN %d...", int(timeToRespawn - deathTimer)), 50, CENTER, RED);
       return;
    }
 
@@ -547,11 +540,11 @@ void GameState::render() {
 
       if (data.action == ItemActionType::placeBlock) {
          Color tint = (map.isNotSolid(mouseX, mouseY) && map.blockNear(mouseX, mouseY) ? WHITE : RED);
-         drawTexture(getBlockData(data.block).texture, V2(mouseX, mouseY), {1.0f, 1.0f}, Fade(tint, furniturePreviewAlpha));
+         drawTexture(getBlockData(data.block).texture, V2(mouseX, mouseY), {1.0f, 1.0f}, TOP_LEFT, Fade(tint, furniturePreviewAlpha));
       }
       else if (data.action == ItemActionType::placeWall && map.isWall(mouseX, mouseY, BlockType::empty)) {
          Color tint = (map.isNotSolid(mouseX, mouseY) && map.blockNear(mouseX, mouseY) ? wallTint : MAROON);
-         drawTexture(getBlockData(data.wall).texture, V2(mouseX, mouseY), {1.0f, 1.0f}, Fade(tint, furniturePreviewAlpha));
+         drawTexture(getBlockData(data.wall).texture, V2(mouseX, mouseY), {1.0f, 1.0f}, TOP_LEFT, Fade(tint, furniturePreviewAlpha));
       }
       else if (data.action == ItemActionType::placeFurniture) {
          blockid_t below = (map.isPositionValid(mouseX, mouseY + furniturePreview.height) ? map.getBlock(mouseX, mouseY + furniturePreview.height).id : 0);
@@ -573,7 +566,7 @@ void GameState::render() {
 
          SetShaderValue(shader, GetShaderLocation(shader, "time"), &time, SHADER_UNIFORM_FLOAT);
          BeginShaderMode(shader);
-         drawTexture(getLiquidData(data.liquid).texture, V2(mouseX, mouseY), {1.0f, 1.0f}, Fade(tint, furniturePreviewAlpha));
+         drawTexture(getLiquidData(data.liquid).texture, V2(mouseX, mouseY), {1.0f, 1.0f}, TOP_LEFT, Fade(tint, furniturePreviewAlpha));
          EndShaderMode();
       }
    }
@@ -602,40 +595,35 @@ void GameState::render() {
 
       for (int i = 0; i < bubbles; ++i) {
          float a = 1.0f - std::min(1.0f, float((i + 1) * breathValue - player.displayBreath) / breathValue);
-         drawTexture(bubbleIcon, {startingX + padding * i - halfSine, startingY - halfSine}, {size + sine, size + sine}, Fade(WHITE, a));
+         drawTexture(bubbleIcon, {startingX + padding * i - halfSine, startingY - halfSine}, {size + sine, size + sine}, TOP_LEFT, Fade(WHITE, a));
       }
    }
    EndMode2D();
-
-   float wr = getWidthRatio();
-   float hr = getHeightRatio();
-   float cr = getMinRatio();
 
    // Render all of the hearts dynamically
    if (!player.creative) {
       Texture2D &heartIcon = getTexture("heart_icon");
       Shader &grayscaleShader = getShader("grayscale");
-      
-      float size = 25 * cr;
-      float padding = size + 5 * cr;
-      int heartValue = 20;
-      int counter = player.maxHearts / heartValue;
-      int heartsPerRow = 10;
-      float startingY = 40 * hr;
-      float startingX = GetScreenWidth() - size * heartsPerRow - 5 * (heartsPerRow - 1) * wr - 15 * wr;
 
       float static sineCounter = 0.0f;
       sineCounter += 1.0f - float(player.hearts) / player.maxHearts;
       float sine = std::sin(sineCounter * 0.5f);
-      float halfSine = sine / 2.0f;
+   
+      int heartValue = 20;
+      int heartsPerRow = 10;
+      int heartCount = player.maxHearts / heartValue;
+      int rows = heartCount / heartsPerRow;
+      Rectangle area = mapRatioToArea(R4(0.99f, 0.035f, heartsPerRow * 0.025f, rows * 0.025f), TOP_RIGHT, WINDOW_AREA, CUBIC_RATIO);
+      Vector2 size = mapRatioToArea(0.023f, 0.023f, WINDOW_AREA, CUBIC_RATIO) - V2(sine);
 
       BeginShaderMode(grayscaleShader);
-      for (int i = 0; i < counter; ++i) {
+      for (int i = 0; i < heartCount; ++i) {
          float a = 1.0f - std::min(1.0f, float((i + 1) * heartValue - player.displayHearts) / heartValue);
-         drawTexture(heartIcon, {startingX + padding * (i % heartsPerRow) - halfSine, startingY + padding * int(i / heartsPerRow) - halfSine}, {size + sine, size + sine}, Fade(WHITE, a));
+         drawTexture(heartIcon, gridPosition(area, heartsPerRow, rows, i % heartsPerRow, i / heartsPerRow, CENTER), size, CENTER, Fade(WHITE, a));
       }
       EndShaderMode();
-      drawTextCentered("andy", {startingX + (GetScreenWidth() - startingX) / 2.0f, startingY / 2.0f}, TextFormat("HP: %d/%d", player.hearts, player.maxHearts), getFontSize(20), WHITE);
+      // bit of a grid hack. index out of bounds to get the preffered position. only works because there are no checks there
+      drawText(font, gridPosition(area, heartsPerRow, rows, heartsPerRow / 2, -1, CENTER_LEFT), TextFormat("HP: %d/%d", player.hearts, player.maxHearts), getFontSizeScaled(20));
    }
 
    // Render other game UI
@@ -670,7 +658,7 @@ void GameState::calculateCameraBounds() {
    camera.target.y = std::clamp(camera.target.y * camera.zoom, camera.offset.y, map.sizeY * camera.zoom - camera.offset.y) / camera.zoom;
 
    Vector2 pos = GetScreenToWorld2D({0, 0}, camera);
-   Vector2 size = Vector2Scale(getScreenSize(), 1.f / camera.zoom);
+   Vector2 size = getWindowSize() / camera.zoom;
    cameraBounds = {pos.x, pos.y, size.x, size.y};
 
    cameraBounds.x = std::max(0, int(cameraBounds.x));

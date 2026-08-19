@@ -1,7 +1,8 @@
 #include "objs/parallax.hpp"
-#include "SRU/render.hpp"
 #include "SRU/assets.hpp"
 #include "SRU/random.hpp"
+#include "SRU/render.hpp"
+#include "SRU/util.hpp"
 #include <cmath>
 #include <string>
 #include <vector>
@@ -11,20 +12,20 @@
 constexpr inline float parallaxBgSpeed = 75.0f;
 constexpr inline float parallaxFgSpeed = 100.0f;
 
-constexpr int starCountMin    = 10;
-constexpr int starCountMax    = 50;
-constexpr int moonPhaseCount  = 8;
-constexpr Vector2 sunSize     = {0.083f, 0.083f};
-constexpr Vector2 moonSize    = {0.056f, 0.056f};
+constexpr int starCountMin = 10;
+constexpr int starCountMax = 50;
+constexpr int moonPhaseCount = 8;
+constexpr Vector2 sunSize = {0.083f, 0.083f};
+constexpr Vector2 moonSize = {0.056f, 0.056f};
 constexpr Vector2 starSizeMin = {20.0f, 20.0f};
 constexpr Vector2 starSizeMax = {50.0f, 50.0f};
 
-constexpr Color skyColorNight       = {30, 30, 30, 255};
-constexpr Color skyColorDay         = {255, 255, 255, 255};
+constexpr Color skyColorNight = {30, 30, 30, 255};
+constexpr Color skyColorDay = {255, 255, 255, 255};
 constexpr Color backgroundTintNight = {35, 35, 35, 255};
-constexpr Color backgroundTintDay   = {190, 190, 170, 255};
+constexpr Color backgroundTintDay = {190, 190, 170, 255};
 constexpr Color foregroundTintNight = {40, 40, 40, 255};
-constexpr Color foregroundTintDay   = {210, 210, 190, 255};
+constexpr Color foregroundTintDay = {210, 210, 190, 255};
 
 using s = std::vector<std::string>;
 static inline const std::array<s, (size_t)MapGenerator::Biome::count> biomeBackgroundTextures {
@@ -130,7 +131,7 @@ void drawBackground(float bgSpeed, float fgSpeed, float daySpeed) {
    float t = getFadeStrengthBasedOnTime();
 
    // Draw the sky
-   DrawTexturePro(getTexture("sky"), getSource(getTexture("sky")), {0, 0, screenSize.x, screenSize.y}, {0, 0}, 0, ColorLerp(skyColorDay, skyColorNight, t));
+   drawTexture("sky", getWindowArea(), TOP_LEFT, ColorLerp(skyColorDay, skyColorNight, t));
 
    // Draw the stars
    if (prevMoonPhase != moonPhase) {
@@ -154,29 +155,28 @@ void drawBackground(float bgSpeed, float fgSpeed, float daySpeed) {
    if (isNight) {
       Texture &texture = getTexture("moon");
       Vector2 position = {origin.x, screenSize.y};
-      Vector2 size = mapCubicRatioToScreen(moonSize);
+      Vector2 size = mapRatioToArea(moonSize, WINDOW_AREA, CUBIC_RATIO);
 
       DrawTexturePro(texture, {(float)moonPhase * texture.height, 0.0f, (float)texture.height, (float)texture.height}, {position.x, position.y, size.x, size.y}, origin, currentTime - 180.0f, WHITE);
    } else {
       Texture &texture = getTexture("sun");
       Vector2 position = {origin.x, screenSize.y};
-      Vector2 size = mapCubicRatioToScreen(sunSize);
+      Vector2 size = mapRatioToArea(sunSize, WINDOW_AREA, CUBIC_RATIO);
 
       DrawTexturePro(texture, getSource(texture), {position.x, position.y, size.x, size.y}, origin, currentTime, WHITE);
    }
 
    // Draw backgrounds
-
    if (bgTexture) {
       Color bgColor = ColorLerp(backgroundTintDay, backgroundTintNight, t);
-      drawTexture(*bgTexture, {bgProgress, 0.0f}, screenSize, bgColor);
-      drawTexture(*bgTexture, {screenSize.x + bgProgress, 0}, screenSize, bgColor);
+      drawTexture(*bgTexture, {bgProgress, 0.0f}, screenSize, TOP_LEFT, bgColor);
+      drawTexture(*bgTexture, {screenSize.x + bgProgress, 0}, screenSize, TOP_LEFT, bgColor);
    }
 
    if (fgTexture) {
       Color fgColor = ColorLerp(foregroundTintDay, foregroundTintNight, t);
-      drawTexture(*fgTexture, {fgProgress, 0}, screenSize, fgColor);
-      drawTexture(*fgTexture, {screenSize.x + fgProgress, 0}, screenSize, fgColor);
+      drawTexture(*fgTexture, {fgProgress, 0}, screenSize, TOP_LEFT, fgColor);
+      drawTexture(*fgTexture, {screenSize.x + fgProgress, 0}, screenSize, TOP_LEFT, fgColor);
    }
 }
 

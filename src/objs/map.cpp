@@ -389,7 +389,7 @@ LiquidData &Map::getLiquidData(int x, int y) const {
 // render
 
 void Map::renderLight(const Camera2D &camera, Texture2D &texture, float x, float y, const Vector2 &size, const Color &color) {
-   drawTextureCentered(texture, {(((x + 0.5f - camera.target.x) * camera.zoom) + camera.offset.x) / 2.0f, (((y + 0.5f - camera.target.y) * camera.zoom) + camera.offset.y) / 2.0f}, size, color);
+   drawTexture(texture, {(((x + 0.5f - camera.target.x) * camera.zoom) + camera.offset.x) / 2.0f, (((y + 0.5f - camera.target.y) * camera.zoom) + camera.offset.y) / 2.0f}, size, CENTER, color);
 }
 
 void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &player, float accumulator, const Rectangle &cameraBounds, const Camera2D &camera, const Inventory &inventory) {
@@ -410,7 +410,7 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
 
          Texture texture = blockData[wall.id].texture;
          Rectangle source = R4(0, 0, texture.width * (x - oldX), texture.height);
-         drawTexture(texture, V2(oldX, y), V2(x - oldX, 1), wallTint, 0.0f, source);
+         drawTexture(texture, V2(oldX, y), V2(x - oldX, 1), TOP_LEFT, wallTint, source, 0.0f);
          x -= 1;
       }
    }
@@ -449,7 +449,7 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
          }
 
          Rectangle source = R4(0, 0, texture.width * (x - oldX), texture.height);
-         drawTexture(texture, V2(oldX, y), V2(x - oldX, 1), WHITE, 0.0f, source);
+         drawTexture(texture, V2(oldX, y), V2(x - oldX, 1), TOP_LEFT, WHITE, source, 0.0f);
          x -= 1;
       }
    }
@@ -483,7 +483,7 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
    
          Texture texture = getLiquidData(x, y).texture;
          Rectangle source = R4(0, texture.height - texture.height * height, texture.width, texture.height * height);
-         drawTexture(texture, V2(x, y + (1 - height)), V2(1, height), Fade(liquidFlags, height), 0.0f, source);
+         drawTexture(texture, V2(x, y + (1 - height)), V2(1, height), TOP_LEFT, Fade(liquidFlags, height), source, 0.0f);
       }
    }
    EndShaderMode();

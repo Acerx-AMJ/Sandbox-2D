@@ -3,22 +3,26 @@
 #include "ui/keybindIndicator.hpp"
 #include "SRU/audio.hpp"
 #include "SRU/render.hpp"
-#include "SRU/text.hpp"
+#include "SRU/util.hpp"
 #include <raymath.h>
 
-// Constants
+constexpr float buttonScaleMin = 0.98f;
+constexpr float buttonScaleMax = 1.02f;
+constexpr Color buttonDisabledTint = {170, 170, 150, 255};
 
-constexpr float buttonScaleMin      = 0.98f;
-constexpr float buttonScaleMax      = 1.02f;
-constexpr Color buttonDisabledColor = {170, 170, 150, 255};
-
-// Update
+void Button::init(Font font, Texture texture, Vector2 origin, const std::string &text, const std::string &keybind) {
+   this->font = font;
+   this->texture = texture;
+   this->origin = origin;
+   this->text = text;
+   this->keybind = keybind;
+}
 
 void Button::update(float dt, float offsetY) {
-   const bool wasHovering = hovering;
-   const Vector2 mousePosition = {GetMousePosition().x, GetMousePosition().y + offsetY};
+   bool wasHovering = hovering;
+   Vector2 mousePosition = V2(GetMouseX(), GetMouseY() + offsetY);
 
-   hovering = CheckCollisionPointRec(mousePosition, normalizeRect());
+   hovering = CheckCollisionPointRec(mousePosition, R4bounds(rect, origin));
    if (hovering) {
       setMouseOnUI(true);
    }
@@ -50,20 +54,14 @@ void Button::update(float dt, float offsetY) {
    }
 }
 
-// Render
+void Button::render(float offsetY) {
+   Color tint = (disabled ? buttonDisabledTint : WHITE);
+   Vector2 size = R4size(rect) * scale;
+   Vector2 position = V2(rect.x, rect.y - offsetY);
 
-void Button::render(float offsetY) const {
-   const Color tint = disabled ? buttonDisabledColor : WHITE;
-
-   if (texture) {
-      drawTextureCentered(*texture, {rectangle.x, rectangle.y - offsetY}, {rectangle.width * scale, rectangle.height * scale}, tint);
+   if (texture.id != 0) {
+      drawTexture(texture, position, size, origin, tint);
    }
-   drawTextCentered("andy", {rectangle.x, rectangle.y - offsetY}, text.c_str(), getFontSizeScaled(35 * scale), tint);
-   drawKeybindIndicator(keybind, {rectangle.x + rectangle.width / 2.0f * scale, rectangle.y - rectangle.height / 2.0f}, tint);
-}
-
-// Get real boundaries
-
-Rectangle Button::normalizeRect() const {
-   return {rectangle.x - rectangle.width / 2.0f, rectangle.y - rectangle.height / 2.0f, rectangle.width, rectangle.height};
+   drawText(font, R4anchor(rect, origin, CENTER) - V2(0.0f, offsetY), text.c_str(), getFontSizeScaled(35.0f * scale), CENTER, tint);
+   drawKeybindIndicator(font, keybind, R4anchor(rect, origin, TOP_RIGHT), tint);
 }

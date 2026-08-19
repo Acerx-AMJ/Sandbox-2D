@@ -1,20 +1,15 @@
 #include "mngr/input.hpp"
-#include "SRU/text.hpp"
 #include "ui/input.hpp"
 #include "SRU/audio.hpp"
-#include "SRU/assets.hpp"
 #include "SRU/render.hpp"
-#include <raymath.h>
-#include <cmath>
+#include "SRU/text.hpp"
+#include "SRU/util.hpp"
+#include <algorithm>
 
-// Constants
-
-constexpr float textWrapPadding = 10.0f;
-constexpr float fadeSpeed       = 0.3f / 0.016f;
-constexpr int   fadeMin         = 200;
-constexpr int   fadeRange       = 255 - fadeMin;
-
-// Helper functions
+constexpr float textWrapPadding = 0.0015f;
+constexpr float fadeSpeed = 0.3f / 0.016f;
+constexpr int fadeMin = 200;
+constexpr int fadeRange = 255 - fadeMin;
 
 static bool consumeBackspace(std::string &text, size_t &cursor) {
    if (cursor == 0) {
@@ -33,7 +28,13 @@ static bool consumeBackspace(std::string &text, size_t &cursor) {
    return true;
 }
 
-// Update
+void Input::init(Font font, Texture texture, Vector2 origin, int maxChars, const std::string &fallback) {
+   this->font = font;
+   this->texture = texture;
+   this->origin = origin;
+   this->maxChars = maxChars;
+   this->fallback = fallback;
+}
 
 void Input::update(float dt) {
    if (prevsize != text.size()) {
@@ -42,7 +43,7 @@ void Input::update(float dt) {
    changed = false;
 
    const bool wasTyping = typing;
-   hovering = CheckCollisionPointRec(GetMousePosition(), normalizeRect());
+   hovering = CheckCollisionPointRec(GetMousePosition(), R4bounds(rect, origin));
 
    if (hovering) {
       setMouseOnUI(true);
@@ -114,48 +115,46 @@ void Input::update(float dt) {
    prevsize = text.size();
 }
 
-// Render function
-
 void Input::render() {
+   std::string selected = text.empty() ? fallback : text;
    float fontsize = getFontSizeScaled(35.0f);
-   float spacing = getFontSizeScaled(1.0f);
    unsigned char value = 255;
 
    if (typing) {
-      value = std::sin(counter * fadeSpeed) * fadeRange + fadeMin;
+      value = std::sin(counter * fadeSpeed) * fadeRange + fadeMin - (fadeRange * text.empty());
    }
 
-   if (text.empty()) {
-      value -= fadeRange;
+   if (texture.id != 0) {
+      drawTexture(texture, rect, origin);
    }
 
-   if (texture) {
-      drawTextureCentered(*texture, {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height});
-   }
-
-   std::string selected = text.empty() ? fallback : text;
    if (wrapinput) {
-      wrapInPlace(selected, getFont("andy"), rectangle.width - textWrapPadding, fontsize);
-      drawTextCentered("andy", {rectangle.x, rectangle.y}, selected.c_str(), fontsize, Color{value, value, value, 255}, spacing);
-   } else {
-      Vector2 origin = getTextOrigin(getFont("andy"), selected.c_str(), fontsize, spacing);
-      Vector2 position = {rectangle.x - (origin.x - rectangle.width / 2.0f), rectangle.y};
-      DrawTextPro(getFont("andy"), selected.c_str(), position, origin, 0, fontsize, spacing, Color{value, value, value, 255});
-
-      if (rendercursor && !text.empty()) {
-         std::string substr = selected.substr(0, cursor);
-         Vector2 cursorPosition = MeasureTextEx(getFont("andy"), (substr.empty() ? "X" : substr.c_str()), fontsize, spacing);
-         if (substr.empty()) {
-            cursorPosition.x = 0.0f;
-         }
-
-         DrawRectangleV(Vector2Add({cursorPosition.x, 0}, Vector2Subtract(position, origin)), {fontsize * (15.0f / 35.0f), fontsize}, Fade(WHITE, 0.75f));
-      }
+      wrapInPlace(selected, font, rect.width - mapRatioToWidth(textWrapPadding, WINDOW_AREA, CUBIC_RATIO), fontsize);
    }
-}
 
-// Normalize rect
+   if (typing && rendercursor && !text.empty()) {
+      // kind of hacky. we need to translate cursor for wrapInPlace and account for any new dashes inserted into the text.
+      // we just check if there's a dash followed by a newline and if so then increment it by 2.
+      size_t wrappedCursor = cursor;
+      for (size_t i = 0; i < wrappedCursor; ++i) {
+         wrappedCursor += (selected[i] == '-' && i + 1 < selected.size() && selected[i + 1] == '\n') * 2;
+      }
 
-Rectangle Input::normalizeRect() const {
-   return {rectangle.x - rectangle.width / 2.0f, rectangle.y - rectangle.height / 2.0f, rectangle.width, rectangle.height};
+      std::string before = selected.substr(0, wrappedCursor);
+      size_t find = before.find('\n');
+      size_t lineStart = 0;
+      int lineIndex = 0;
+   
+      while (find != std::string::npos) {
+         lineStart = find + 1;
+         lineIndex += 1;
+         find = before.find('\n', lineStart);
+      }
+
+      Vector2 textTopleft = R4anchor(rect, origin, textOrigin) - getTextOrigin(font, selected.c_str(), fontsize, textOrigin);
+      float lineWidth = getTextSize(font, before.substr(lineStart).c_str(), fontsize).x;
+      float lineHeight = lineIndex * getTextSize(font, "X", fontsize).y;
+      drawRect(V2(lineWidth, lineHeight) + textTopleft, V2(fontsize * (15.0f / 35.0f), fontsize), TOP_LEFT, Fade(WHITE, 0.75f));
+   }
+   drawText(font, R4anchor(rect, origin, textOrigin), selected.c_str(), fontsize, textOrigin, Color{value, value, value, 255});
 }

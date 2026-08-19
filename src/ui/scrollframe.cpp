@@ -1,19 +1,15 @@
 #include "mngr/input.hpp"
 #include "ui/scrollframe.hpp"
-#include "util/position.hpp"
-#include "SRU/assets.hpp"
 #include "SRU/render.hpp"
 #include <raymath.h>
 
-// Update
-
 void Scrollframe::update(float dt) {
    const float scrollFactor = GetMouseWheelMove();
-   scrollbarHeight = rectangle.height * (rectangle.height / scrollHeight);
+   scrollbarHeight = rect.height * (rect.height / scrollHeight);
 
-   if (CheckCollisionPointRec(GetMousePosition(), rectangle) && scrollFactor != 0.f) {
-      progress = Clamp(progress + scrollFactor * 15.0f * dt * (rectangle.height / scrollHeight), 0.f, 1.f);
-   } else if (CheckCollisionPointRec(GetMousePosition(), {rectangle.x + rectangle.width - scrollBarWidth, rectangle.y, scrollBarWidth, rectangle.height})) {
+   if (CheckCollisionPointRec(GetMousePosition(), rect) && scrollFactor != 0.f) {
+      progress = Clamp(progress + scrollFactor * 15.0f * dt * (rect.height / scrollHeight), 0.f, 1.f);
+   } else if (CheckCollisionPointRec(GetMousePosition(), {rect.x + rect.width - scrollBarWidth, rect.y, scrollBarWidth, rect.height})) {
       setMouseOnUI(true);
       moving = isMouseDownUI(MOUSE_BUTTON_LEFT);
    }
@@ -23,34 +19,31 @@ void Scrollframe::update(float dt) {
       moving = false;
    }
 
-   if (moving && scrollbarHeight < rectangle.height) {
-      scrollbarY = Clamp(GetMouseY(), rectangle.y, rectangle.y + rectangle.height - scrollbarHeight);
-      progress = (scrollbarY - rectangle.y) / (rectangle.height - scrollbarHeight);
+   if (moving && scrollbarHeight < rect.height) {
+      scrollbarY = Clamp(GetMouseY(), rect.y, rect.y + rect.height - scrollbarHeight);
+      progress = (scrollbarY - rect.y) / (rect.height - scrollbarHeight);
    } else {
-      scrollbarY = rectangle.y + (rectangle.height - scrollbarHeight) * progress;
+      scrollbarY = rect.y + (rect.height - scrollbarHeight) * progress;
    }
 }
 
-// Render
-
 void Scrollframe::render() const {
-   drawTexture(getTexture("scrollframe"), {rectangle.x, rectangle.y}, {rectangle.width, rectangle.height});
-   drawTexture(getTexture("scrollbar"), {rectangle.x + rectangle.width - scrollBarWidth * getWidthRatio(), scrollbarY}, {scrollBarWidth * getWidthRatio(), scrollbarHeight});
+   float width = mapRatioToWidth(scrollBarWidth, WINDOW_AREA, CUBIC_RATIO);
+   drawTexture("scrollframe", rect, TOP_LEFT);
+   drawTexture("scrollbar", Vector2{rect.x + rect.width - width}, {width, scrollbarHeight}, TOP_LEFT);
 }
-
-// Helper functions
 
 void Scrollframe::setProgressBasedOnPosition(float positionY) {
-   const float maxScroll = std::max(0.0f, scrollHeight - rectangle.height);
-   progress = (maxScroll > 0.0f ? Clamp(positionY - rectangle.y, 0.0f, maxScroll) / maxScroll : 0.0f);
-   scrollbarY = rectangle.y + (rectangle.height - scrollbarHeight) * progress;
+   const float maxScroll = std::max(0.0f, scrollHeight - rect.height);
+   progress = (maxScroll > 0.0f ? Clamp(positionY - rect.y, 0.0f, maxScroll) / maxScroll : 0.0f);
+   scrollbarY = rect.y + (rect.height - scrollbarHeight) * progress;
 }
 
-bool Scrollframe::inFrame(const Rectangle &rect) const {
-   const float top = rectangle.y + getOffsetY();
-   return rectangle.x <= rect.x && rectangle.x + rectangle.width >= rect.x + rect.width && top <= rect.y && top + rectangle.height >= rect.y + rect.height;
+bool Scrollframe::inFrame(const Rectangle &rect2) const {
+   const float top = rect.y + getOffsetY();
+   return rect.x <= rect2.x && rect.x + rect.width >= rect2.x + rect2.width && top <= rect2.y && top + rect.height >= rect2.y + rect2.height;
 }
 
 float Scrollframe::getOffsetY() const {
-   return (scrollHeight - rectangle.height) * progress;
+   return (scrollHeight - rect.height) * progress;
 }

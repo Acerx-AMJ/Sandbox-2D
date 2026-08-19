@@ -125,11 +125,11 @@ void DroppedItem::render() const {
    Vector2 position = V2(tileX, tileY - offsetY);
    Vector2 size = getItemSize(id, droppedItemSize);
    Color tint = (itemData[id].action == ItemActionType::placeWall && itemData[id].wall != 0 ? wallTint : WHITE);
-   drawTexture(getItemTexture(id), position, size, tint);
+   drawTexture(getItemTexture(id), position, size, TOP_LEFT, tint);
 
    if (count > 1) {
       Vector2 textPosition = position + V2(0.0f, 0.7f);
-      drawTextCentered("andy", textPosition, TextFormat("%d", count), 0.75f);
+      drawText("andy", textPosition, TextFormat("%d", count), 0.75f);
    }
 }
 

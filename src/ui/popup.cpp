@@ -1,17 +1,25 @@
-#include "SRU/text.hpp"
 #include "mngr/input.hpp"
 #include "ui/button.hpp"
 #include "ui/popup.hpp"
-#include "util/position.hpp"
 #include "SRU/audio.hpp"
 #include "SRU/assets.hpp"
 #include "SRU/render.hpp"
+#include "SRU/text.hpp"
+#include "SRU/util.hpp"
 #include <vector>
 
 // Constants
 
-constexpr Vector2 popupSize = {500.0f, 375.0f};
+constexpr Vector2 popupSize = V2(0.463f, 0.347f);
+constexpr Vector2 headerPosition = V2(0.5f, 0.12f);
+constexpr Vector2 bodyPosition = V2(0.5f, 0.21f);
+constexpr Vector2 denialPosition = V2(0.275f, 0.85f);
+constexpr Vector2 confirmationPosition = V2(0.725f, 0.85f);
+constexpr Vector2 okayPosition = V2(0.5f, 0.85f);
+
 constexpr float fadeTime = 0.6f;
+constexpr float headerFontSize = 50.0f;
+constexpr float bodyFontSize = 25.0f;
 
 // Globals
 
@@ -21,6 +29,7 @@ static float fadeTimer = 0.0f;
 static float alpha = 0.0f;
 static bool fadedIn = false, fadedOut = true;
 
+static Rectangle rect;
 static Button confirmationButton;
 static Button denialButton;
 static Button okayButton;
@@ -56,29 +65,23 @@ void fadeIn(float dt) {
    }
 }
 
-void setPopupSize() {
-   float wr = getWidthRatio();
-   float hr = getHeightRatio();
-
-   denialButton.rectangle = {getScreenCenter().x - 120.0f * wr, getScreenCenter().y + 110.0f * hr, buttonWidth * wr, buttonHeight * hr};
-   confirmationButton.rectangle = {getScreenCenter().x + 120.0f * wr, getScreenCenter().y + 110.0f * hr, buttonWidth * wr, buttonHeight * hr};
-   okayButton.rectangle = {getScreenCenter().x, getScreenCenter().y + 110.0f * hr, buttonWidth * wr, buttonHeight * hr};
-}
-
 // Init functions
 
 void initPopups() {
-   confirmationButton.text = "YES";
-   denialButton.text = "NO";
-   okayButton.text = "OKAY";
-   confirmationButton.texture = denialButton.texture = okayButton.texture = &getTexture("button");
+   Texture texture = getTexture("button");
+   Font font = getFont("andy");
+
+   confirmationButton.init(font, texture, CENTER, "YES");
+   denialButton.init(font, texture, CENTER, "NO");
+   okayButton.init(font, texture, CENTER, "OKAY");
+   updatePopupResponsiveness();
 }
 
 // Popup functions
 
 void insertPopup(const std::string &header, const std::string &body, PopupType type) {
-   popups.push_back(Popup{header, body, type});
-   setPopupSize();
+   std::string wrappedBody = wrap(body, getFont("andy"), rect.width - mapRatioToWidth(0.05f, rect, CUBIC_RATIO), getFontSizeScaled(bodyFontSize));
+   popups.emplace_back(header, wrappedBody, type);
 
    if (type == PopupType::error) {
       playSound("failure");
@@ -99,7 +102,16 @@ bool anyPopups() {
    return !popups.empty();
 }
 
-// Update function
+// Update
+
+void updatePopupResponsiveness() {
+   rect = mapRatioToArea(R4(CENTER, popupSize), CENTER, WINDOW_AREA, CUBIC_RATIO);
+
+   Vector2 size = mapRatioToArea(buttonSize, WINDOW_AREA, CUBIC_RATIO);
+   denialButton.rect = R4(mapRatioToArea(denialPosition, rect), size);
+   confirmationButton.rect = R4(mapRatioToArea(confirmationPosition, rect), size);
+   okayButton.rect = R4(mapRatioToArea(okayPosition, rect), size);
+}
 
 void updatePopups(float dt) {
    if (popups.empty()) {
@@ -109,7 +121,6 @@ void updatePopups(float dt) {
 
    fadeIn(dt);
    Popup &popup = popups.back();
-   setPopupSize();
 
    if (popup.type == PopupType::confirmation) {
       confirmationButton.update(dt);
@@ -136,22 +147,16 @@ void updatePopups(float dt) {
 // Render function
 
 void renderPopups() {
-   drawRect({0.0f, 0.0f}, getWindowSize(), Fade(BLACK, alpha));
-
+   drawRect(getWindowArea(), TOP_LEFT, Fade(BLACK, alpha));
    if (popups.empty()) {
       return;
    }
-
-   float wr = getWidthRatio();
-   float hr = getHeightRatio();
-
+   Font font = getFont("andy");
    Popup &popup = popups.back();
-   drawTextureCentered(getTexture("popup_frame"), getScreenCenter(), applyResponsiveness(popupSize));
-   drawTextCentered("andy", getScreenCenter({0.0f, hr * -125.0f}), popup.header.c_str(), getFontSize(50.0f));
 
-   std::string wrappedBody = popup.body;
-   wrapInPlace(wrappedBody, getFont("andy"), (popupSize.x - 30.0f) * wr, getFontSize(25.0f));
-   drawTextCentered("andy", getScreenCenter({0.0f, hr * -40.0f}), wrappedBody.c_str(), getFontSize(25.0f), WHITE, getFontSize(1.0f));
+   drawTexture("popup_frame", rect, TOP_LEFT);
+   drawTextResponsive(font, headerPosition, popup.header.c_str(), headerFontSize, CENTER, WHITE, rect);
+   drawTextResponsive(font, bodyPosition, popup.body.c_str(), bodyFontSize, TOP_CENTER, WHITE, rect);
 
    if (popup.type == PopupType::confirmation) {
       confirmationButton.render();

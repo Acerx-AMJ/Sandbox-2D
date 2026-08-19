@@ -68,9 +68,9 @@ void LoadingState::render() {
    if (loadPhase != Load::count) {
       finalLoadingText = TextFormat("%s%d/%d", loadingText.c_str(), (int)loadPhase, (int)Load::count);
    }
-   drawTextCenteredResponsive("andy", V2(0.5, 0.33f), finalLoadingText.c_str(), loadingTextFontSize);
-   drawTextCenteredResponsive("andy", V2(0.5f, 0.6f), splashText.c_str(), splashFontSize);
-   drawTextureCenteredResponsiveCubic("loading", V2(0.5f, 0.5f), V2(0.065), WHITE, iconRotation);
+   drawTextResponsive("andy", V2(0.5, 0.33f), finalLoadingText.c_str(), loadingTextFontSize);
+   drawTextResponsive("andy", V2(0.5f, 0.6f), splashText.c_str(), splashFontSize);
+   drawTextureResponsive("loading", V2(0.5f, 0.5f), V2(0.065), CENTER, WHITE, FULL_SOURCE, WINDOW_AREA, CUBIC_RATIO, iconRotation);
 }
 
 State* LoadingState::change() {

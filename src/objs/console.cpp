@@ -2,10 +2,10 @@
 #include "objs/inventory.hpp"
 #include "objs/parallax.hpp"
 #include "objs/player.hpp"
-#include "util/position.hpp"
 #include "SRU/assets.hpp"
 #include "SRU/render.hpp"
 #include "SRU/text.hpp"
+#include "SRU/util.hpp"
 #include <functional>
 #include <unordered_map>
 
@@ -14,23 +14,19 @@
 constexpr int maxLines = 7;
 constexpr int consoleFontSize = 35;
 
-static inline constexpr Color lineColors[(size_t)ConsoleColor::count] {
-   WHITE, GRAY, YELLOW, RED, GREEN, BLUE, Color{255, 125, 0, 255}, Color{125, 0, 255, 255}, Color{255, 125, 255, 255}
-};
-
 // Commands
 
 bool c_help(Console &console, const VArgs&, Map&, Player&, Inventory&) {
-   console.output("Controls:", ConsoleColor::gray);
+   console.output("Controls:", GRAY);
    console.output("UP - previous command from history.");
    console.output("DOWN - next command from history.");
    console.output("ENTER - run command.");
    console.output("ESC/CTRL+TAB - close.");
-   console.output("Operators:", ConsoleColor::gray);
+   console.output("Operators:", GRAY);
    console.output("& - execute next command only if the last was successful.");
    console.output("| - execute next command only if the last failed.");
    console.output("; - execute next command.");
-   console.output("Commands:", ConsoleColor::gray);
+   console.output("Commands:", GRAY);
    console.output("echo [MSG] - echo a message to the console.");
    console.output("hist - output command history.");
    console.output("chist - clear command history.");
@@ -53,13 +49,13 @@ bool c_help(Console &console, const VArgs&, Map&, Player&, Inventory&) {
    console.output("kill - kill the player.");
    console.output("clear - clear the console.");
    console.output("exit - exit the console. Or simply press ESC!");
-   console.output("Scroll back with the scroll wheel to see more commands.", ConsoleColor::gray);
+   console.output("Scroll back with the scroll wheel to see more commands.", GRAY);
    return true;
 }
 
 bool c_echo(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
    if (args.size() != 2) {
-      console.output("echo: expected exactly 1 argument.", ConsoleColor::red);
+      console.output("echo: expected exactly 1 argument.", RED);
       return false;
    }
    console.output(args[1]);
@@ -68,7 +64,7 @@ bool c_echo(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
 
 bool c_tp(Console &console, const VArgs &args, Map &map, Player &player, Inventory&) {
    if (args.size() != 3) {
-      console.output("tp: expected exactly 2 arguments.", ConsoleColor::red);
+      console.output("tp: expected exactly 2 arguments.", RED);
       return false;
    }
    int x, y;
@@ -78,12 +74,12 @@ bool c_tp(Console &console, const VArgs &args, Map &map, Player &player, Invento
       x = stoi(args[1]);
       y = stoi(args[2]);
    } catch (...) {
-      console.output("tp: expected both arguments to be numbers.", ConsoleColor::red);
+      console.output("tp: expected both arguments to be numbers.", RED);
       return false;
    }
 
    if (x < 0 || y < 0 || x >= map.sizeX || y >= map.sizeY) {
-      console.output("tp: coordinates are out of bounds.", ConsoleColor::red);
+      console.output("tp: coordinates are out of bounds.", RED);
       return false;
    }
 
@@ -97,7 +93,7 @@ bool c_tp(Console &console, const VArgs &args, Map &map, Player &player, Invento
 
 bool c_spawnpoint(Console &console, const VArgs &args, Map &map, Player &player, Inventory&) {
    if (args.size() != 1 && args.size() != 3) {
-      console.output("spawnpoint: expected 2 or no arguments.", ConsoleColor::red);
+      console.output("spawnpoint: expected 2 or no arguments.", RED);
       return false;
    }
    int x, y;
@@ -110,13 +106,13 @@ bool c_spawnpoint(Console &console, const VArgs &args, Map &map, Player &player,
          x = stoi(args[1]);
          y = stoi(args[2]);
       } catch (...) {
-         console.output("spawnpoint: expected both arguments to be numbers.", ConsoleColor::red);
+         console.output("spawnpoint: expected both arguments to be numbers.", RED);
          return false;
       }
    }
 
    if (x < 0 || y < 0 || x >= map.sizeX || y >= map.sizeY) {
-      console.output("spawnpoint: coordinates are out of bounds.", ConsoleColor::red);
+      console.output("spawnpoint: coordinates are out of bounds.", RED);
       return false;
    }
 
@@ -128,7 +124,7 @@ bool c_spawnpoint(Console &console, const VArgs &args, Map &map, Player &player,
 
 bool c_pos(Console &console, const VArgs &args, Map&, Player &player, Inventory&) {
    if (args.size() != 1) {
-      console.output("pos: expected no arguments. Executing anyway.", ConsoleColor::red);
+      console.output("pos: expected no arguments. Executing anyway.", RED);
    }
    console.output(TextFormat("pos: your position is (X %d; Y %d).", (int)player.position.x, (int)player.position.y));
    return true;
@@ -151,7 +147,7 @@ bool c_exit(Console &console, const VArgs&, Map&, Player&, Inventory&) {
 
 bool c_hp(Console &console, const VArgs &args, Map&, Player &player, Inventory&) {
    if (args.size() != 2) {
-      console.output("hp: expected 1 argument.", ConsoleColor::red);
+      console.output("hp: expected 1 argument.", RED);
       return false;
    }
 
@@ -159,7 +155,7 @@ bool c_hp(Console &console, const VArgs &args, Map&, Player &player, Inventory&)
    try {
       hp = stoi(args[1]);
    } catch (...) {
-      console.output("hp: expected first argument to be a number.", ConsoleColor::red);
+      console.output("hp: expected first argument to be a number.", RED);
       return false;
    }
 
@@ -171,7 +167,7 @@ bool c_hp(Console &console, const VArgs &args, Map&, Player &player, Inventory&)
 
 bool c_maxhp(Console &console, const VArgs &args, Map&, Player &player, Inventory&) {
    if (args.size() != 2) {
-      console.output("maxhp: expected 1 argument.", ConsoleColor::red);
+      console.output("maxhp: expected 1 argument.", RED);
       return false;
    }
 
@@ -179,7 +175,7 @@ bool c_maxhp(Console &console, const VArgs &args, Map&, Player &player, Inventor
    try {
       hp = stoi(args[1]);
    } catch (...) {
-      console.output("maxhp: expected first argument to be a number.", ConsoleColor::red);
+      console.output("maxhp: expected first argument to be a number.", RED);
       return false;
    }
 
@@ -192,7 +188,7 @@ bool c_maxhp(Console &console, const VArgs &args, Map&, Player &player, Inventor
 
 bool c_kill(Console &console, const VArgs &args, Map&, Player &player, Inventory&) {
    if (args.size() != 1) {
-      console.output("kill: expected no arguments. Executing anyway.", ConsoleColor::red);
+      console.output("kill: expected no arguments. Executing anyway.", RED);
    }
    player.hearts = 0;
    console.output("kill: killed player.");
@@ -201,7 +197,7 @@ bool c_kill(Console &console, const VArgs &args, Map&, Player &player, Inventory
 
 bool c_time(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
    if (args.size() != 2) {
-      console.output("time: expected 1 argument.", ConsoleColor::red);
+      console.output("time: expected 1 argument.", RED);
       return false;
    }
 
@@ -209,7 +205,7 @@ bool c_time(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
    try {
       t = stof(args[1]) * (360.0f / 24.0f);
    } catch (...) {
-      console.output("time: expected first argument to be a number.", ConsoleColor::red);
+      console.output("time: expected first argument to be a number.", RED);
       return false;
    }
 
@@ -220,7 +216,7 @@ bool c_time(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
 
 bool c_hist(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
    if (args.size() != 1) {
-      console.output("hist: expected no arguments. Executing anyway.", ConsoleColor::red);
+      console.output("hist: expected no arguments. Executing anyway.", RED);
    }
 
    // Don't show the current 'hist' command in history
@@ -231,7 +227,7 @@ bool c_hist(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
 
 bool c_chist(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
    if (args.size() != 1) {
-      console.output("chist: expected no arguments. Executing anyway.", ConsoleColor::red);
+      console.output("chist: expected no arguments. Executing anyway.", RED);
    }
    console.history.clear();
    console.history.shrink_to_fit();
@@ -241,7 +237,7 @@ bool c_chist(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
 
 bool c_place(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
    if (args.size() != 4) {
-      console.output("place: expected 3 arguments.", ConsoleColor::red);
+      console.output("place: expected 3 arguments.", RED);
       return false;
    }
 
@@ -250,12 +246,12 @@ bool c_place(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
       id = stoi(args[1]);
 
       if (!isBlockIdValid(id)) {
-         console.output("place: invalid block id.", ConsoleColor::red);
+         console.output("place: invalid block id.", RED);
          return false;
       }
    } catch (...) {
       if (!isBlockNameValid(args[1].c_str())) {
-         console.output("place: expected first argument to either be a valid block id or name.", ConsoleColor::red);
+         console.output("place: expected first argument to either be a valid block id or name.", RED);
          return false;
       }
       id = getBlockIdFromName(args[1].c_str());
@@ -265,12 +261,12 @@ bool c_place(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
       x = stoi(args[2]);
       y = stoi(args[3]);
    } catch (...) {
-      console.output("place: expected second and third arguments to be numbers.", ConsoleColor::red);
+      console.output("place: expected second and third arguments to be numbers.", RED);
       return false;
    }
 
    if (x < 0 || y < 0 || x >= map.sizeX || y >= map.sizeY) {
-      console.output("place: coordinates are out of bounds.", ConsoleColor::red);
+      console.output("place: coordinates are out of bounds.", RED);
       return false;
    }
 
@@ -281,7 +277,7 @@ bool c_place(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
 
 bool c_fill(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
    if (args.size() != 6) {
-      console.output("fill: expected 5 arguments.", ConsoleColor::red);
+      console.output("fill: expected 5 arguments.", RED);
       return false;
    }
 
@@ -290,12 +286,12 @@ bool c_fill(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
       id = stoi(args[1]);
 
       if (!isBlockIdValid(id)) {
-         console.output("fill: invalid block id.", ConsoleColor::red);
+         console.output("fill: invalid block id.", RED);
          return false;
       }
    } catch (...) {
       if (!isBlockNameValid(args[1].c_str())) {
-         console.output("fill: expected first argument to either be a valid block id or name.", ConsoleColor::red);
+         console.output("fill: expected first argument to either be a valid block id or name.", RED);
          return false;
       }
       id = getBlockIdFromName(args[1].c_str());
@@ -307,12 +303,12 @@ bool c_fill(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
       dx = stoi(args[4]);
       dy = stoi(args[5]);
    } catch (...) {
-      console.output("fill: expected second, third, fourth and fifth arguments to be numbers.", ConsoleColor::red);
+      console.output("fill: expected second, third, fourth and fifth arguments to be numbers.", RED);
       return false;
    }
 
    if (sx < 0 || sy < 0 || sx >= map.sizeX || sy >= map.sizeY || dx < 0 || dy < 0 || dx >= map.sizeX || dy >= map.sizeY) {
-      console.output("fill: coordinates are out of bounds.", ConsoleColor::red);
+      console.output("fill: coordinates are out of bounds.", RED);
       return false;
    }
 
@@ -330,7 +326,7 @@ bool c_fill(Console &console, const VArgs &args, Map &map, Player&, Inventory&) 
 
 bool c_placew(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
    if (args.size() != 4) {
-      console.output("placew: expected 3 arguments.", ConsoleColor::red);
+      console.output("placew: expected 3 arguments.", RED);
       return false;
    }
 
@@ -339,12 +335,12 @@ bool c_placew(Console &console, const VArgs &args, Map &map, Player&, Inventory&
       id = stoi(args[1]);
 
       if (!isBlockIdValid(id)) {
-         console.output("placew: invalid wall id.", ConsoleColor::red);
+         console.output("placew: invalid wall id.", RED);
          return false;
       }
    } catch (...) {
       if (!isBlockNameValid(args[1].c_str())) {
-         console.output("placew: expected first argument to either be a valid wall id or name.", ConsoleColor::red);
+         console.output("placew: expected first argument to either be a valid wall id or name.", RED);
          return false;
       }
       id = getBlockIdFromName(args[1].c_str());
@@ -354,12 +350,12 @@ bool c_placew(Console &console, const VArgs &args, Map &map, Player&, Inventory&
       x = stoi(args[2]);
       y = stoi(args[3]);
    } catch (...) {
-      console.output("placew: expected second and third arguments to be numbers.", ConsoleColor::red);
+      console.output("placew: expected second and third arguments to be numbers.", RED);
       return false;
    }
 
    if (x < 0 || y < 0 || x >= map.sizeX || y >= map.sizeY) {
-      console.output("placew: coordinates are out of bounds.", ConsoleColor::red);
+      console.output("placew: coordinates are out of bounds.", RED);
       return false;
    }
 
@@ -370,7 +366,7 @@ bool c_placew(Console &console, const VArgs &args, Map &map, Player&, Inventory&
 
 bool c_fillw(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
    if (args.size() != 6) {
-      console.output("fillw: expected 5 arguments.", ConsoleColor::red);
+      console.output("fillw: expected 5 arguments.", RED);
       return false;
    }
 
@@ -379,12 +375,12 @@ bool c_fillw(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
       id = stoi(args[1]);
 
       if (!isBlockIdValid(id)) {
-         console.output("fillw: invalid wall id.", ConsoleColor::red);
+         console.output("fillw: invalid wall id.", RED);
          return false;
       }
    } catch (...) {
       if (!isBlockNameValid(args[1].c_str())) {
-         console.output("fillw: expected first argument to either be a valid wall id or name.", ConsoleColor::red);
+         console.output("fillw: expected first argument to either be a valid wall id or name.", RED);
          return false;
       }
       id = getBlockIdFromName(args[1].c_str());
@@ -396,12 +392,12 @@ bool c_fillw(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
       dx = stoi(args[4]);
       dy = stoi(args[5]);
    } catch (...) {
-      console.output("fillw: expected second, third, fourth and fifth arguments to be numbers.", ConsoleColor::red);
+      console.output("fillw: expected second, third, fourth and fifth arguments to be numbers.", RED);
       return false;
    }
 
    if (sx < 0 || sy < 0 || sx >= map.sizeX || sy >= map.sizeY || dx < 0 || dy < 0 || dx >= map.sizeX || dy >= map.sizeY) {
-      console.output("fillw: coordinates are out of bounds.", ConsoleColor::red);
+      console.output("fillw: coordinates are out of bounds.", RED);
       return false;
    }
 
@@ -419,7 +415,7 @@ bool c_fillw(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
 
 bool c_placeq(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
    if (args.size() != 4) {
-      console.output("placeq: expected 3 arguments.", ConsoleColor::red);
+      console.output("placeq: expected 3 arguments.", RED);
       return false;
    }
 
@@ -428,12 +424,12 @@ bool c_placeq(Console &console, const VArgs &args, Map &map, Player&, Inventory&
       id = stoi(args[1]);
 
       if (!isLiquidIdValid(id)) {
-         console.output("placeq: invalid liquid id.", ConsoleColor::red);
+         console.output("placeq: invalid liquid id.", RED);
          return false;
       }
    } catch (...) {
       if (!isLiquidNameValid(args[1])) {
-         console.output("placeq: expected first argument to either be a valid liquid id or name.", ConsoleColor::red);
+         console.output("placeq: expected first argument to either be a valid liquid id or name.", RED);
          return false;
       }
       id = getLiquidIdFromName(args[1]);
@@ -443,12 +439,12 @@ bool c_placeq(Console &console, const VArgs &args, Map &map, Player&, Inventory&
       x = stoi(args[2]);
       y = stoi(args[3]);
    } catch (...) {
-      console.output("placeq: expected second and third arguments to be numbers.", ConsoleColor::red);
+      console.output("placeq: expected second and third arguments to be numbers.", RED);
       return false;
    }
 
    if (x < 0 || y < 0 || x >= map.sizeX || y >= map.sizeY) {
-      console.output("placeq: coordinates are out of bounds.", ConsoleColor::red);
+      console.output("placeq: coordinates are out of bounds.", RED);
       return false;
    }
 
@@ -461,7 +457,7 @@ bool c_placeq(Console &console, const VArgs &args, Map &map, Player&, Inventory&
 
 bool c_fillq(Console &console, const VArgs &args, Map &map, Player&, Inventory&) {
    if (args.size() != 6) {
-      console.output("fillq: expected 5 arguments.", ConsoleColor::red);
+      console.output("fillq: expected 5 arguments.", RED);
       return false;
    }
 
@@ -470,12 +466,12 @@ bool c_fillq(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
       id = stoi(args[1]);
 
       if (!isLiquidIdValid(id)) {
-         console.output("placeq: invalid liquid id.", ConsoleColor::red);
+         console.output("placeq: invalid liquid id.", RED);
          return false;
       }
    } catch (...) {
       if (!isLiquidNameValid(args[1])) {
-         console.output("placeq: expected first argument to either be a valid liquid id or name.", ConsoleColor::red);
+         console.output("placeq: expected first argument to either be a valid liquid id or name.", RED);
          return false;
       }
       id = getLiquidIdFromName(args[1]);
@@ -487,12 +483,12 @@ bool c_fillq(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
       dx = stoi(args[4]);
       dy = stoi(args[5]);
    } catch (...) {
-      console.output("fillq: expected second, third, fourth and fifth arguments to be numbers.", ConsoleColor::red);
+      console.output("fillq: expected second, third, fourth and fifth arguments to be numbers.", RED);
       return false;
    }
 
    if (sx < 0 || sy < 0 || sx >= map.sizeX || sy >= map.sizeY || dx < 0 || dy < 0 || dx >= map.sizeX || dy >= map.sizeY) {
-      console.output("fillq: coordinates are out of bounds.", ConsoleColor::red);
+      console.output("fillq: coordinates are out of bounds.", RED);
       return false;
    }
 
@@ -511,7 +507,7 @@ bool c_fillq(Console &console, const VArgs &args, Map &map, Player&, Inventory&)
 
 bool c_give(Console &console, const VArgs &args, Map&, Player &player, Inventory &inventory) {
    if (args.size() != 3 && args.size() != 2) {
-      console.output("give: expected 1 or 2 arguments.", ConsoleColor::red);
+      console.output("give: expected 1 or 2 arguments.", RED);
       return false;
    }
 
@@ -523,7 +519,7 @@ bool c_give(Console &console, const VArgs &args, Map&, Player &player, Inventory
          item.id = getItemIdFromName(args[1]);
       }
       else {
-         console.output("give: invalid first argument, expected valid item name.", ConsoleColor::red);
+         console.output("give: invalid first argument, expected valid item name.", RED);
          return false;
       }
 
@@ -532,11 +528,11 @@ bool c_give(Console &console, const VArgs &args, Map&, Player &player, Inventory
       }
 
       if (item.count > getItemData(item.id).stackSize) {
-         console.output("give: invalid second argument, count exceeded stack size. Defaulting to stack size.", ConsoleColor::red);
+         console.output("give: invalid second argument, count exceeded stack size. Defaulting to stack size.", RED);
          item.count = getItemData(item.id).stackSize;
       }
    } catch (...) {
-      console.output("give: expected second argument to be number.", ConsoleColor::red);
+      console.output("give: expected second argument to be number.", RED);
       return false;
    }
 
@@ -547,7 +543,7 @@ bool c_give(Console &console, const VArgs &args, Map&, Player &player, Inventory
 
 bool c_cinv(Console &console, const VArgs &args, Map&, Player&, Inventory &inventory) {
    if (args.size() != 1) {
-      console.output("cinv: expected no arguments. Executing anyway.", ConsoleColor::red);
+      console.output("cinv: expected no arguments. Executing anyway.", RED);
    }
    inventory.selection = {};
    for (int i = 0; i < inventorySlots; ++i) {
@@ -558,12 +554,12 @@ bool c_cinv(Console &console, const VArgs &args, Map&, Player&, Inventory &inven
 
 bool c_set(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
    if (args.size() != 3) {
-      console.output("set: expected 2 arguments.", ConsoleColor::red);
+      console.output("set: expected 2 arguments.", RED);
       return false;
    }
    
    if (console.vars.find(args[1]) == console.vars.end()) {
-      console.output(TextFormat("set: unknown variable '%s'.", args[1].c_str()), ConsoleColor::red);
+      console.output(TextFormat("set: unknown variable '%s'.", args[1].c_str()), RED);
       return false;
    }
 
@@ -571,7 +567,7 @@ bool c_set(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
    try {
       value = stof(args[2]);
    } catch (...) {
-      console.output("set: expected second argument to be a number.", ConsoleColor::red);
+      console.output("set: expected second argument to be a number.", RED);
       return false;
    }
 
@@ -588,10 +584,10 @@ bool c_set(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
 
 bool c_list(Console &console, const VArgs &args, Map&, Player&, Inventory&) {
    if (args.size() != 1) {
-      console.output("list: expected no arguments. Executing anyway.", ConsoleColor::red);
+      console.output("list: expected no arguments. Executing anyway.", RED);
    }
 
-   console.output("Variables:", ConsoleColor::gray);
+   console.output("Variables:", GRAY);
    for (auto &[key, value] : console.vars) {
       std::string msg = key + ": ";
       if (auto *b = std::get_if<bool*>(&value)) {
@@ -638,10 +634,11 @@ static inline const std::unordered_map<std::string, Command> commands {
 // init
 
 void Console::init(Map &map, Player &player, Inventory &inventory) {
-   updateResponsiveness();
-   input.fallback = "'help' for a list of commands.";
    input.wrapinput = false;
-   input.maxChars = 512;
+   input.cursor = true;
+   input.textOrigin = CENTER_RIGHT;
+   input.init(getFont("andy"), {0}, TOP_LEFT, 512, "'help' for a list of commands.");
+   updateResponsiveness();
 
    // I might be crazy
    // Player
@@ -709,9 +706,9 @@ void Console::init(Map &map, Player &player, Inventory &inventory) {
    vars["inventory.open"] = Variable(&inventory.open);
 }
 
-void Console::output(const std::string &string, ConsoleColor color) {
+void Console::output(const std::string &string, Color color) {
    size_t last = text.size();
-   divideTextInPlace(text, string, getFont("andy"), input.rectangle.width - 10.0f * getMinRatio(), getFontSize(consoleFontSize));
+   divideTextInPlace(text, string, getFont("andy"), input.rect.width - mapRatioToX(0.01f, WINDOW_AREA, CUBIC_RATIO), getFontSizeScaled(consoleFontSize));
 
    for (size_t i = last; i < text.size(); ++i) {
       textColors.push_back(color);
@@ -752,27 +749,27 @@ void Console::update(float dt, Map &map, Player &player, Inventory &inventory) {
 }
 
 void Console::updateResponsiveness() {
-   float cr = getMinRatio();
-   input.rectangle = {500.0f * cr, GetScreenHeight() - 25.0f * cr, 1000.0f * cr, 50.0f * cr};
+   input.rect = mapRatioToArea(R4(0.0f, 1.0f, 0.92f, 0.05f), BOTTOM_LEFT, WINDOW_AREA, CUBIC_RATIO);
 }
 
 // Render
 
 void Console::render() {
    if (!input.typing) return;
-   drawRectCentered(input.rectangle, Fade(BLACK, 0.9f));
-   input.render();
+   Rectangle area = mapRatioToArea(R4(0.0f, 1.0f, 0.92f, 0.3f), BOTTOM_LEFT, WINDOW_AREA, CUBIC_RATIO);
+   Rectangle outputArea = mapRatioToArea(R4(0.0f, 1.0f, 0.92f, 0.3f - 0.05f), BOTTOM_LEFT, WINDOW_AREA, CUBIC_RATIO);
 
    Font &font = getFont("andy");
-   float cr = getMinRatio();
-   float ym125 = input.rectangle.y - 125.0f * cr;
-   float hp250 = input.rectangle.height + 250.0f * cr;
-   float xconst = input.rectangle.x - input.rectangle.width / 2.0f + 5.0f * cr;
-   float yconst = ym125 - hp250 / 2.0f;
+   float constX = area.x + mapRatioToX(0.005f, WINDOW_AREA, CUBIC_RATIO);
+   float constY = area.y + mapRatioToY(0.005f, WINDOW_AREA, CUBIC_RATIO);
+   float paddingY = mapRatioToHeight((1.0f - 0.005f) / maxLines, outputArea, CUBIC_RATIO);
 
-   drawRectCentered({input.rectangle.x, ym125 - input.rectangle.height, input.rectangle.width, hp250}, Fade(BLACK, 0.75f));
+   drawRect(input.rect, TOP_LEFT, Fade(BLACK, 0.9f));
+   drawRect(area, TOP_LEFT, Fade(BLACK, 0.75f));
+   input.render();
+
    for (int i = scrollback; i < scrollback + maxLines && (size_t)i < text.size(); ++i) {
-      DrawTextPro(font, text[i].c_str(), {xconst, yconst + (i - scrollback - 1) * 40.0f * cr}, {0, 0}, 0, getFontSize(consoleFontSize), getFontSize(1), lineColors[(size_t)textColors[i]]);
+      drawText(font, {constX, constY + (i - scrollback) * paddingY}, text[i].c_str(), getFontSizeScaled(consoleFontSize), TOP_LEFT, textColors[i]);
    }
 }
 
@@ -796,7 +793,7 @@ void Console::lex(Map &map, Player &player, Inventory &inventory) {
 
       if (ch == ';') {
          if (args.empty()) {
-            output("operator ';': no command to execute.", ConsoleColor::red);
+            output("operator ';': no command to execute.", RED);
             goto QUIT_LEXING;
          }
 
@@ -804,7 +801,7 @@ void Console::lex(Map &map, Player &player, Inventory &inventory) {
          args.clear();
       } else if (ch == '&') {
          if (args.empty()) {
-            output("operator '&': no command to execute.", ConsoleColor::red);
+            output("operator '&': no command to execute.", RED);
             goto QUIT_LEXING;
          }
          
@@ -812,7 +809,7 @@ void Console::lex(Map &map, Player &player, Inventory &inventory) {
          args.clear();
       } else if (ch == '|') {
          if (args.empty()) {
-            output("operator '|': no command to execute.", ConsoleColor::red);
+            output("operator '|': no command to execute.", RED);
             goto QUIT_LEXING;
          }
 
@@ -822,7 +819,7 @@ void Console::lex(Map &map, Player &player, Inventory &inventory) {
          std::string var;
          index += 1;
          if (index >= input.text.size()) {
-            output("operator '$': no variable present.", ConsoleColor::red);
+            output("operator '$': no variable present.", RED);
             goto QUIT_LEXING;
          }
 
@@ -830,7 +827,7 @@ void Console::lex(Map &map, Player &player, Inventory &inventory) {
             var.push_back(ch);
 
          if (vars.find(var) == vars.end()) {
-            output(TextFormat("operator '$': no such variable '%s'.", var.c_str()), ConsoleColor::red);
+            output(TextFormat("operator '$': no such variable '%s'.", var.c_str()), RED);
             goto QUIT_LEXING;
          }
          
@@ -850,7 +847,7 @@ void Console::lex(Map &map, Player &player, Inventory &inventory) {
          std::string str;
          index += 1;
          if (index >= input.text.size()) {
-            output("operator '\"': unterminated string.", ConsoleColor::red);
+            output("operator '\"': unterminated string.", RED);
             goto QUIT_LEXING;
          }
 
@@ -858,7 +855,7 @@ void Console::lex(Map &map, Player &player, Inventory &inventory) {
             str.push_back(ch);
 
          if (index >= input.text.size() || ch != '"') {
-            output("operator '\"': unterminated string.", ConsoleColor::red);
+            output("operator '\"': unterminated string.", RED);
             goto QUIT_LEXING;
          }
          args.push_back(str);
@@ -893,7 +890,7 @@ bool Console::handleCommand(VArgs &args, Map &map, Player &player, Inventory &in
    if (auto it = commands.find(args[0]); it != commands.end()) {
       return it->second(*this, args, map, player, inventory);
    } else {
-      output("Invalid command. See 'help' for a list of commands.", ConsoleColor::red);
+      output("Invalid command. See 'help' for a list of commands.", RED);
       return false;
    }
 }

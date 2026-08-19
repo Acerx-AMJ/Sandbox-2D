@@ -3,14 +3,17 @@
 #include <string>
 
 struct Input {
+   void init(Font font, Texture texture, Vector2 origin, int maxChars, const std::string &fallback);
    void update(float dt);
    void render();
-   Rectangle normalizeRect() const;
 
    // Members
 
-   Texture *texture = nullptr;
-   Rectangle rectangle;
+   Font font;
+   Texture texture = {0};
+   Rectangle rect = {0, 0, 0, 0};
+   Vector2 origin = {0.5f, 0.5f};
+   Vector2 textOrigin = {0.5f, 0.5f};
    std::string text, fallback;
 
    bool hovering = false;

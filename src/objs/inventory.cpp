@@ -43,7 +43,7 @@ void Inventory::update(bool canSwitchOnScroll) {
    }
 
    // Handle item operations
-   Rectangle grid = mapCubicArea(inventoryGridPosition, inventoryGridSize);
+   Rectangle grid = mapRatioToArea(R4(inventoryGridPosition, inventoryGridSize), TOP_LEFT, WINDOW_AREA, CUBIC_RATIO);
    int columns = inventoryWidth;
    int rows = inventoryHeight + 1;
 
@@ -328,25 +328,25 @@ Color Inventory::getItemColor(Item item) {
 // render
 
 void Inventory::renderFrame(Font font, float fontSize, Vector2 position, Vector2 size, Item item, int i, bool externalSlot) {
-   drawTextureCentered(getFrameTexture(i), position, size);
+   drawTexture(getFrameTexture(i), position, size);
 
    if (item.id != 0) {
-      drawTextureCentered(getItemTexture(item.id), position, getItemSize(item.id, size * itemScale), getItemColor(item));
+      drawTexture(getItemTexture(item.id), position, getItemSize(item.id, size * itemScale), CENTER, getItemColor(item));
    }
 
    if (item.id != 0 && item.count > 1) {
       Vector2 textPosition = {position.x, position.y + size.y / 3.0f};
-      drawTextCentered(font, textPosition, TextFormat("%d", item.count), fontSize);
+      drawText(font, textPosition, TextFormat("%d", item.count), fontSize);
    }
 
    if (i < inventoryWidth || externalSlot) {
       Vector2 textPosition = position - size / 3.0f;
-      drawTextCentered(font, textPosition, (i == trashSlot ? "BIN" : TextFormat("%d", i)), fontSize);
+      drawText(font, textPosition, (i == trashSlot ? "BIN" : TextFormat("%d", i)), fontSize);
    }
 }
 
 void Inventory::render() {
-   Rectangle grid = mapCubicArea(inventoryGridPosition, inventoryGridSize);
+   Rectangle grid = mapRatioToArea(R4(inventoryGridPosition, inventoryGridSize), TOP_LEFT, WINDOW_AREA, CUBIC_RATIO);
    int columns = inventoryWidth;
    int rows = inventoryHeight + 1;
 
@@ -368,10 +368,10 @@ void Inventory::render() {
    }
 
    if (selection.selected && !externalSlot) {
-      drawTextureCentered(getItemTexture(selection.item.id), GetMousePosition(), getItemSize(selection.item.id, size * itemScale), getItemColor(selection.item));
+      drawTexture(getItemTexture(selection.item.id), GetMousePosition(), getItemSize(selection.item.id, size * itemScale), CENTER, getItemColor(selection.item));
       if (selection.item.count > 1) {
          Vector2 textPosition = V2(GetMouseX(), GetMouseY() + size.y / 3.0f);
-         drawTextCentered(font, textPosition, TextFormat("%d", selection.item.count), fontSize);
+         drawText(font, textPosition, TextFormat("%d", selection.item.count), fontSize);
       }
    }
 }

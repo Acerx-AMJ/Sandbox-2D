@@ -6,6 +6,8 @@ enum class PopupType: char {
 };
 
 struct Popup {
+   Popup(const std::string &header, const std::string &body, PopupType type)
+      : header(header), body(body), type(type) {}
    std::string header;
    std::string body;
    PopupType type;
@@ -17,5 +19,6 @@ void insertPopup(const std::string &header, const std::string &body, PopupType t
 bool isPopupConfirmed();
 bool anyPopups();
 
+void updatePopupResponsiveness();
 void updatePopups(float dt);
 void renderPopups();

@@ -1,11 +1,14 @@
 ### Right Now
 - backgrounds
 - lightmap, light color, range in liquid config
-- remove position.hpp, rendering overhaul
 - do something about furniture sprite duplication if data.shouldFacePlayer
 - file compression
 - add tools and fix tool config for drops
 - add sprites for broken items
+- fix weird goto logic in console.cpp
+- fix tree tops resetting ghost tiles when overlapping
+- water shader is a bit broken?
+- load fonts/textures once
 
 ### Furniture
 - Add furniture with chest logic.

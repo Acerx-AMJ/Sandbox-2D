@@ -4,7 +4,6 @@
 #include <variant>
 #include <vector>
 
-enum class ConsoleColor: char {white, gray, yellow, red, green, blue, orange, purple, pink, count};
 using VArgs = std::vector<std::string>;
 using Variable = std::variant<bool*, int*, float*>;
 
@@ -15,7 +14,7 @@ struct Console {
    
    void render();
 
-   void output(const std::string &string, ConsoleColor color = ConsoleColor::white);
+   void output(const std::string &string, Color color = WHITE);
    void lex(struct Map &map, struct Player &player, struct Inventory &inventory);
    bool handleCommand(VArgs &args, struct Map &map, struct Player &player, struct Inventory &inventory);
 
@@ -23,7 +22,7 @@ struct Console {
 
    std::unordered_map<std::string, Variable> vars;
    std::vector<std::string> text, history;
-   std::vector<ConsoleColor> textColors;
+   std::vector<Color> textColors;
 
    Input input;
    int scrollback = 0;
