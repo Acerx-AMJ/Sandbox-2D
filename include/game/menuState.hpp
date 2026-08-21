@@ -4,9 +4,10 @@
 #include "ui/button.hpp"
 #include "ui/checkbox.hpp"
 #include "ui/input.hpp"
-#include "ui/scrollframe.hpp"
 #include <mutex>
 #include <vector>
+
+constexpr int buttonsInWorldFrame = 7;
 
 struct MenuState: public State {
    enum class Phase {title, levelSelection, levelCreation, levelRenaming, generatingLevel};
@@ -18,7 +19,6 @@ struct MenuState: public State {
 
    void update() override;
    void updateResponsiveness() override;
-   void updateWorldButtonResponsiveness();
 
    void updateTitle();
    void updateLevelSelection();
@@ -62,13 +62,15 @@ struct MenuState: public State {
    Button backButtonRenaming, renameButtonRenaming;
    Button *selectedButton = nullptr; 
 
-   Scrollframe worldFrame;
+   Rectangle worldFrame;
    CheckBox shouldWorldBeFlat;
    Input worldName, worldSearchBar, renameInput;
    Bar generationProgressBar;
 
    std::vector<std::string> favoriteWorlds;
    std::vector<Button> worldButtons;
+   Rectangle worldFrameButtonRects[buttonsInWorldFrame];
+
    std::string selectedWorld, generationSplash, generationInfoText;
    Phase phase = Phase::title;
 
@@ -83,6 +85,7 @@ struct MenuState: public State {
    bool wasFavoriteBeforeRenaming = false;
    bool playing = false;
 
+   int scrollIndex = 0;
    float upKeyTimer = 0.0f;
    float downKeyTimer = 0.0f;
    float upKeyDelayTimer = 0.0f;

@@ -8,8 +8,8 @@ constexpr inline Vector2 buttonPadding = {buttonSize.x + rawButtonPadding.x, but
 
 struct Button {
    void init(Font font, Texture texture, Vector2 origin, const std::string &text, const std::string &keybind = "");
-   void update(float dt, float offsetY = 0.0f);
-   void render(float offsetY = 0.0f);
+   void update(float dt);
+   void render();
 
    // Members
 

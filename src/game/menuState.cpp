@@ -80,6 +80,7 @@ void MenuState::update() {
 void MenuState::updateResponsiveness() {
    Vector2 bsize = mapRatioToArea(buttonSize, WINDOW_AREA, CUBIC_RATIO);
    Vector2 padding = convertRatio(buttonPadding, CUBIC_RATIO, RATIO);
+   float worldButtonStartY = 0.58f - convertRatioY(0.619f / 2.0f, CUBIC_RATIO, RATIO) + padding.y * 0.6f;
 
    // title screen
    playButton.rect = R4(mapRatioToArea(0.5f, 0.5f), bsize);
@@ -95,10 +96,13 @@ void MenuState::updateResponsiveness() {
    newButton.rect = R4(mapRatioToArea(0.5f + padding.x * 2.5f, 0.95f), bsize);
 
    worldSearchBar.rect = mapRatioToArea(R4(0.5f, 0.225f, 1.222f, 0.0679f), CENTER, WINDOW_AREA, CUBIC_RATIO);
-   worldFrame.rect = mapRatioToArea(R4(0.5f, 0.575f, 1.222f, 0.619f), CENTER, WINDOW_AREA, CUBIC_RATIO);
-   worldFrame.scrollHeight = worldFrame.rect.height;
-   worldFrame.scrollbarY = worldFrame.rect.y - worldFrame.rect.height * 0.5f;
-   updateWorldButtonResponsiveness();
+   worldFrame = mapRatioToArea(R4(0.5f, 0.575f, 1.222f, 0.619f), CENTER, WINDOW_AREA, CUBIC_RATIO);
+
+   for (int i = 0; i < buttonsInWorldFrame; ++i) {
+      worldFrameButtonRects[i] = mapRatioToArea(R4(0.5f, worldButtonStartY + padding.y * i, 1.0f, buttonSize.y), CENTER, WINDOW_AREA, CUBIC_RATIO);
+      worldFrameButtonRects[i].x += worldFrameButtonRects[i].width / 2.0f;
+      worldFrameButtonRects[i].y += worldFrameButtonRects[i].height / 2.0f;
+   }
 
    // world creation screen
    backButtonCreation.rect = deleteButton.rect;
@@ -113,20 +117,6 @@ void MenuState::updateResponsiveness() {
 
    // world generation screen
    generationProgressBar.rect = mapRatioToArea(R4(0.5f, 0.5f, 0.833f, 0.0463f), TOP_LEFT, WINDOW_AREA, CUBIC_RATIO);
-}
-
-void MenuState::updateWorldButtonResponsiveness() {
-   Vector2 padding = convertRatio(buttonPadding, CUBIC_RATIO, RATIO);
-   float startY = 0.58f - convertRatioY(0.619f / 2.0f, CUBIC_RATIO, RATIO) + padding.y * 0.6f;
-   size_t index = 0;
-
-   for (Button &button: worldButtons) {
-      button.rect = mapRatioToArea(R4(0.5f, startY + padding.y * index, 1.0f, buttonSize.y), CENTER, WINDOW_AREA, CUBIC_RATIO);
-      button.rect.x += button.rect.width / 2.0f;
-      button.rect.y += button.rect.height / 2.0f;
-      worldFrame.scrollHeight = std::max(worldFrame.rect.height, button.rect.y + button.rect.height / 2.0f);
-      index += 1;
-   }
 }
 
 // Update title
@@ -154,7 +144,6 @@ void MenuState::updateTitle() {
 void MenuState::updateLevelSelection() {
    backButton.update(dt);
    newButton.update(dt);
-   worldFrame.update(dt);
    worldSearchBar.update(dt);
 
    if (backButton.clicked || (!worldSearchBar.typing && handleKeyPressWithSound(KEY_ESCAPE))) {
@@ -181,24 +170,32 @@ void MenuState::updateLevelSelection() {
       loadWorldButtons();
    }
 
-   float offsetY = worldFrame.getOffsetY();
    bool wantsToPlay = false;
+   Vector2 padding = convertRatio(buttonPadding, CUBIC_RATIO, RATIO);
+   float startY = 0.58f - convertRatioY(0.619f / 2.0f, CUBIC_RATIO, RATIO) + padding.y * 0.6f;
+   size_t index = 0;
 
    for (Button &button: worldButtons) {
-      if (!worldFrame.inFrame(R4bounds(button.rect, button.origin))) {
-         continue;
-      }
+      button.rect = mapRatioToArea(R4(0.5f, startY + padding.y * index, 1.0f, buttonSize.y), CENTER, WINDOW_AREA, CUBIC_RATIO);
+      button.rect.x += button.rect.width / 2.0f;
+      button.rect.y += button.rect.height / 2.0f;
+      index += 1;
+   }
 
-      button.update(dt, offsetY);
-      if (!button.clicked) {
-         continue;
-      }
+   for (int i = scrollIndex; i - scrollIndex < buttonsInWorldFrame && i - scrollIndex < (int)worldButtons.size(); ++i) {
+      Button &button = worldButtons[i];
+      button.rect = worldFrameButtonRects[i - scrollIndex];
+      button.update(dt);
 
-      if (selectedButton == &button) {
-         wantsToPlay = true;
-         break;
+      if (button.clicked) {
+         if (selectedButton == &button) {
+            wantsToPlay = true;
+            break;
+         }
+         else {
+            selectButton(button);
+         }
       }
-      selectButton(button);
    }
 
    // Quick world navigation
@@ -206,18 +203,23 @@ void MenuState::updateLevelSelection() {
    bool shouldGoDown = isKeyRepeating(KEY_DOWN, downKeyTimer, downKeyDelayTimer);
    bool shouldGoUp = isKeyRepeating(KEY_UP, upKeyTimer, upKeyDelayTimer);
 
+   float scroll = GetMouseWheelMove();
+   if (scroll >= 0.5f) shouldGoUp = true;
+   else if (scroll <= -0.5f) shouldGoDown = true;
+
    if (!worldButtons.empty() && (shouldGoUp || shouldGoDown)) {
       if (!anySelected) {
          anySelected = true;
          selectedButton = (shouldGoUp ? &worldButtons.back() : &worldButtons.front());
+         scrollIndex = (shouldGoUp ? fmax(0, (int)worldButtons.size() - buttonsInWorldFrame) : 0);
       } else {
-         size_t currentIndex = getSelectedButtonIndex();
+         int currentIndex = getSelectedButtonIndex();
          currentIndex = (shouldGoUp ? (currentIndex - 1 + worldButtons.size()) : (currentIndex + 1)) % worldButtons.size();
          selectedButton->texture = getTexture("button_long");
          selectedButton = &worldButtons.at(currentIndex);
+         scrollIndex = fmin(currentIndex, fmax(0, (int)worldButtons.size() - buttonsInWorldFrame));
       }
       selectedButton->texture = getTexture("button_long_selected");
-      worldFrame.setProgressBasedOnPosition(selectedButton->rect.y - selectedButton->rect.height / 2.0f);
    }
 
    // Update world-specific buttons
@@ -503,22 +505,22 @@ void MenuState::renderLevelSelection() {
    favoriteButton.render();
    playWorldButton.render();
    newButton.render();
-   worldFrame.render();
    worldSearchBar.render();
 
-   float offsetY = worldFrame.getOffsetY();
-   for (Button &button: worldButtons) {
-      if (!worldFrame.inFrame(R4bounds(button.rect, button.origin))) {
-         continue;
-      }
+   float scrollbarHeight = ((int)worldButtons.size() <= buttonsInWorldFrame ? 1.0f : buttonsInWorldFrame / (float)worldButtons.size());
+   float scrollbarY = ((int)worldButtons.size() <= buttonsInWorldFrame ? 0.0f : (1.0f - convertRatioY(scrollbarHeight, CUBIC_RATIO, RATIO)) * (scrollIndex / float(worldButtons.size() - buttonsInWorldFrame)));
+   drawTexture("scrollframe", worldFrame, TOP_LEFT);
+   drawTexture("scrollbar", mapRatioToArea(R4(1.0f, scrollbarY, 1.222f * 0.0525f, scrollbarHeight), TOP_RIGHT, worldFrame, CUBIC_RATIO), TOP_LEFT);
 
-      button.render(offsetY);
-      if (!button.favorite) {
-         continue;
-      }
+   for (int i = scrollIndex; i - scrollIndex < buttonsInWorldFrame && i - scrollIndex < (int)worldButtons.size(); ++i) {
+      Button &button = worldButtons[i];
+      button.rect = worldFrameButtonRects[i - scrollIndex];
+      button.render();
 
-      Vector2 position = {button.rect.x + (button.rect.width * button.scale) / 2.f - (button.rect.height * button.scale) / 2.f, button.rect.y - offsetY};
-      drawTexture("star", position, mapRatioToArea(0.05f, 0.05f, WINDOW_AREA, CUBIC_RATIO));
+      if (button.favorite) {
+         Vector2 position = {button.rect.x + (button.rect.width * button.scale) / 2.f - (button.rect.height * button.scale) / 2.f, button.rect.y};
+         drawTexture("star", position, mapRatioToArea(0.05f, 0.05f, WINDOW_AREA, CUBIC_RATIO));
+      }
    }
 }
 
@@ -600,6 +602,7 @@ void MenuState::loadWorldButtons() {
       }
    }
    sortWorldButtonsByFavorites();
+   scrollIndex = fmin(scrollIndex, fmax(0, (int)worldButtons.size() - buttonsInWorldFrame));
 }
 
 void MenuState::sortWorldButtonsByFavorites() {
@@ -609,7 +612,6 @@ void MenuState::sortWorldButtonsByFavorites() {
       }
       return toLower(a.text) < toLower(b.text);
    });
-   updateWorldButtonResponsiveness();
 }
 
 void MenuState::resetSelection() {

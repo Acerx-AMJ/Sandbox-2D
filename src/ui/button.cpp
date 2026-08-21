@@ -18,11 +18,9 @@ void Button::init(Font font, Texture texture, Vector2 origin, const std::string 
    this->keybind = keybind;
 }
 
-void Button::update(float dt, float offsetY) {
+void Button::update(float dt) {
    bool wasHovering = hovering;
-   Vector2 mousePosition = V2(GetMouseX(), GetMouseY() + offsetY);
-
-   hovering = CheckCollisionPointRec(mousePosition, R4bounds(rect, origin));
+   hovering = CheckCollisionPointRec(GetMousePosition(), R4bounds(rect, origin));
    if (hovering) {
       setMouseOnUI(true);
    }
@@ -54,14 +52,13 @@ void Button::update(float dt, float offsetY) {
    }
 }
 
-void Button::render(float offsetY) {
+void Button::render() {
    Color tint = (disabled ? buttonDisabledTint : WHITE);
    Vector2 size = R4size(rect) * scale;
-   Vector2 position = V2(rect.x, rect.y - offsetY);
 
    if (texture.id != 0) {
-      drawTexture(texture, position, size, origin, tint);
+      drawTexture(texture, R4pos(rect), size, origin, tint);
    }
-   drawText(font, R4anchor(rect, origin, CENTER) - V2(0.0f, offsetY), text.c_str(), getFontSizeScaled(35.0f * scale), CENTER, tint);
+   drawText(font, R4anchor(rect, origin, CENTER), text.c_str(), getFontSizeScaled(35.0f * scale), CENTER, tint);
    drawKeybindIndicator(font, keybind, R4anchor(rect, origin, TOP_RIGHT), tint);
 }

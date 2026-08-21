@@ -10,7 +10,6 @@
 - water shader is a bit broken?
 - load fonts/textures once
 - fix spawning on water
-- remove scrollframe UI
 
 ### Furniture
 - Add furniture with chest logic.
@@ -51,5 +50,4 @@
 - World generation.
 - Add more sounds for sitting, opening doors, swimming, drowning, stepping on sticky and bouncy blocks. And fix existing sounds.
 - make backgrounds fade
-- fix only some inputs having visible cursor
 - use that Raylib UI corner feature for dynamic UI elements

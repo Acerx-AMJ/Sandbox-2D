@@ -218,7 +218,6 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
    player.init();
 
    auto end = std::chrono::steady_clock::now();
-   file.seekg(0, std::ios::end);
    size_t writeSize = file.tellg();
    printf("Successfully read %lluB (%lluMB) from 'data/worlds/%s.bin'. Took %lldms.\n", writeSize, writeSize / 1'000'000, name.c_str(), std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
 }
