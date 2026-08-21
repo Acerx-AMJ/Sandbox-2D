@@ -34,6 +34,9 @@ void LoadingState::update() {
       loadTextures("assets/sprites/");
       initPopups();
       initParticles();
+      Image icon = LoadImageFromTexture(getTexture("icon"));
+      SetWindowIcon(icon);
+      UnloadImage(icon);
 
       loadingText = "Loading Shaders... ";
       loadPhase = Load::shaders;

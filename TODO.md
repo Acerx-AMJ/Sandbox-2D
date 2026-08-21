@@ -3,13 +3,11 @@
 - lightmap, light color, range in liquid config
 - add tools and fix tool config for drops
 
-- do something about furniture sprite duplication if data.shouldFacePlayer
-- add sprites for broken items
+- add palm planks, palm sapling...
 - fix tree tops resetting ghost tiles when overlapping
 - water shader is a bit broken?
 - load fonts/textures once
 - fix spawning on water
-- game icon
 
 ### Furniture
 - Add furniture with chest logic.

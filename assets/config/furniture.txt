@@ -129,6 +129,7 @@ break_speed=0.3
 [table]
 type=table
 size=3,2
+face_player=true
 drop_table=table
 break_speed=0.5
 

@@ -165,15 +165,14 @@ bool Furniture::isSuitableForPlant(const Map &map, FurnitureData &data, bool pre
 }
 
 bool Furniture::setSimpleFurniture(const Map &map, FurnitureData &data, bool playerFacingLeft, bool walkable, bool previewing) {
-   int offset = (data.shouldFacePlayer && !playerFacingLeft ? data.textureSize * width : 0);
-
+   flipped = (data.shouldFacePlayer && !playerFacingLeft);
    for (int dy = 0; dy < height; ++dy) {
       for (int dx = 0; dx < width; ++dx) {
          if (!previewing && !map.isNotSolid(x + dx, y + dy)) {
             return false;
          }
          int i = dy * width + dx;
-         pieces[i].tx = data.textureSize * dx + offset;
+         pieces[i].tx = data.textureSize * dx;
          pieces[i].ty = data.textureSize * dy;
          pieces[i].walkable = (dy == 0 && walkable);
       }
@@ -239,7 +238,7 @@ void Furniture::update(Map &map, Player &player, const Vector2 &mousePos, float 
 
       for (int x = 0; x < width; ++x) {
          for (int i = 0; ivalue1 != previousValue && i < height; ++i) {
-            pieces[i * width + x].ty = ivalue1 * height * data.textureSize;
+            pieces[i * width + x].tx = ivalue1 * width * data.textureSize;
          }
       }
    } break;
@@ -265,29 +264,34 @@ bool Furniture::isValid(FurnitureData &data, const Map &map) const {
 void Furniture::preview(const Map &map) const {
    FurnitureData &data = furnitureData[id];
    bool valid = isValid(data, map);
+   float face = (flipped ? -1.0f : 1.0f);
 
    for (int dy = y; dy - y < height; ++dy) {
       for (int dx = x; dx - x < width; ++dx) {
-         const FurniturePiece &piece = pieces[(dy - y) * width + (dx - x)];
+         int rx = (flipped ? x + (x + width - 1) - dx : dx);
+         const FurniturePiece &piece = pieces[(dy - y) * width + (rx - x)];
          if (piece.nil) {
             continue;
          }
          Color color = Fade((map.isNotSolid(dx, dy) && valid ? WHITE : RED), furniturePreviewAlpha);
-         DrawTexturePro(data.texture, R4(piece.tx, piece.ty, data.textureSize, data.textureSize), R4(dx, dy, 1, 1), {0, 0}, 0, color);
+         DrawTexturePro(data.texture, R4(piece.tx, piece.ty, data.textureSize * face, data.textureSize), R4(dx, dy, 1, 1), {0, 0}, 0, color);
       }
    }
 }
 
 void Furniture::render(const Rectangle &cameraBounds) const {
    FurnitureData &data = furnitureData[id];
+   float face = (flipped ? -1.0f : 1.0f);
+
    for (int dy = y; dy <= cameraBounds.height && dy - y < height; ++dy) {
       for (int dx = x; dx <= cameraBounds.width && dx - x < width; ++dx) {
-         const FurniturePiece &piece = pieces[(dy - y) * width + (dx - x)];
+         int rx = (flipped ? x + (x + width - 1) - dx : dx);
+         const FurniturePiece &piece = pieces[(dy - y) * width + (rx - x)];
          if (dy < cameraBounds.y || dx < cameraBounds.x || piece.nil) {
             continue;
          }
          Color color = (data.type == FurnitureType::door && ivalue1 ? wallTint : WHITE);
-         DrawTexturePro(data.texture, R4(piece.tx, piece.ty, data.textureSize, data.textureSize), R4(dx, dy, 1, 1), {0, 0}, 0, color);
+         DrawTexturePro(data.texture, R4(piece.tx, piece.ty, data.textureSize * face, data.textureSize), R4(dx, dy, 1, 1), {0, 0}, 0, color);
       }
    }
 }

@@ -138,6 +138,7 @@ block=lamp
 [torch]
 action=place_block
 block=torch
+texture=torch_item
 
 [honey_block]
 action=place_block
@@ -208,10 +209,12 @@ action=none
 [sapling]
 action=place_furniture
 furniture=sapling
+texture=sapling_item
 
 [cactus_seed]
 action=place_furniture
 furniture=cactus_seed
+texture=cactus_seed_item
 
 [table]
 action=place_furniture
@@ -224,6 +227,7 @@ furniture=chair
 [door]
 action=place_furniture
 furniture=door
+texture=door_item
 
 [water_bucket]
 action=place_liquid

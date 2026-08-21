@@ -523,7 +523,8 @@ void GameState::render() {
 
       if (data.action == ItemActionType::placeBlock) {
          Color tint = (map.isNotSolid(mouseX, mouseY) && map.blockNear(mouseX, mouseY) ? WHITE : RED);
-         drawTexture(getBlockData(data.block).texture, V2(mouseX, mouseY), {1.0f, 1.0f}, TOP_LEFT, Fade(tint, furniturePreviewAlpha));
+         Texture texture = (BlockTypeHas(getBlockData(data.block).attributes, BlockType::torch) ? data.texture : getBlockData(data.block).texture);
+         drawTexture(texture, V2(mouseX, mouseY), {1.0f, 1.0f}, TOP_LEFT, Fade(tint, furniturePreviewAlpha));
       }
       else if (data.action == ItemActionType::placeWall && map.isWall(mouseX, mouseY, BlockType::empty)) {
          Color tint = (map.isNotSolid(mouseX, mouseY) && map.blockNear(mouseX, mouseY) ? wallTint : MAROON);

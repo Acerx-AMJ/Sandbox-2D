@@ -101,6 +101,7 @@ struct Furniture {
    int y = 0;
    int width = 0;
    int height = 0;
+   bool flipped = false;
 
    int ivalue1 = 0;
    int ivalue2 = 0;

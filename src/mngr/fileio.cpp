@@ -182,6 +182,7 @@ void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, 
       file.write(reinterpret_cast<const char*>(&obj.y), sizeof(obj.y));
       file.write(reinterpret_cast<const char*>(&obj.width), sizeof(obj.width));
       file.write(reinterpret_cast<const char*>(&obj.height), sizeof(obj.height));
+      file.write(reinterpret_cast<const char*>(&obj.flipped), sizeof(obj.flipped));
       file.write(reinterpret_cast<const char*>(&obj.ivalue1), sizeof(obj.ivalue1));
       file.write(reinterpret_cast<const char*>(&obj.ivalue2), sizeof(obj.ivalue2));
       file.write(reinterpret_cast<const char*>(&obj.fvalue1), sizeof(obj.fvalue1));
@@ -324,6 +325,7 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
       file.read(reinterpret_cast<char*>(&obj.y), sizeof(obj.y));
       file.read(reinterpret_cast<char*>(&obj.width), sizeof(obj.width));
       file.read(reinterpret_cast<char*>(&obj.height), sizeof(obj.height));
+      file.read(reinterpret_cast<char*>(&obj.flipped), sizeof(obj.flipped));
       file.read(reinterpret_cast<char*>(&obj.ivalue1), sizeof(obj.ivalue1));
       file.read(reinterpret_cast<char*>(&obj.ivalue2), sizeof(obj.ivalue2));
       file.read(reinterpret_cast<char*>(&obj.fvalue1), sizeof(obj.fvalue1));
