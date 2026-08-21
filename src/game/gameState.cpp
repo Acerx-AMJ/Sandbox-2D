@@ -1,17 +1,14 @@
 #include "game/gameState.hpp"
 #include "game/menuState.hpp"
-#include "mngr/particle.hpp"
 #include "mngr/input.hpp"
 #include "mngr/fileio.hpp"
 #include "objs/parallax.hpp"
 #include "SRU/audio.hpp"
 #include "SRU/assets.hpp"
+#include "SRU/particles.hpp"
 #include "SRU/random.hpp"
 #include "SRU/render.hpp"
 #include "SRU/util.hpp"
-#include <raymath.h>
-#include <algorithm>
-#include <cmath>
 
 // Constructors
 
@@ -78,7 +75,7 @@ void GameState::fixedUpdate() {
 
       if (lastPhase != phase) {
          playSound("die");
-         spawnParticles(player.getCenter(), deathParticles);
+         spawnParticles("dust", 0, nullptr, player.getCenter(), false);
       }
       calculateCameraBounds(); // Make sure the camera does not go out of bounds
    } else {
@@ -501,7 +498,7 @@ void GameState::render() {
 
    BeginMode2D(camera);
    map.render(droppedItems, player, accumulator, cameraBounds, camera, inventory);
-   drawParticleCluster(deathParticles);
+   drawParticles();
 
    // Render effects
    if (!player.creative && player.hearts != player.maxHearts) {

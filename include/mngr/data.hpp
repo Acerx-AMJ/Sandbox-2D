@@ -9,3 +9,5 @@ void loadLiquidData(std::vector<Header> &headers);
 void loadFurnitureData(std::vector<Header> &headers);
 void loadItemData(std::vector<Header> &headers);
 void loadDropTableData(std::vector<Header> &headers);
+
+void initParticles();

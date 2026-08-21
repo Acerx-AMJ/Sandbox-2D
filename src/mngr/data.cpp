@@ -1,10 +1,11 @@
 #include "mngr/data.hpp"
-#include "SRU/assets.hpp"
-#include "SRU/text.hpp"
 #include "objs/item.hpp"
 #include "objs/map.hpp"
+#include "SRU/assets.hpp"
 #include <SRU/file.hpp>
-#include <cstdio>
+#include "SRU/particles.hpp"
+#include "SRU/text.hpp"
+#include "SRU/util.hpp"
 
 // data functions
 
@@ -181,7 +182,7 @@ void loadLiquidData(std::vector<Header> &headers) {
             data.damageMax = getIntValue(value);
          }
          else if (field == "conversion") {
-            std::vector<Line> dictionary = getDictionaryValue(value, '=');
+            std::vector<Line> dictionary = getDictionaryValue(value, ',', '=');
             for (auto &[field, value]: dictionary) {
                if (!isBlockNameValid(value)) {
                   printf("loadLiquidData: Block '%s' does not exist.\n", value.c_str());
@@ -396,7 +397,7 @@ void loadDropTableData(std::vector<Header> &headers) {
 
       for (auto &[field, value]: header.lines) {
          if (field == "table") {
-            std::vector<Line> dictionary = getDictionaryValue(value, '=');
+            std::vector<Line> dictionary = getDictionaryValue(value, ',', '=');
             data.drops.reserve(data.drops.size() + dictionary.size()); // in case someone defines table multiple times
             
             for (auto &[item, values]: dictionary) {
@@ -422,4 +423,8 @@ void loadDropTableData(std::vector<Header> &headers) {
       }
       setDropTable(header.name, data);
    }
+}
+
+void initParticles() {
+   pushParticleCluster("dust", ParticleConfig{&getTexture("dust"), {V2(), V2(-1.3f), V2(), V2(0.5f), 0.99f, 0.0f, -720.0f, 0.0f, 0.5f}, {V2(), V2(1.3f), V2(), V2(0.9f), 1.01f, 360.0f, 720.0f, 0.0f, 1.3f}, 8});
 }

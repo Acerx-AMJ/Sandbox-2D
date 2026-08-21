@@ -314,7 +314,7 @@ void MenuState::updateLevelSelection() {
       std::string worldName = selectedButton->text;
       selectedButton->favorite = !selectedButton->favorite;
 
-      writeFileLines("data/favorites.txt", favoriteWorlds);
+      writeFile("data/favorites.txt", favoriteWorlds);
       sortWorldButtonsByFavorites();
 
       for (Button &button: worldButtons) {
@@ -439,7 +439,7 @@ void MenuState::updateLevelRenaming() {
       if (wasFavoriteBeforeRenaming) {
          favoriteWorlds.erase(std::remove(favoriteWorlds.begin(), favoriteWorlds.end(), renameInput.text), favoriteWorlds.end());
          favoriteWorlds.push_back(renameInput.text);
-         writeFileLines("data/favorites.txt", favoriteWorlds);
+         writeFile("data/favorites.txt", favoriteWorlds);
       }
 
       loadWorldButtons();
