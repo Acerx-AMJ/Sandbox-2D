@@ -1,7 +1,6 @@
 ### Right Now
 - backgrounds
 - lightmap, light color, range in liquid config
-- file compression
 - add tools and fix tool config for drops
 
 - do something about furniture sprite duplication if data.shouldFacePlayer
@@ -10,6 +9,7 @@
 - water shader is a bit broken?
 - load fonts/textures once
 - fix spawning on water
+- game icon
 
 ### Furniture
 - Add furniture with chest logic.

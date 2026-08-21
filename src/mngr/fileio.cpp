@@ -4,26 +4,30 @@
 #include "objs/map.hpp"
 #include "objs/parallax.hpp"
 #include "objs/player.hpp"
+#include <filesystem>
 #include <fstream>
 #include <vector>
 
-// Please increment after any breaking changes to warn players
-// about corrupted worlds
-constexpr int fileVersion = 12;
+// Please increment after any breaking changes to warn players about corrupted worlds
+constexpr int fileVersion = 13;
 
-// World saving functions
-// Save and load functions must follow the same data arrangement
-
+// Save and load functions must follow the same data arrangement. save here takes in optional arguments since world generator
+// does not have them
 void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, const Vector2 &position, bool creative, int breath, int hearts, int maxHearts, float zoom, const Map &map, const Console *console, const Inventory *inventory, const std::vector<DroppedItem> *droppedItems) {
    auto begin = std::chrono::steady_clock::now();
-   std::ofstream file ("data/worlds/" + name + ".bin", std::ios::binary);
+   std::string filename = "data/worlds/" + name + ".bin";
+   std::ofstream file (filename, std::ios::binary);
 
    if (!file.is_open()) {
       printf("saveWorldData: Failed to save world 'data/worlds/%s.bin'.\n", name.c_str());
       return;
    }
 
-   // Write basic data
+   // Write basic data. we check for inventory here since freshly generated maps don't pass it. and there's no reason
+   // to save the time and moon phase of the main menu.
+   float timeOfDay = (inventory ? getTimeOfDay() : 0);
+   int moonPhase = (inventory ? getMoonPhase() : 0);
+
    file.write(reinterpret_cast<const char*>(&fileVersion), sizeof(fileVersion));
    file.write(reinterpret_cast<const char*>(&playerSpawnPosition.x), sizeof(playerSpawnPosition.x));
    file.write(reinterpret_cast<const char*>(&playerSpawnPosition.y), sizeof(playerSpawnPosition.y));
@@ -36,10 +40,6 @@ void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, 
    file.write(reinterpret_cast<const char*>(&map.sizeX), sizeof(map.sizeX));
    file.write(reinterpret_cast<const char*>(&map.sizeY), sizeof(map.sizeY));
    file.write(reinterpret_cast<const char*>(&zoom), sizeof(zoom));
-
-   float timeOfDay = (inventory ? getTimeOfDay() : 0);
-   int moonPhase = (inventory ? getMoonPhase() : 0);
-
    file.write(reinterpret_cast<const char*>(&timeOfDay), sizeof(timeOfDay));
    file.write(reinterpret_cast<const char*>(&moonPhase), sizeof(moonPhase));
 
@@ -47,51 +47,136 @@ void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, 
    if (inventory) {
       file.write(reinterpret_cast<const char*>(inventory->items), realInventorySlots * sizeof(Item));
    } else {
-      Item item;
-      for (int i = 0; i < realInventorySlots; ++i) {
-         file.write(reinterpret_cast<const char*>(&item), sizeof(Item));
-      }
+      Item item [realInventorySlots];
+      file.write(reinterpret_cast<const char*>(item), realInventorySlots * sizeof(Item));
    }
 
    // Write console history
+   size_t consoleHistorySize = (console ? console->history.size() : 0);
+   file.write(reinterpret_cast<const char*>(&consoleHistorySize), sizeof(consoleHistorySize));
    if (console) {
-      size_t size = console->history.size();
-      file.write(reinterpret_cast<const char*>(&size), sizeof(size));
       for (const std::string &string : console->history) {
-         size = string.size();
+         size_t size = string.size();
          file.write(reinterpret_cast<const char*>(&size), sizeof(size));
          file.write(reinterpret_cast<const char*>(string.data()), string.size());
       }
-   } else {
-      size_t none = 0;
-      file.write(reinterpret_cast<const char*>(&none), sizeof(none));
    }
 
    // Write the map
-   int blockCount = map.sizeX * map.sizeY;
+   int mapBlockCount = map.sizeX * map.sizeY;
    std::vector<blockid_t> blocks, walls;
-   blocks.reserve(blockCount);
-   walls.reserve(blockCount);
+   blocks.reserve(mapBlockCount);
+   walls.reserve(mapBlockCount);
 
+   // my dead ass simple compression algorithm that groups blocks together and writes the count and the ID. we then have
+   // a super nice map.fill function to nicely fill these chunks after reading. since blockid_t is unsigned short and can
+   // only hold a value up to 65k, we need to check against max. went from 9MB to ~250KB for a fresh world. a flat world
+   // at creation is now under 1KB in size
+   blockid_t lastBlock = (map.blocks.empty() ? 0 : map.blocks.front().id);
+   blockid_t blockCount = 0;
+   blockid_t blockMax = std::numeric_limits<blockid_t>::max();
+   
    for (const Block &tile: map.blocks) {
-      blocks.push_back(tile.id);
+      // basically set ID to 0 for ghost tiles (furniture). or get a corrupted world
+      blockid_t id = (tile.tile == TileType::root) * tile.id;
+
+      if (id == lastBlock && blockCount != blockMax) {
+         blockCount += 1;
+      }
+      else {
+         blocks.push_back(blockCount);
+         blocks.push_back(lastBlock);
+         lastBlock = id;
+         blockCount = 1;
+      }
    }
+   blocks.push_back(blockCount);
+   blocks.push_back(lastBlock);
+
+   // do the same for walls...
+   blockid_t lastWall = (map.walls.empty() ? 0 : map.walls.front().id);
+   blockid_t wallCount = 0;
+   blockid_t wallMax = std::numeric_limits<blockid_t>::max();
 
    for (const Wall &tile: map.walls) {
-      walls.push_back(tile.id);
+      if (tile.id == lastWall && wallCount != wallMax) {
+         wallCount += 1;
+      }
+      else {
+         walls.push_back(wallCount);
+         walls.push_back(lastWall);
+         lastWall = tile.id;
+         wallCount = 1;
+      }
    }
+   walls.push_back(wallCount);
+   walls.push_back(lastWall);
 
+   // write size too since we have no idea how many chunks we'll get
+   size_t blockSize = blocks.size();
+   size_t wallSize = walls.size();
+   file.write(reinterpret_cast<const char*>(&blockSize), sizeof(blockSize));
+   file.write(reinterpret_cast<const char*>(&wallSize), sizeof(wallSize));
    file.write(reinterpret_cast<const char*>(blocks.data()), blocks.size() * sizeof(blockid_t));
    file.write(reinterpret_cast<const char*>(walls.data()), walls.size() * sizeof(blockid_t));
-   file.write(reinterpret_cast<const char*>(map.liquidHeights.data()), map.liquidHeights.size() * sizeof(liquidlayer_t));
-   file.write(reinterpret_cast<const char*>(map.liquidTypes.data()), map.liquidTypes.size() * sizeof(liquidid_t));
+
+   // liquids are relatively scarce in the world, so 255 liquids per chunk is miniscule. we can optimize this just by saving
+   // them as integers. flat maps will just save a single chunk of liquids, since they don't have any.
+   std::vector<int> liquidHeights, liquidTypes;
+   liquidHeights.reserve(mapBlockCount / 1000); // absurd to allocate all 1,5 million spots
+   liquidTypes.reserve(mapBlockCount / 1000);
+
+   // unlike we did for walls and blocks, we won't check for max here as 2 billion blocks is kind of a huge number. 2000x750
+   // maps for comparison only have 1,5 million blocks. and they're pretty big.
+   int lastLiquid = (map.liquidTypes.empty() ? 0 : map.liquidTypes.front());
+   int liquidCount = 0;
+
+   for (liquidid_t id: map.liquidTypes) {
+      if (id == lastLiquid) {
+         liquidCount += 1;
+      }
+      else {
+         liquidTypes.push_back(liquidCount);
+         liquidTypes.push_back(lastLiquid);
+         lastLiquid = id;
+         liquidCount = 1;
+      }
+   }
+   liquidTypes.push_back(liquidCount);
+   liquidTypes.push_back(lastLiquid);
+
+   // do the same for liquid height...
+   int lastLiquidHeight = (map.liquidHeights.empty() ? 0 : map.liquidHeights.front());
+   int liquidHeightCount = 0;
+
+   for (liquidlayer_t h: map.liquidHeights) {
+      if (h == lastLiquidHeight) {
+         liquidHeightCount += 1;
+      }
+      else {
+         liquidHeights.push_back(liquidHeightCount);
+         liquidHeights.push_back(lastLiquidHeight);
+         lastLiquidHeight = h;
+         liquidHeightCount = 1;
+      }
+   }
+   liquidHeights.push_back(liquidHeightCount);
+   liquidHeights.push_back(lastLiquidHeight);
+
+   // and again write the size with the data.
+   size_t liquidTypeSize = liquidTypes.size();
+   size_t liquidHeightSize = liquidHeights.size();
+   file.write(reinterpret_cast<const char*>(&liquidTypeSize), sizeof(liquidTypeSize));
+   file.write(reinterpret_cast<const char*>(&liquidHeightSize), sizeof(liquidHeightSize));
+   file.write(reinterpret_cast<const char*>(liquidTypes.data()), liquidTypes.size() * sizeof(int));
+   file.write(reinterpret_cast<const char*>(liquidHeights.data()), liquidHeights.size() * sizeof(int));
 
    // Write the furniture
    size_t furnitureCount = map.furniture.size();
    file.write(reinterpret_cast<const char*>(&furnitureCount), sizeof(furnitureCount));
 
    for (const Furniture &obj: map.furniture) {
-      if (obj.id == 0) continue;
+      if (obj.id == 0) continue; // we don't want any deleted furniture here.
       file.write(reinterpret_cast<const char*>(&obj.id), sizeof(obj.id));
       file.write(reinterpret_cast<const char*>(&obj.x), sizeof(obj.x));
       file.write(reinterpret_cast<const char*>(&obj.y), sizeof(obj.y));
@@ -111,16 +196,17 @@ void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, 
       file.write(reinterpret_cast<const char*>(droppedItems->data()), droppedItems->size() * sizeof(DroppedItem));
    }
 
+   // everything's done
    auto end = std::chrono::steady_clock::now();
-   size_t writeSize = file.tellp();
-   printf("Successfully wrote %lluB (%lluMB) to 'data/worlds/%s.bin'. Took %lldms.\n", writeSize, writeSize / 1'000'000, name.c_str(), std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
+   file.close();
+   size_t writeSize = std::filesystem::file_size(filename);
+   printf("Successfully wrote %lluB (%lluKB) to 'data/worlds/%s.bin'. Took %lldms.\n", writeSize, writeSize / 1'000, name.c_str(), std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
 }
-
-// World loading functions
 
 void loadWorldData(const std::string &name, Player &player, float &zoom, Map &map, Console &console, Inventory &inventory, std::vector<DroppedItem> &droppedItems) {
    auto begin = std::chrono::steady_clock::now();
-   std::ifstream file ("data/worlds/" + name + ".bin", std::ios::binary);
+   std::string filename = "data/worlds/" + name + ".bin";
+   std::ifstream file (filename, std::ios::binary);
 
    if (!file.is_open()) {
       printf("loadWorldData: Failed to load world 'data/worlds/%s.bin'.\n", name.c_str());
@@ -129,6 +215,9 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
 
    // Read basic data
    int versionOfFile = 0;
+   float timeofDay = 0;
+   int moonPhase = 0;
+
    file.read(reinterpret_cast<char*>(&versionOfFile), sizeof(versionOfFile));
    file.read(reinterpret_cast<char*>(&player.spawnPos.x), sizeof(player.spawnPos.x));
    file.read(reinterpret_cast<char*>(&player.spawnPos.y), sizeof(player.spawnPos.y));
@@ -141,11 +230,9 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
    file.read(reinterpret_cast<char*>(&map.sizeX), sizeof(map.sizeX));
    file.read(reinterpret_cast<char*>(&map.sizeY), sizeof(map.sizeY));
    file.read(reinterpret_cast<char*>(&zoom), sizeof(zoom));
-
-   float timeofDay = 0;
-   int moonPhase = 0;
    file.read(reinterpret_cast<char*>(&timeofDay), sizeof(timeofDay));
    file.read(reinterpret_cast<char*>(&moonPhase), sizeof(moonPhase));
+
    setTimeOfDay(timeofDay);
    setMoonPhase(moonPhase);
    map.init();
@@ -168,23 +255,62 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
       console.history[i] = line;
    }
 
-   // Read map
-   int blockCount = map.sizeX * map.sizeY;
+   // read map. check saveWorldData for the compression algorithm in use
+   size_t blockSize = 0;
+   size_t wallSize = 0;
+   file.read(reinterpret_cast<char*>(&blockSize), sizeof(size_t));
+   file.read(reinterpret_cast<char*>(&wallSize), sizeof(size_t));
+
    std::vector<blockid_t> blocks, walls;
-   blocks.resize(blockCount);
-   walls.resize(blockCount);
+   blocks.resize(blockSize);
+   walls.resize(wallSize);
 
    file.read(reinterpret_cast<char*>(blocks.data()), blocks.size() * sizeof(blockid_t));
    file.read(reinterpret_cast<char*>(walls.data()), walls.size() * sizeof(blockid_t));
-   file.read(reinterpret_cast<char*>(map.liquidHeights.data()), map.liquidHeights.size() * sizeof(liquidlayer_t));
-   file.read(reinterpret_cast<char*>(map.liquidTypes.data()), map.liquidTypes.size() * sizeof(liquidid_t));
 
-   for (int y = 0; y < map.sizeY; ++y) {
-      map.setRow(y, blocks.data() + y * map.sizeX);
+   int blockCounter = 0;
+   for (size_t i = 0; i < blockSize; i += 2) {
+      blockid_t count = blocks[i];
+      blockid_t id = blocks[i+1];
+      map.fill(blockCounter, count, id);
+      blockCounter += count;
    }
 
-   for (int y = 0; y < map.sizeY; ++y) {
-      map.setWallRow(y, walls.data() + y * map.sizeX);
+   int wallCounter = 0;
+   for (size_t i = 0; i < wallSize; i += 2) {
+      blockid_t count = walls[i];
+      blockid_t id = walls[i+1];
+      map.fillWalls(wallCounter, count, id);
+      wallCounter += count;
+   }
+
+   // do the same with liquids...
+   size_t liquidTypeSize = 0;
+   size_t liquidHeightSize = 0;
+   file.read(reinterpret_cast<char*>(&liquidTypeSize), sizeof(size_t));
+   file.read(reinterpret_cast<char*>(&liquidHeightSize), sizeof(size_t));
+
+   std::vector<int> liquidTypes, liquidHeights;
+   liquidTypes.resize(liquidTypeSize);
+   liquidHeights.resize(liquidHeightSize);
+
+   file.read(reinterpret_cast<char*>(liquidTypes.data()), liquidTypes.size() * sizeof(int));
+   file.read(reinterpret_cast<char*>(liquidHeights.data()), liquidHeights.size() * sizeof(int));
+
+   int liquidTypeCounter = 0;
+   for (size_t i = 0; i < liquidTypeSize; i += 2) {
+      int count = liquidTypes[i];
+      int id = liquidTypes[i+1];
+      map.fillLiquids(liquidTypeCounter, count, id);
+      liquidTypeCounter += count;
+   }
+
+   int liquidHeightCounter = 0;
+   for (size_t i = 0; i < liquidHeightSize; i += 2) {
+      int count = liquidHeights[i];
+      int height = liquidHeights[i+1];
+      map.fillLiquidHeights(liquidHeightCounter, count, height);
+      liquidHeightCounter += count;
    }
 
    // Read furniture
@@ -208,6 +334,7 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
       map.addFurniture(obj);
    }
 
+   // and read dropped items
    size_t droppedItemCount = 0;
    file.read(reinterpret_cast<char*>(&droppedItemCount), sizeof(droppedItemCount));
    droppedItems.resize(droppedItemCount);
@@ -217,9 +344,11 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
    }
    player.init();
 
+   // and that's done
    auto end = std::chrono::steady_clock::now();
-   size_t writeSize = file.tellg();
-   printf("Successfully read %lluB (%lluMB) from 'data/worlds/%s.bin'. Took %lldms.\n", writeSize, writeSize / 1'000'000, name.c_str(), std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
+   file.close();
+   size_t writeSize = std::filesystem::file_size(filename);
+   printf("Successfully read %lluB (%lluKB) from 'data/worlds/%s.bin'. Took %lldms.\n", writeSize, writeSize / 1'000, name.c_str(), std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
 }
 
 int getFileVersion(const std::string &name) {

@@ -165,24 +165,6 @@ void Map::setWallRow(int y, const std::string &name) {
    std::fill_n(&walls[y * sizeX], sizeX, wall);
 }
 
-void Map::setRow(int y, blockid_t *ids) {
-   int start = y * sizeX;
-   for (int i = 0; i < sizeX; ++i) {
-      Block &block = blocks[start + i];
-      block.id = ids[i];
-      block.type = blockData[block.id].attributes;
-   }
-}
-
-void Map::setWallRow(int y, blockid_t *ids) {
-   int start = y * sizeX;
-   for (int i = 0; i < sizeX; ++i) {
-      Wall &wall = walls[start + i];
-      wall.id = ids[i];
-      wall.type = blockData[wall.id].attributes;
-   }
-}
-
 void Map::setColumnFromPoint(int x, int y, const std::string &name) {
    blockid_t id = getBlockIdFromName(name);
    BlockType type = blockData[id].attributes;
@@ -197,6 +179,24 @@ void Map::setColumnFromPoint(int x, int y, const std::string &name) {
       blocks[i] = block;
       walls[i] = wall;
    }
+}
+
+void Map::fill(int i, int n, blockid_t id) {
+   Block block = {id, 0, TileType::root, blockData[id].attributes};
+   std::fill_n(&blocks[i], n, block);
+}
+
+void Map::fillWalls(int i, int n, blockid_t id) {
+   Wall wall = {id, blockData[id].attributes};
+   std::fill_n(&walls[i], n, wall);
+}
+
+void Map::fillLiquids(int i, int n, liquidid_t id) {
+   std::fill_n(&liquidTypes[i], n, id);
+}
+
+void Map::fillLiquidHeights(int i, int n, liquidlayer_t height) {
+   std::fill_n(&liquidHeights[i], n, height);
 }
 
 void Map::setBlock(int x, int y, const std::string &name) {

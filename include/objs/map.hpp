@@ -127,9 +127,12 @@ struct Map {
 
    void setRow(int y, const std::string &name);
    void setWallRow(int y, const std::string &name);
-   void setRow(int y, blockid_t *ids);
-   void setWallRow(int y, blockid_t *ids);
    void setColumnFromPoint(int x, int y, const std::string &name);
+
+   void fill(int i, int n, blockid_t id);
+   void fillWalls(int i, int n, blockid_t id);
+   void fillLiquids(int i, int n, liquidid_t id);
+   void fillLiquidHeights(int i, int n, liquidlayer_t height);
 
    void setBlock(int x, int y, const std::string &name);
    void setBlock(int x, int y, blockid_t id);
