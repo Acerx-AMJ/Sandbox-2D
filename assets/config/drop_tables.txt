@@ -133,3 +133,21 @@ table=planks=1;24;36,sapling=1;1;3
 
 [cactus]
 table=cactus_block=1;6;14,cactus_seed=1;1;2
+
+[palm_planks]
+table=palm_planks=1
+
+[palm_plank_wall]
+table=palm_plank_wall=1
+
+[pine_planks]
+table=pine_planks=1
+
+[pine_plank_wall]
+table=pine_plank_wall=1
+
+[jungle_planks]
+table=jungle_planks=1
+
+[jungle_plank_wall]
+table=jungle_plank_wall=1

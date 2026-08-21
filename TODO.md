@@ -3,7 +3,6 @@
 - lightmap, light color, range in liquid config
 - add tools and fix tool config for drops
 
-- add palm planks, palm sapling...
 - fix tree tops resetting ghost tiles when overlapping
 - water shader is a bit broken?
 - load fonts/textures once
