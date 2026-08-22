@@ -305,29 +305,40 @@ Furniture getFurniture(int x, int y, const Map &map, furnitureid_t id, bool play
    case FurnitureType::tree: {
       // trees are not placed by top-left but from center-bottom.
       int treeHeight = randomInt(data.treeSizeMin, data.treeSizeMax);
+      bool isPalm = (data.treeRootChance == 0 && data.treeBranchChance == 0 && !data.treeIsCactus);
+      int topHeight = (data.treeIsCactus ? 0 : (isPalm ? 3 : 2));
+      int middle = treeWidth / 2;
+
+      printf("THEIGHT BEFORE %d\n", treeHeight);
       for (int dy = 0; dy < treeHeight; ++dy) {
-         if (!map.isNotSolid(x, y - dy)) {
-            treeHeight = dy;
-            break;
+         if (data.treeIsCactus) {
+            if (!map.isNotSolid(x, y - dy)) {
+               treeHeight = dy;
+               goto BREAK_OUT;
+            }
+            continue;
+         }
+         for (int ty = 0; ty < topHeight; ++ty) {
+            for (int tx = -middle; tx < treeWidth - middle; ++tx) {
+               if (!map.isNotSolid(x + tx, (y - dy) - ty)) {
+                  treeHeight = y - (y - dy) + ty;
+                  goto BREAK_OUT;
+               }
+            }
          }
       }
+   BREAK_OUT:
+      printf("THEIGHT AFTER %d\n", treeHeight);
 
       if (!previewing && (treeHeight < data.treeSizeMin || !isTreeSoilCompatible(map.getBlock(x, y + 1).id, id))) {
          return {};
       }
-
-      bool isPalm = (data.treeRootChance == 0 && data.treeBranchChance == 0 && !data.treeIsCactus);
-      int middle = treeWidth / 2;
-      int topHeight = 0;
-   
       Furniture tree;
       tree.init(id, x - middle, y - treeHeight + 1, treeWidth, treeHeight);
 
       // place the tree top
       if (!data.treeIsCactus) {
          int topOffset = chance(50) * treeWidth * data.textureSize;
-         topHeight = (isPalm ? 3 : 2);
-
          for (int dy = 0; dy < topHeight; ++dy) {
             for (int dx = 0; dx < treeWidth; ++dx) {
                int i = dy * treeWidth + dx;

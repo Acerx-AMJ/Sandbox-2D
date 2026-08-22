@@ -3,11 +3,6 @@
 - lightmap, light color, range in liquid config
 - add tools and fix tool config for drops
 
-- fix tree tops resetting ghost tiles when overlapping
-- water shader is a bit broken?
-- load fonts/textures once
-- fix spawning on water
-
 ### Furniture
 - Add furniture with chest logic.
 - Add all of the inventory quirks to chests.

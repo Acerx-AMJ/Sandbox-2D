@@ -15,10 +15,10 @@ constexpr float loadingTextFontSize = 80.0f;
 // Constructors
 
 LoadingState::LoadingState() {
-   loadFont("andy", "assets/fonts/andy.ttf");
-   loadTexture("loading", "assets/sprites/ui/loading.png");
+   font = loadFont("andy", "assets/fonts/andy.ttf");
+   loadingTexture = loadTexture("loading", "assets/sprites/ui/loading.png");
    splashText = getRandomLineFromFile("assets/config/splash.txt");
-   wrapInPlace(splashText, getFont("andy"), mapRatioToX(0.9), getFontSizeScaled(splashFontSize));
+   wrapInPlace(splashText, font, mapRatioToX(0.9), getFontSizeScaled(splashFontSize));
 }
 
 void LoadingState::update() {
@@ -70,9 +70,9 @@ void LoadingState::render() {
    if (loadPhase != Load::count) {
       finalLoadingText = TextFormat("%s%d/%d", loadingText.c_str(), (int)loadPhase, (int)Load::count);
    }
-   drawTextResponsive("andy", V2(0.5, 0.33f), finalLoadingText.c_str(), loadingTextFontSize);
-   drawTextResponsive("andy", V2(0.5f, 0.6f), splashText.c_str(), splashFontSize);
-   drawTextureResponsive("loading", V2(0.5f, 0.5f), V2(0.065), CENTER, WHITE, FULL_SOURCE, WINDOW_AREA, CUBIC_RATIO, iconRotation);
+   drawTextResponsive(font, V2(0.5, 0.33f), finalLoadingText.c_str(), loadingTextFontSize);
+   drawTextResponsive(font, V2(0.5f, 0.6f), splashText.c_str(), splashFontSize);
+   drawTextureResponsive(loadingTexture, V2(0.5f, 0.5f), V2(0.065), CENTER, WHITE, FULL_SOURCE, WINDOW_AREA, CUBIC_RATIO, iconRotation);
 }
 
 State* LoadingState::change() {

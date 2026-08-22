@@ -284,7 +284,7 @@ Vector2 MapGenerator::findPlayerSpawnLocation() {
       }
    breakOut:
 
-      if (map.isLiquid(x, y) || map.isLiquid(x, y)) {
+      if (map.isLiquid(x, y + 1) || map.isLiquid(x + 1, y + 1)) {
          valid = false;
       }
 

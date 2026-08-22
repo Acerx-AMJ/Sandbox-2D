@@ -13,9 +13,18 @@
 // Constructors
 
 GameState::GameState(const std::string &worldName) {
-   this->worldName = worldName;
+   font = getFont("andy");
+   buttonTexture = getTexture("button");
+   vignetteTexture = getTexture("vignette");
+   breakingTexture = getTexture("breaking");
+   bubbleTexture = getTexture("bubble_icon");
+   heartTexture = getTexture("heart_icon");
+   grayscaleShader = getShader("grayscale");
+   waterPreviewShader = getShader("water_preview");
+   waterPreviewTimeLocation = GetShaderLocation(waterPreviewShader, "time");
    
    // Init world and camera
+   this->worldName = worldName;
    loadWorldData(worldName, player, camera.zoom, map, console, inventory, droppedItems);
 
    camera.zoom = std::clamp(camera.zoom, minCameraZoom, maxCameraZoom);
@@ -25,10 +34,8 @@ GameState::GameState(const std::string &worldName) {
    calculateCameraBounds();
 
    // Init UI
-   Font font = getFont("andy");
-   Texture button = getTexture("button");
-   continueButton.init(font, button, CENTER, "Continue");
-   menuButton.init(font, button, CENTER, "Save & Quit");
+   continueButton.init(font, buttonTexture, CENTER, "Continue");
+   menuButton.init(font, buttonTexture, CENTER, "Save & Quit");
    pauseButton.init(font, {0}, CENTER, "Pause");
 
    liquidCounters.resize(getLiquidCount());
@@ -492,7 +499,6 @@ void GameState::updateTorchPhysics(int x, int y) {
 // Render
 
 void GameState::render() {
-   Font font = getFont("andy");
    const float delta = (phase != Phase::playing ? 0 : player.delta.x * dt);
    drawBackground(delta, delta, (phase == Phase::paused ? 0.0f : 1.0f) * dt);
 
@@ -502,7 +508,7 @@ void GameState::render() {
 
    // Render effects
    if (!player.creative && player.hearts != player.maxHearts) {
-      drawTexture("vignette", getWindowArea(), TOP_LEFT, Fade(WHITE, 1.0f - float(player.hearts) / player.maxHearts));
+      drawTexture(vignetteTexture, getWindowArea(), TOP_LEFT, Fade(WHITE, 1.0f - float(player.hearts) / player.maxHearts));
    }
 
    if (phase == Phase::died) {
@@ -545,11 +551,10 @@ void GameState::render() {
       }
       else if (data.action == ItemActionType::placeLiquid) {
          Color tint = (map.getBlock(mouseX, mouseY).tile != TileType::root || map.isEmpty(mouseX, mouseY) ? WHITE : RED);
-         Shader shader = getShader("water_preview");
          float time = GetTime();
 
-         SetShaderValue(shader, GetShaderLocation(shader, "time"), &time, SHADER_UNIFORM_FLOAT);
-         BeginShaderMode(shader);
+         SetShaderValue(waterPreviewShader, waterPreviewTimeLocation, &time, SHADER_UNIFORM_FLOAT);
+         BeginShaderMode(waterPreviewShader);
          drawTexture(getLiquidData(data.liquid).texture, V2(mouseX, mouseY), {1.0f, 1.0f}, TOP_LEFT, Fade(tint, furniturePreviewAlpha));
          EndShaderMode();
       }
@@ -558,13 +563,11 @@ void GameState::render() {
    // Render block breaking preview
    if (player.breakTime != 0.0f) {
       int textureX = (player.breakTime / player.breakSpeed) * 5;
-      DrawTexturePro(getTexture("breaking"), {textureX * 8.0f, 0, 8, 8}, {(float)player.lastBreakingX, (float)player.lastBreakingY, 1, 1}, {0, 0}, 0, (player.breakingWall ? wallTint : WHITE));
+      DrawTexturePro(breakingTexture, {textureX * 8.0f, 0, 8, 8}, {(float)player.lastBreakingX, (float)player.lastBreakingY, 1, 1}, {0, 0}, 0, (player.breakingWall ? wallTint : WHITE));
    }
 
    // Render breath dynamically
    if (!player.creative && player.breath != maxBreath) {
-      Texture2D &bubbleIcon = getTexture("bubble_icon");
-      
       float size = 1.25f;
       float padding = size + 0.075f;
       int breathValue = 10;
@@ -579,16 +582,13 @@ void GameState::render() {
 
       for (int i = 0; i < bubbles; ++i) {
          float a = 1.0f - std::min(1.0f, float((i + 1) * breathValue - player.displayBreath) / breathValue);
-         drawTexture(bubbleIcon, {startingX + padding * i - halfSine, startingY - halfSine}, {size + sine, size + sine}, TOP_LEFT, Fade(WHITE, a));
+         drawTexture(bubbleTexture, {startingX + padding * i - halfSine, startingY - halfSine}, {size + sine, size + sine}, TOP_LEFT, Fade(WHITE, a));
       }
    }
    EndMode2D();
 
    // Render all of the hearts dynamically
    if (!player.creative) {
-      Texture2D &heartIcon = getTexture("heart_icon");
-      Shader &grayscaleShader = getShader("grayscale");
-
       float static sineCounter = 0.0f;
       sineCounter += 1.0f - float(player.hearts) / player.maxHearts;
       float sine = std::sin(sineCounter * 0.5f);
@@ -603,7 +603,7 @@ void GameState::render() {
       BeginShaderMode(grayscaleShader);
       for (int i = 0; i < heartCount; ++i) {
          float a = 1.0f - std::min(1.0f, float((i + 1) * heartValue - player.displayHearts) / heartValue);
-         drawTexture(heartIcon, gridPosition(area, heartsPerRow, rows, i % heartsPerRow, i / heartsPerRow, CENTER), size, CENTER, Fade(WHITE, a));
+         drawTexture(heartTexture, gridPosition(area, heartsPerRow, rows, i % heartsPerRow, i / heartsPerRow, CENTER), size, CENTER, Fade(WHITE, a));
       }
       EndShaderMode();
       // bit of a grid hack. index out of bounds to get the preffered position. only works because there are no checks there

@@ -131,6 +131,15 @@ table=door=1
 [tree]
 table=planks=1;24;36,sapling=1;1;3
 
+[palm_tree]
+table=palm_planks=1;26;40,palm_sapling=1;1;3
+
+[pine_tree]
+table=pine_planks=1;24;36,pine_sapling=1;1;3
+
+[jungle_tree]
+table=jungle_planks=1;24;36,jungle_sapling=1;1;3
+
 [cactus]
 table=cactus_block=1;6;14,cactus_seed=1;1;2
 

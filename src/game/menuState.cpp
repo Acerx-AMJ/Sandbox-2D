@@ -28,38 +28,46 @@ constexpr int defaultMapSizeY = 750;
 // Constructors
 
 MenuState::MenuState() {
-   Texture button = getTexture("button");
-   Font font = getFont("andy");
-   
+   font = getFont("andy");
+   buttonTexture = getTexture("button");
+   searchBarTexture = getTexture("search_bar");
+   barTexture = getTexture("bar");
+   titleTexture = getTexture("title");
+   starTexture = getTexture("star");
+   scrollframeTexture = getTexture("scrollframe");
+   scrollbarTexture = getTexture("scrollbar");
+   longButtonTexture = getTexture("button_long");
+   longSelectedButtonTexture = getTexture("button_long_selected");
+
    // Init title screen
-   playButton.init(font, button, CENTER, "Play");
-   optionsButton.init(font, button, CENTER, "Options", "O");
-   quitButton.init(font, button, CENTER, "Quit");
+   playButton.init(font, buttonTexture, CENTER, "Play");
+   optionsButton.init(font, buttonTexture, CENTER, "Options", "O");
+   quitButton.init(font, buttonTexture, CENTER, "Quit");
 
    // Init world selection screen
-   worldSearchBar.init(font, getTexture("search_bar"), TOP_LEFT, maxWorldNameSize, "Search for a World...");
-   deleteButton.init(font, button, CENTER, "Delete World", "D");
-   renameButton.init(font, button, CENTER, "Rename World", "F2");
-   backButton.init(font, button, CENTER, "Back");
-   favoriteButton.init(font, button, CENTER, "Favorite", "F");
-   playWorldButton.init(font, button, CENTER, "Play World");
-   newButton.init(font, button, CENTER, "New", "N");
+   worldSearchBar.init(font, searchBarTexture, TOP_LEFT, maxWorldNameSize, "Search for a World...");
+   deleteButton.init(font, buttonTexture, CENTER, "Delete World", "D");
+   renameButton.init(font, buttonTexture, CENTER, "Rename World", "F2");
+   backButton.init(font, buttonTexture, CENTER, "Back");
+   favoriteButton.init(font, buttonTexture, CENTER, "Favorite", "F");
+   playWorldButton.init(font, buttonTexture, CENTER, "Play World");
+   newButton.init(font, buttonTexture, CENTER, "New", "N");
    loadWorldButtons();
 
    // Init world creation screen
-   backButtonCreation.init(font, button, CENTER, "Back");
-   createButtonCreation.init(font, button, CENTER, "Create");
-   worldName.init(font, button, CENTER, maxWorldNameSize, "Name Your New World...");
+   backButtonCreation.init(font, buttonTexture, CENTER, "Back");
+   createButtonCreation.init(font, buttonTexture, CENTER, "Create");
+   worldName.init(font, buttonTexture, CENTER, maxWorldNameSize, "Name Your New World...");
    shouldWorldBeFlat.init(font, CENTER, "F");
 
    // Init world renaming screen
-   backButtonRenaming.init(font, button, CENTER, "Back");
-   renameButtonRenaming.init(font, button, CENTER, "Rename");
-   renameInput.init(font, button, CENTER, maxWorldNameSize, "Rename Your World...");
+   backButtonRenaming.init(font, buttonTexture, CENTER, "Back");
+   renameButtonRenaming.init(font, buttonTexture, CENTER, "Rename");
+   renameInput.init(font, buttonTexture, CENTER, maxWorldNameSize, "Rename Your World...");
 
    // Init world generation screen
    generationProgressBar.progress = generationProgressBar.progressInterpolation = 0.0f;
-   generationProgressBar.init(getTexture("bar"), CENTER, WHITE, GRAY);
+   generationProgressBar.init(barTexture, CENTER, WHITE, GRAY);
 
    updateResponsiveness();
    setCurrentBackgroundBiome(MapGenerator::Biome(randomInt(0, (int)MapGenerator::Biome::count - 1)));
@@ -215,11 +223,11 @@ void MenuState::updateLevelSelection() {
       } else {
          int currentIndex = getSelectedButtonIndex();
          currentIndex = (shouldGoUp ? (currentIndex - 1 + worldButtons.size()) : (currentIndex + 1)) % worldButtons.size();
-         selectedButton->texture = getTexture("button_long");
+         selectedButton->texture = longButtonTexture;
          selectedButton = &worldButtons.at(currentIndex);
          scrollIndex = fmin(currentIndex, fmax(0, (int)worldButtons.size() - buttonsInWorldFrame));
       }
-      selectedButton->texture = getTexture("button_long_selected");
+      selectedButton->texture = longSelectedButtonTexture;
    }
 
    // Update world-specific buttons
@@ -271,12 +279,7 @@ void MenuState::updateLevelSelection() {
    if (megaDeleteClicked && isPopupConfirmed()) {
       int failedCount = 0;
       for (const Button &button: worldButtons) {
-         if (isWorldFavorite(button.text)) {
-            continue;
-         }
-         std::string fileName = TextFormat("data/worlds/%s.bin", button.text.c_str());
-
-         if (!std::filesystem::remove_all(fileName)) {
+         if (!isWorldFavorite(button.text) && !deleteWorld(button.text)) {
             failedCount += 1;
          }
       }
@@ -289,9 +292,7 @@ void MenuState::updateLevelSelection() {
    megaDeleteClicked = false;
 
    if (deleteClicked && isPopupConfirmed()) {
-      std::string fileName = TextFormat("data/worlds/%s.bin", selectedButton->text.c_str());
-
-      if (!std::filesystem::remove_all(fileName)) {
+      if (!deleteWorld(selectedButton->text)) {
          insertPopup("Notice", TextFormat("World '%s' could not be deleted. Please check the 'data/worlds/' folder, if the file is present, check your permissions.", selectedButton->text.c_str()), PopupType::error);
       }
       loadWorldButtons();
@@ -390,7 +391,7 @@ void MenuState::updateLevelCreation() {
       }
 
       generationSplash = getRandomLineFromFile("assets/config/splash.txt");
-      wrapInPlace(generationSplash, getFont("andy"), GetScreenWidth() - 50.0f, 40.0f);
+      wrapInPlace(generationSplash, font, GetScreenWidth() - mapRatioToX(0.05f, WINDOW_AREA, CUBIC_RATIO), getFontSizeScaled(40.0f));
 
       worldName.typing = false;
       phase = Phase::generatingLevel;
@@ -489,7 +490,7 @@ void MenuState::render() {
 // Render title
 
 void MenuState::renderTitle() {
-   drawTextureResponsive("title", V2(0.5f, 0.3f), V2(1.0f, 0.167f), CENTER, WHITE, FULL_SOURCE, WINDOW_AREA, CUBIC_RATIO);
+   drawTextureResponsive(titleTexture, V2(0.5f, 0.3f), V2(1.0f, 0.167f), CENTER, WHITE, FULL_SOURCE, WINDOW_AREA, CUBIC_RATIO);
    playButton.render();
    optionsButton.render();
    quitButton.render();
@@ -498,7 +499,7 @@ void MenuState::renderTitle() {
 // Render level selection screen
 
 void MenuState::renderLevelSelection() {
-   drawTextResponsive("andy", V2(0.5f, 0.106f), "SELECT WORLD", 180.0f);
+   drawTextResponsive(font, V2(0.5f, 0.106f), "SELECT WORLD", 180.0f);
    backButton.render();
    renameButton.render();
    deleteButton.render();
@@ -509,8 +510,8 @@ void MenuState::renderLevelSelection() {
 
    float scrollbarHeight = ((int)worldButtons.size() <= buttonsInWorldFrame ? 1.0f : buttonsInWorldFrame / (float)worldButtons.size());
    float scrollbarY = ((int)worldButtons.size() <= buttonsInWorldFrame ? 0.0f : (1.0f - convertRatioY(scrollbarHeight, CUBIC_RATIO, RATIO)) * (scrollIndex / float(worldButtons.size() - buttonsInWorldFrame)));
-   drawTexture("scrollframe", worldFrame, TOP_LEFT);
-   drawTexture("scrollbar", mapRatioToArea(R4(1.0f, scrollbarY, 1.222f * 0.0525f, scrollbarHeight), TOP_RIGHT, worldFrame, CUBIC_RATIO), TOP_LEFT);
+   drawTexture(scrollframeTexture, worldFrame, TOP_LEFT);
+   drawTexture(scrollbarTexture, mapRatioToArea(R4(1.0f, scrollbarY, 1.222f * 0.0525f, scrollbarHeight), TOP_RIGHT, worldFrame, CUBIC_RATIO), TOP_LEFT);
 
    for (int i = scrollIndex; i - scrollIndex < buttonsInWorldFrame && i - scrollIndex < (int)worldButtons.size(); ++i) {
       Button &button = worldButtons[i];
@@ -519,7 +520,7 @@ void MenuState::renderLevelSelection() {
 
       if (button.favorite) {
          Vector2 position = {button.rect.x + (button.rect.width * button.scale) / 2.f - (button.rect.height * button.scale) / 2.f, button.rect.y};
-         drawTexture("star", position, mapRatioToArea(0.05f, 0.05f, WINDOW_AREA, CUBIC_RATIO));
+         drawTexture(starTexture, position, mapRatioToArea(0.05f, 0.05f, WINDOW_AREA, CUBIC_RATIO));
       }
    }
 }
@@ -527,38 +528,38 @@ void MenuState::renderLevelSelection() {
 // Render level creation screen
 
 void MenuState::renderLevelCreation() {
-   drawTextResponsive("andy", V2(0.5f, 0.13f), "CREATE WORLD", 180.0f);
+   drawTextResponsive(font, V2(0.5f, 0.13f), "CREATE WORLD", 180.0f);
    backButtonCreation.render();
    createButtonCreation.render();
    worldName.render();
    shouldWorldBeFlat.render();
 
    Vector2 anchor = R4anchor(worldName.rect, worldName.origin, CENTER_LEFT) - mapRatioToArea(0.05f, 0.0f, WINDOW_AREA, CUBIC_RATIO);
-   drawText("andy", anchor, "World Name:", getFontSizeScaled(50.0f), CENTER_RIGHT);
-   drawText("andy", V2(anchor.x, shouldWorldBeFlat.rect.y), "Flat World:", getFontSizeScaled(50.0f), CENTER_RIGHT);
+   drawText(font, anchor, "World Name:", getFontSizeScaled(50.0f), CENTER_RIGHT);
+   drawText(font, V2(anchor.x, shouldWorldBeFlat.rect.y), "Flat World:", getFontSizeScaled(50.0f), CENTER_RIGHT);
 }
 
 // Render level renaming screen
 
 void MenuState::renderLevelRenaming() {
-   drawTextResponsive("andy", V2(0.5f, 0.13f), "RENAME WORLD", 180.0f);
+   drawTextResponsive(font, V2(0.5f, 0.13f), "RENAME WORLD", 180.0f);
    backButtonRenaming.render();
    renameButtonRenaming.render();
    renameInput.render();
 
    Vector2 anchor = R4anchor(renameInput.rect, renameInput.origin, CENTER_LEFT) - mapRatioToArea(0.05f, 0.0f, WINDOW_AREA, CUBIC_RATIO);
    Vector2 topOffset = mapRatioToArea(0.0f, 0.139f);
-   drawText("andy", anchor, "New World Name:", getFontSizeScaled(50.0f), CENTER_RIGHT);
-   drawText("andy", anchor + topOffset, "Old World Name:", getFontSizeScaled(50.0f), CENTER_RIGHT);
-   drawText("andy", R4anchor(renameInput.rect, renameInput.origin, CENTER) + topOffset, selectedWorld.c_str(), getFontSizeScaled(50.0f));
+   drawText(font, anchor, "New World Name:", getFontSizeScaled(50.0f), CENTER_RIGHT);
+   drawText(font, anchor + topOffset, "Old World Name:", getFontSizeScaled(50.0f), CENTER_RIGHT);
+   drawText(font, R4anchor(renameInput.rect, renameInput.origin, CENTER) + topOffset, selectedWorld.c_str(), getFontSizeScaled(50.0f));
 }
 
 // Render level generation screen
 
 void MenuState::renderGeneratingLevel() {
    generationProgressBar.render();
-   drawTextResponsive("andy", V2(0.5f, 0.5f - convertRatioY(0.0926f, RATIO, CUBIC_RATIO)), generationInfoText.c_str(), 50.0f);
-   drawTextResponsive("andy", V2(0.5f, 0.5f + convertRatioY(0.0926f, RATIO, CUBIC_RATIO)), generationSplash.c_str(), 40.0f);
+   drawTextResponsive(font, V2(0.5f, 0.5f - convertRatioY(0.0926f, RATIO, CUBIC_RATIO)), generationInfoText.c_str(), 50.0f);
+   drawTextResponsive(font, V2(0.5f, 0.5f + convertRatioY(0.0926f, RATIO, CUBIC_RATIO)), generationSplash.c_str(), 40.0f);
 }
 
 // Change states
@@ -582,11 +583,9 @@ void MenuState::loadWorldButtons() {
       selectedButton = nullptr;
    }
 
-   Font font = getFont("andy");
-   Texture texture = getTexture("button_long");
    for (const auto &file: std::filesystem::directory_iterator("data/worlds")) {
       Button button;
-      button.init(font, texture, CENTER, file.path().stem().string());
+      button.init(font, longButtonTexture, CENTER, file.path().stem().string());
       button.favorite = isWorldFavorite(button.text);
 
       if (worldSearchBar.text.empty()) {
@@ -617,18 +616,18 @@ void MenuState::sortWorldButtonsByFavorites() {
 void MenuState::resetSelection() {
    if (anySelected) {
       anySelected = false;
-      selectedButton->texture = getTexture("button_long");
+      selectedButton->texture = longButtonTexture;
       selectedButton = nullptr;
    }
 }
 
 void MenuState::selectButton(Button &button) {
    if (anySelected) {
-      selectedButton->texture = getTexture("button_long");
+      selectedButton->texture = longButtonTexture;
    }
    anySelected = true;
    selectedButton = &button;
-   selectedButton->texture = getTexture("button_long_selected");
+   selectedButton->texture = longSelectedButtonTexture;
 }
 
 std::string MenuState::generateRandomWorldName() const {

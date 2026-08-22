@@ -478,8 +478,9 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
 
          float height = (float)getLiquidHeight(x, y) / (float)maxLiquidLayers;
          Color liquidFlags;
-         liquidFlags.r = (is(x, y - 1, BlockType::solid) && !is(x, y - 1, BlockType::platform) ? 255 : 0);
+         liquidFlags.r = (isStable(x, y - 1) ? 255 : 0);
          liquidFlags.g = (!isAnyLiquid(x, y + 1) || !isLiquidOfType(x, y + 1, liquidTypes[y * sizeX + x]) ? 255 : 0);
+         liquidFlags.b = height * 255.0f;
    
          Texture texture = getLiquidData(x, y).texture;
          Rectangle source = R4(0, texture.height - texture.height * height, texture.width, texture.height * height);

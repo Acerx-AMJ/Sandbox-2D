@@ -19,7 +19,7 @@ void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, 
    std::ofstream file (filename, std::ios::binary);
 
    if (!file.is_open()) {
-      printf("saveWorldData: Failed to save world 'data/worlds/%s.bin'.\n", name.c_str());
+      printf("saveWorldData: Failed to save world '%s'.\n", filename.c_str());
       return;
    }
 
@@ -201,7 +201,7 @@ void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, 
    auto end = std::chrono::steady_clock::now();
    file.close();
    size_t writeSize = std::filesystem::file_size(filename);
-   printf("Successfully wrote %lluB (%lluKB) to 'data/worlds/%s.bin'. Took %lldms.\n", writeSize, writeSize / 1'000, name.c_str(), std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
+   printf("Successfully wrote %lluB (%lluKB) to '%s'. Took %lldms.\n", writeSize, writeSize / 1000, filename.c_str(), std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
 }
 
 void loadWorldData(const std::string &name, Player &player, float &zoom, Map &map, Console &console, Inventory &inventory, std::vector<DroppedItem> &droppedItems) {
@@ -210,7 +210,7 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
    std::ifstream file (filename, std::ios::binary);
 
    if (!file.is_open()) {
-      printf("loadWorldData: Failed to load world 'data/worlds/%s.bin'.\n", name.c_str());
+      printf("loadWorldData: Failed to load world '%s'.\n", filename.c_str());
       return;
    }
 
@@ -350,7 +350,21 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
    auto end = std::chrono::steady_clock::now();
    file.close();
    size_t writeSize = std::filesystem::file_size(filename);
-   printf("Successfully read %lluB (%lluKB) from 'data/worlds/%s.bin'. Took %lldms.\n", writeSize, writeSize / 1'000, name.c_str(), std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
+   printf("Successfully read %lluB (%lluKB) from '%s'. Took %lldms.\n", writeSize, writeSize / 1000, filename.c_str(), std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
+}
+
+// delete a world
+bool deleteWorld(const std::string &name) {
+   std::string filename = "data/worlds/" + name + ".bin";
+   size_t size = std::filesystem::file_size(filename);
+   uintmax_t deleteCount = std::filesystem::remove_all(filename);
+
+   if (deleteCount > 0) {
+      printf("Successfully deleted world '%s' (%lluKB).\n", filename.c_str(), size / 1000);
+      return true;
+   }
+   printf("Failed to delete world '%s'.\n", filename.c_str());
+   return false;
 }
 
 int getFileVersion(const std::string &name) {

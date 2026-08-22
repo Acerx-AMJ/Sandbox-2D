@@ -90,4 +90,9 @@ struct MenuState: public State {
    float downKeyTimer = 0.0f;
    float upKeyDelayTimer = 0.0f;
    float downKeyDelayTimer = 0.0f;
+
+   // Assets
+
+   Font font;
+   Texture longButtonTexture, longSelectedButtonTexture, buttonTexture, searchBarTexture, barTexture, titleTexture, starTexture, scrollframeTexture, scrollbarTexture;
 };

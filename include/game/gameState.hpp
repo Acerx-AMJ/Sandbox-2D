@@ -75,4 +75,11 @@ struct GameState: public State {
    float timeToRespawn = 10.0f;
    float maxPickupRange = 2.0f;
    float maxToolRange = 10.0f;
+
+   // Assets
+
+   Font font;
+   Texture buttonTexture, vignetteTexture, breakingTexture, bubbleTexture, heartTexture;
+   Shader grayscaleShader, waterPreviewShader;
+   int waterPreviewTimeLocation = 0;
 };

@@ -1,4 +1,3 @@
-#include "SRU/text.hpp"
 #include "SRU/util.hpp"
 #include "mngr/input.hpp"
 #include "objs/inventory.hpp"

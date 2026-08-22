@@ -42,7 +42,7 @@ tree_size_max=22
 tree_root_chance=0
 tree_branch_chance=0
 tree_soil=sand
-drop_table=tree
+drop_table=palm_tree
 break_speed=2.0
 tool_type=axe
 
@@ -53,7 +53,7 @@ tree_size_max=18
 tree_root_chance=25
 tree_branch_chance=15
 tree_soil=snow
-drop_table=tree
+drop_table=pine_tree
 break_speed=2.0
 tool_type=axe
 
@@ -64,7 +64,7 @@ tree_size_max=18
 tree_root_chance=25
 tree_branch_chance=15
 tree_soil=jungle_grass,mud
-drop_table=tree
+drop_table=jungle_tree
 break_speed=2.0
 tool_type=axe
 

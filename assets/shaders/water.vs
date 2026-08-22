@@ -15,7 +15,7 @@ void main() {
    bool isTop = vertexColor.r > 0.5;
    bool isBottom = vertexColor.g > 0.5;
 
-   if (!(isTop && isBottom) && ((isTop && !isBottom && vertexTexCoord.y == 1.0) || (!isTop && isBottom && vertexTexCoord.y == 0.0) || (!isTop && !isBottom))) {
+   if (!(isTop && isBottom) && ((isTop && !isBottom && vertexTexCoord.y == vertexColor.b) || (!isTop && isBottom && vertexTexCoord.y == 0.0) || (!isTop && !isBottom))) {
       position.y += sin(time * 2.0 + position.x) * 0.15;
    }
 

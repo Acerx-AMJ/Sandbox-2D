@@ -1,5 +1,6 @@
 #pragma once
 #include "game/state.hpp"
+#include "raylib.h"
 #include <string>
 
 struct LoadingState: public State {
@@ -22,4 +23,9 @@ struct LoadingState: public State {
 
    float finalWaitTimer = 0.f;
    float iconRotation = 0.f;
+
+   // Assets
+
+   Font font;
+   Texture loadingTexture;
 };
