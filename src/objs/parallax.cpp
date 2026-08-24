@@ -201,8 +201,8 @@ void setMoonPhase(int moonPhase) {
 
 // Texture functions
 
-Color getLightBasedOnTime() {
-   return ColorLerp(WHITE, {15, 15, 15, 255}, getFadeStrengthBasedOnTime());
+unsigned char getLightBasedOnTime() {
+   return Lerp(0, 140, getFadeStrengthBasedOnTime());
 }
 
 void setCurrentBackgroundBiome(MapGenerator::Biome biome) {

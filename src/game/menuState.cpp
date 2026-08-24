@@ -107,9 +107,7 @@ void MenuState::updateResponsiveness() {
    worldFrame = mapRatioToArea(R4(0.5f, 0.575f, 1.222f, 0.619f), CENTER, WINDOW_AREA, CUBIC_RATIO);
 
    for (int i = 0; i < buttonsInWorldFrame; ++i) {
-      worldFrameButtonRects[i] = mapRatioToArea(R4(0.5f, worldButtonStartY + padding.y * i, 1.0f, buttonSize.y), CENTER, WINDOW_AREA, CUBIC_RATIO);
-      worldFrameButtonRects[i].x += worldFrameButtonRects[i].width / 2.0f;
-      worldFrameButtonRects[i].y += worldFrameButtonRects[i].height / 2.0f;
+      worldFrameButtonRects[i] = mapRatioToArea(R4(0.5f, worldButtonStartY + padding.y * i, 1.0f, buttonSize.y), TOP_LEFT, WINDOW_AREA, CUBIC_RATIO);
    }
 
    // world creation screen
@@ -200,9 +198,12 @@ void MenuState::updateLevelSelection() {
             wantsToPlay = true;
             break;
          }
-         else {
-            selectButton(button);
+         if (anySelected) {
+            selectedButton->texture = longButtonTexture;
          }
+         anySelected = true;
+         selectedButton = &button;
+         selectedButton->texture = longSelectedButtonTexture;
       }
    }
 
@@ -323,6 +324,7 @@ void MenuState::updateLevelSelection() {
       for (Button &button: worldButtons) {
          if (button.text == worldName) {
             selectedButton = &button;
+            break;
          }
       }
    }
@@ -621,15 +623,6 @@ void MenuState::resetSelection() {
    }
 }
 
-void MenuState::selectButton(Button &button) {
-   if (anySelected) {
-      selectedButton->texture = longButtonTexture;
-   }
-   anySelected = true;
-   selectedButton = &button;
-   selectedButton->texture = longSelectedButtonTexture;
-}
-
 std::string MenuState::generateRandomWorldName() const {
    std::string adjective = getRandomLineFromFile("assets/config/adjectives.txt");
    std::string noun = getRandomLineFromFile("assets/config/nouns.txt");
@@ -637,12 +630,7 @@ std::string MenuState::generateRandomWorldName() const {
 }
 
 bool MenuState::isWorldFavorite(const std::string &name) const {
-   for (const std::string &world: favoriteWorlds) {
-      if (world == name) {
-         return true;
-      }
-   }
-   return false;
+   return std::find_if(favoriteWorlds.begin(), favoriteWorlds.end(), [&name](const std::string &s) -> bool { return name == s; }) != favoriteWorlds.end();
 }
 
 // Helper functions

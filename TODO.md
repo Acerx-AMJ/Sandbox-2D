@@ -2,6 +2,8 @@
 - backgrounds
 - lightmap, light color, range in liquid config
 - add tools and fix tool config for drops
+- implement block replacing
+- id map optimization?
 
 ### Furniture
 - Add furniture with chest logic.

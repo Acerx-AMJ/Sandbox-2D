@@ -26,6 +26,7 @@ GameState::GameState(const std::string &worldName) {
    // Init world and camera
    this->worldName = worldName;
    loadWorldData(worldName, player, camera.zoom, map, console, inventory, droppedItems);
+   map.calculateLighting();
 
    camera.zoom = std::clamp(camera.zoom, minCameraZoom, maxCameraZoom);
    camera.target = player.getCenter();
@@ -145,10 +146,6 @@ void GameState::updateResponsiveness() {
    continueButton.rect = mapRatioToArea(R4(V2(0.5f, 0.5f), buttonSize), TOP_LEFT, WINDOW_AREA, CUBIC_RATIO);
    menuButton.rect = mapRatioToArea(R4(V2(0.5f, 0.5f + padding.y), buttonSize), TOP_LEFT, WINDOW_AREA, CUBIC_RATIO);
    pauseButton.rect = mapRatioToArea(R4(V2(1.0f, 1.0f) - rawPadding, buttonSize), CENTER, WINDOW_AREA, CUBIC_RATIO);
-
-   // must update map's lightmap due to the render texture being fixed to the screen size
-   if (map.lightmap.id != 0) UnloadRenderTexture(map.lightmap);
-   map.lightmap = LoadRenderTexture(GetScreenWidth() / 2, GetScreenHeight() / 2);
 }
 
 // Update playing
@@ -333,20 +330,20 @@ void GameState::updateDying() {
 
 // Block physic update functions
 
-static constexpr unsigned char calculateFlowDown(unsigned char flow1, unsigned char flow2) {
-   unsigned char availableSpace = maxLiquidLayers - flow2;
+static constexpr liquidlayer_t calculateFlowDown(liquidlayer_t flow1, liquidlayer_t flow2) {
+   liquidlayer_t availableSpace = maxLiquidLayers - flow2;
    return std::min(availableSpace, flow1);
 }
 
-static void applyFlowDown(unsigned char &flow1, unsigned char &flow2) {
-   unsigned char flowDown = calculateFlowDown(flow1, flow2);
+static void applyFlowDown(liquidlayer_t &flow1, liquidlayer_t &flow2) {
+   liquidlayer_t flowDown = calculateFlowDown(flow1, flow2);
    flow1 -= flowDown;
    flow2 += flowDown;
 }
 
-static void applyHalfFlowDown(unsigned char &flow1, unsigned char &flow2) {
-   unsigned char flowDown = calculateFlowDown(flow1, flow2);
-   unsigned char halfFlowDown = (flowDown == 1 ? 1 : flowDown / 2);
+static void applyHalfFlowDown(liquidlayer_t &flow1, liquidlayer_t &flow2) {
+   liquidlayer_t flowDown = calculateFlowDown(flow1, flow2);
+   liquidlayer_t halfFlowDown = (flowDown == 1 ? 1 : flowDown / 2);
    flow1 -= halfFlowDown;
    flow2 += halfFlowDown;
 }
@@ -384,8 +381,7 @@ void GameState::updateLiquid(int x, int y, liquidid_t id) {
 
    // Handle liquid going down
    if ((map.getBlock(x, y + 1).tile == TileType::ghost || map.is(x, y + 1, BlockType::flowable)) && !map.isAnyLiquid(x, y + 1)) {
-      std::swap(map.liquidTypes[y * map.sizeX + x], map.liquidTypes[(y + 1) * map.sizeX + x]);
-      std::swap(map.liquidHeights[y * map.sizeX + x], map.liquidHeights[(y + 1) * map.sizeX + x]);
+      map.swapLiquids(x, y, x, y + 1);
       return;
    } else if (map.isAnyLiquid(x, y + 1) && map.isLiquidOfType(x, y + 1, id) && map.getLiquidHeight(x, y + 1) < maxLiquidLayers) {
       applyFlowDown(map.liquidHeights[y * map.sizeX + x], map.liquidHeights[(y + 1) * map.sizeX + x]);
@@ -394,15 +390,21 @@ void GameState::updateLiquid(int x, int y, liquidid_t id) {
    // Handle liquid going left
    if (((map.getBlock(x - 1, y).tile == TileType::ghost || map.is(x - 1, y, BlockType::flowable)) && !map.isAnyLiquid(x - 1, y))
     || (map.isAnyLiquid(x - 1, y) && map.isLiquidOfType(x - 1, y, id) && map.getLiquidHeight(x - 1, y) < height && map.getLiquidHeight(x - 1, y) < maxLiquidLayers)) {
-      map.liquidTypes[y * map.sizeX + x - 1] = id;
-      applyHalfFlowDown(map.liquidHeights[y * map.sizeX + x], map.liquidHeights[y * map.sizeX + x - 1]);
+      int i = y * map.sizeX + x;
+      map.removeLight(i - 1);
+      map.liquidTypes[i - 1] = id;
+      applyHalfFlowDown(map.liquidHeights[i], map.liquidHeights[i - 1]);
+      map.addLight(i - 1);
    }
 
    // Handle liquid going right
    if (((map.getBlock(x + 1, y).tile == TileType::ghost || map.is(x + 1, y, BlockType::flowable)) && !map.isAnyLiquid(x + 1, y))
     || (map.isAnyLiquid(x + 1, y) && map.isLiquidOfType(x + 1, y, id) && map.getLiquidHeight(x + 1, y) < height && map.getLiquidHeight(x + 1, y) < maxLiquidLayers)) {
-      map.liquidTypes[y * map.sizeX + x + 1] = id;
-      applyHalfFlowDown(map.liquidHeights[y * map.sizeX + x], map.liquidHeights[y * map.sizeX + x + 1]);
+      int i = y * map.sizeX + x;
+      map.removeLight(i + 1);
+      map.liquidTypes[i + 1] = id;
+      applyHalfFlowDown(map.liquidHeights[i], map.liquidHeights[i + 1]);
+      map.addLight(i + 1);
    }
 }
 
@@ -503,7 +505,7 @@ void GameState::render() {
    drawBackground(delta, delta, (phase == Phase::paused ? 0.0f : 1.0f) * dt);
 
    BeginMode2D(camera);
-   map.render(droppedItems, player, accumulator, cameraBounds, camera, inventory);
+   map.render(droppedItems, player, accumulator, cameraBounds);
    drawParticles();
 
    // Render effects

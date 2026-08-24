@@ -2,7 +2,6 @@
 #include "SRU/assets.hpp"
 #include "SRU/render.hpp"
 #include "SRU/util.hpp"
-#include "objs/inventory.hpp"
 #include "objs/parallax.hpp"
 #include "objs/player.hpp"
 #include <unordered_map>
@@ -136,7 +135,6 @@ void Map::init() {
 
 void Map::initThreadSafe() {
    waterTimeShaderLocation = GetShaderLocation(getShader("water"), "time");
-   lightmap = LoadRenderTexture(GetScreenWidth() / 2, GetScreenHeight() / 2);
 }
 
 void Map::initContainers() {
@@ -145,10 +143,7 @@ void Map::initContainers() {
    walls = std::vector<Wall>(area, Wall{});
    liquidHeights = std::vector<unsigned char>(area, 0);
    liquidTypes = std::vector<liquidid_t>(area, 0);
-}
-
-Map::~Map() {
-   UnloadRenderTexture(lightmap);
+   lightmap = std::vector<unsigned char>(area, 0);
 }
 
 // setters
@@ -205,6 +200,7 @@ void Map::setBlock(int x, int y, const std::string &name) {
 
 void Map::setBlock(int x, int y, blockid_t id) {
    int i = y * sizeX + x;
+   removeLight(i);
    Block &block = blocks[i];
    block.id = id;
    block.ghostId = 0;
@@ -218,6 +214,7 @@ void Map::setBlock(int x, int y, blockid_t id) {
       liquidHeights[i] = 0;
       liquidTypes[i] = 0;
    }
+   addLight(i);
 }
 
 void Map::setWall(int x, int y, const std::string &name) {
@@ -226,38 +223,219 @@ void Map::setWall(int x, int y, const std::string &name) {
 
 void Map::setWall(int x, int y, blockid_t id) {
    int i = y * sizeX + x;
+   removeLight(i);
    walls[i].id = id;
    walls[i].type = blockData[id].attributes;
+   addLight(i);
 }
 
 void Map::setLiquid(int x, int y, liquidid_t id, liquidlayer_t height) {
    int i = y * sizeX + x;
+   removeLight(i);
    liquidTypes[i] = id;
    liquidHeights[i] = height;
+   addLight(i);
 }
 
 void Map::deleteBlock(int x, int y) {
    int i = y * sizeX + x;
+   removeLight(i);
    blocks[i] = {};
    liquidHeights[i] = 0;
    liquidTypes[i] = 0;
+   addLight(i);
 }
 
 void Map::deleteWall(int x, int y) {
-   walls[y * sizeX + x] = {};
+   int i = y * sizeX + x;
+   removeLight(i);
+   walls[i] = {};
+   addLight(i);
 }
 
 void Map::deleteBlockWithoutDeletingLiquids(int x, int y) {
-   blocks[y * sizeX + x] = {};
+   int i = y * sizeX + x;
+   removeLight(i);
+   blocks[i] = {};
+   addLight(i);
 }
 
 void Map::swapBlocks(int oldX, int oldY, int newX, int newY) {
    int oldI = oldY * sizeX + oldX;
    int newI = newY * sizeX + newX;
+
+   removeLight(oldI);
+   removeLight(newI);
+
    std::swap(blocks[oldI], blocks[newI]);
    std::swap(liquidHeights[oldI], liquidHeights[newI]);
    std::swap(liquidTypes[oldI], liquidTypes[newI]);
+
+   addLight(oldI);
+   addLight(newI);
 }
+
+void Map::swapLiquids(int oldX, int oldY, int newX, int newY) {
+   int oldI = oldY * sizeX + oldX;
+   int newI = newY * sizeX + newX;
+
+   removeLight(oldI);
+   removeLight(newI);
+
+   std::swap(liquidHeights[oldI], liquidHeights[newI]);
+   std::swap(liquidTypes[oldI], liquidTypes[newI]);
+
+   addLight(oldI);
+   addLight(newI);
+}
+
+// lighting
+
+unsigned char Map::getLightLevel(int i) {
+   if (BlockTypeHas(walls[i].type, BlockType::translucent) && (BlockTypeHas(blocks[i].type, BlockType::lightsource) || BlockTypeHas(blocks[i].type, BlockType::translucent) || liquidTypes[i] != 0)) {
+      return 4;
+   }
+   return 0;
+}
+
+unsigned char Map::getLightPassLevel(int i, int lightLevel) {
+   int target = 1;
+   if (liquidTypes[i] != 0) {
+      target = 2;
+   }
+   else if (!BlockTypeHas(walls[i].type, BlockType::translucent) || !BlockTypeHas(blocks[i].type, BlockType::translucent)) {
+      target = 1;
+   }
+   return fmax(0, lightLevel - target);
+}
+
+void Map::popLight() {
+   while (!lightBfsQueue.empty()) {
+      int i = lightBfsQueue.front();
+      lightBfsQueue.pop();
+      unsigned char a = lightmap[i];
+
+      // left
+      if (i % sizeX != 0 && lightmap[i - 1] + 2 <= a) {
+         lightmap[i - 1] = getLightPassLevel(i - 1, a);
+         lightBfsQueue.emplace(i - 1);
+      }
+      //right
+      if (i % sizeX != sizeX - 1 && lightmap[i + 1] + 2 <= a) {
+         lightmap[i + 1] = getLightPassLevel(i + 1, a);
+         lightBfsQueue.emplace(i + 1);
+      }
+      // top
+      if (i >= sizeX && lightmap[i - sizeX] + 2 <= a) {
+         lightmap[i - sizeX] = getLightPassLevel(i - sizeX, a);
+         lightBfsQueue.emplace(i - sizeX);
+      }
+      // bottom
+      if (i < (sizeX * sizeY) - sizeX && lightmap[i + sizeX] + 2 <= a) {
+         lightmap[i + sizeX] = getLightPassLevel(i + sizeX, a);
+         lightBfsQueue.emplace(i + sizeX);
+      }
+   }
+}
+
+void Map::addLight(int i) {
+   unsigned char lightLevel = getLightLevel(i);
+   if (lightLevel == 0) return;
+
+   lightmap[i] = lightLevel + 1;
+   lightBfsQueue.emplace(i);
+   popLight();
+   lightmap[i] = lightLevel;
+}
+
+void Map::removeLight(int i) {
+   unsigned char lightLevel = getLightLevel(i);
+   lightRemovalBfsQueue.emplace(i, lightLevel);
+   lightmap[i] = 0;
+
+   while (!lightRemovalBfsQueue.empty()) {
+      auto [i, v] = lightRemovalBfsQueue.front();
+      lightRemovalBfsQueue.pop();
+
+      // left
+      if (i % sizeX != 0 && lightmap[i - 1] != 0 && lightmap[i - 1] < v) {
+         unsigned char lightLevel = lightmap[i - 1];
+         lightmap[i - 1] = 0;
+         lightRemovalBfsQueue.emplace(i - 1, lightLevel);
+      }
+      else if (i % sizeX != 0 && lightmap[i - 1] >= v) {
+         lightBfsQueue.emplace(i - 1);
+      }
+      //right
+      if (i % sizeX != sizeX - 1 && lightmap[i + 1] != 0 && lightmap[i + 1] < v) {
+         unsigned char lightLevel = lightmap[i + 1];
+         lightmap[i + 1] = 0;
+         lightRemovalBfsQueue.emplace(i + 1, lightLevel);
+      }
+      else if (i % sizeX != sizeX - 1 && lightmap[i + 1] >= v) {
+         lightBfsQueue.emplace(i + 1);
+      }
+      // top
+      if (i >= sizeX && lightmap[i - sizeX] != 0 && lightmap[i - sizeX] < v) {
+         unsigned char lightLevel = lightmap[i - sizeX];
+         lightmap[i - sizeX] = 0;
+         lightRemovalBfsQueue.emplace(i - sizeX, lightLevel);
+      }
+      else if (i >= sizeX && lightmap[i - sizeX] >= v) {
+         lightBfsQueue.emplace(i - sizeX);
+      }
+      // bottom
+      if (i < (sizeX * sizeY) - sizeX && lightmap[i + sizeX] != 0 && lightmap[i + sizeX] < v) {
+         unsigned char lightLevel = lightmap[i + sizeX];
+         lightmap[i + sizeX] = 0;
+         lightRemovalBfsQueue.emplace(i + sizeX, lightLevel);
+      }
+      else if (i < (sizeX * sizeY) - sizeX && lightmap[i + sizeX] >= v) {
+         lightBfsQueue.emplace(i + sizeX);
+      }
+   }
+   popLight();
+}
+
+void Map::calculateLighting() {
+   int area = sizeX * sizeY;
+   for (int i = 0; i < area; ++i) {
+      addLight(i);
+   }
+   // for (int y = lightBoundsMinY; y <= lightBoundsMaxY; ++y) {
+   //    for (int x = lightBoundsMinX; x <= lightBoundsMaxX; ++x) {
+   //       BlockType type = blocks[y * sizeX + x].type;
+   //       if (!BlockTypeHas(type, BlockType::lightsource) && !BlockTypeHas(type, BlockType::translucent)) {
+   //          continue;
+   //       }
+
+   //       // Direct light sources, ones who do not require the wall behind to be transparent
+   //       if (isAnyLiquid(x, y) && getLiquidData(x, y).glow) {
+   //          if (isLiquid(x, y)) {
+   //             renderLight(camera, lightTexture, x + positionOffset, y + positionOffset, liquidSize, {255, 125, 0, 255});
+   //          }
+   //          continue;
+   //       } else if (BlockTypeHas(type, BlockType::torch)) {
+   //          renderLight(camera, lightHugeTexture, x + positionOffset, y + positionOffset, lightHugeSize, {255, 200, 160, 255}); // Light orange
+   //       } else if (BlockTypeHas(type, BlockType::lightsource)) {
+   //          renderLight(camera, lightLargeTexture, x, y, lightLargeSize, {255, 255, 0, 255});
+   //       }
+
+   //       if (!BlockTypeHas(walls[y * sizeX + x].type, BlockType::translucent)) {
+   //          continue;
+   //       }
+
+   //       // Indirect light sources, these require to background to be empty
+   //       if (isLiquid(x, y) && getLiquidData(x, y).naturalLight) {
+   //          renderLight(camera, lightTexture, x, y, lightSize, waterLightColor);
+   //          continue;
+   //       }
+   //       renderLight(camera, lightTexture, x, y, lightSize, airLightColor);
+   //    }
+   // }
+}
+
+// furniture
 
 void Map::updateFurniture(Player &player, Vector2 mousePos, float dt) {
    for (Furniture &object: furniture) {
@@ -388,11 +566,7 @@ LiquidData &Map::getLiquidData(int x, int y) const {
 
 // render
 
-void Map::renderLight(const Camera2D &camera, Texture2D &texture, float x, float y, const Vector2 &size, const Color &color) {
-   drawTexture(texture, {(((x + 0.5f - camera.target.x) * camera.zoom) + camera.offset.x) / 2.0f, (((y + 0.5f - camera.target.y) * camera.zoom) + camera.offset.y) / 2.0f}, size, CENTER, color);
-}
-
-void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &player, float accumulator, const Rectangle &cameraBounds, const Camera2D &camera, const Inventory &inventory) {
+void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &player, float accumulator, const Rectangle &cameraBounds) {
    // Render background walls
    for (int y = cameraBounds.y; y <= cameraBounds.height; ++y) {
       for (int x = cameraBounds.x; x <= cameraBounds.width; ++x) {
@@ -489,73 +663,14 @@ void Map::render(const std::vector<DroppedItem> &droppedItems, const Player &pla
    }
    EndShaderMode();
 
-   // Render lights
-   BeginTextureMode(lightmap);
-   ClearBackground(BLACK);
-   BeginBlendMode(BLEND_ADDITIVE);
-
-   int lightBoundsMinX = std::max<int>(0, cameraBounds.x - 8);
-   int lightBoundsMinY = std::max<int>(0, cameraBounds.y - 8);
-   int lightBoundsMaxX = std::min<int>(sizeX - 1, cameraBounds.width + 8);
-   int lightBoundsMaxY = std::min<int>(sizeY - 1, cameraBounds.height + 8);
-
-   Color airLightColor   = getLightBasedOnTime();
-   Color waterLightColor = Fade(airLightColor, 0.1f);
-
-   // const function hack
-   static float counter = 0.0f;
-   counter += GetFrameTime();
-
-   float sizeOffset     = std::sin(counter * 1.5f) * camera.zoom * 0.4f;
-   float positionOffset = std::cos(counter * 0.8f) * camera.zoom * 0.0075f;
-
-   Vector2 lightSize      = {3.5f * camera.zoom, 3.5f * camera.zoom};
-   Vector2 lightLargeSize = {lightSize.x + lightSize.x, lightSize.y + lightSize.y};
-   Vector2 lightHugeSize  = {lightLargeSize.x + lightSize.x, lightLargeSize.y + lightSize.y};
-   Vector2 liquidSize     = {lightSize.x + sizeOffset, lightSize.y + sizeOffset};
-
-   Texture2D &lightHugeTexture  = getTexture("lightsource_6x");
-   Texture2D &lightLargeTexture = getTexture("lightsource_4x");
-   Texture2D &lightTexture      = getTexture("lightsource_2x");
-
-   for (int y = lightBoundsMinY; y <= lightBoundsMaxY; ++y) {
-      for (int x = lightBoundsMinX; x <= lightBoundsMaxX; ++x) {
-         BlockType type = blocks[y * sizeX + x].type;
-         if (!BlockTypeHas(type, BlockType::lightsource) && !BlockTypeHas(type, BlockType::translucent)) {
-            continue;
-         }
-
-         // Direct light sources, ones who do not require the wall behind to be transparent
-         if (isAnyLiquid(x, y) && getLiquidData(x, y).glow) {
-            if (isLiquid(x, y)) {
-               renderLight(camera, lightTexture, x + positionOffset, y + positionOffset, liquidSize, {255, 125, 0, 255});
-            }
-            continue;
-         } else if (BlockTypeHas(type, BlockType::torch)) {
-            renderLight(camera, lightHugeTexture, x + positionOffset, y + positionOffset, lightHugeSize, {255, 200, 160, 255}); // Light orange
-         } else if (BlockTypeHas(type, BlockType::lightsource)) {
-            renderLight(camera, lightLargeTexture, x, y, lightLargeSize, {255, 255, 0, 255});
-         }
-
-         if (!BlockTypeHas(walls[y * sizeX + x].type, BlockType::translucent)) {
-            continue;
-         }
-
-         // Indirect light sources, these require to background to be empty
-         if (isLiquid(x, y) && getLiquidData(x, y).naturalLight) {
-            renderLight(camera, lightTexture, x, y, lightSize, waterLightColor);
-            continue;
-         }
-         renderLight(camera, lightTexture, x, y, lightSize, airLightColor);
+   // render lights
+   unsigned char daylight = getLightBasedOnTime();
+   for (int y = cameraBounds.y; y <= cameraBounds.height; ++y) {
+      for (int x = cameraBounds.x; x <= cameraBounds.width; ++x) {
+         int lightLevel = lightmap[y * sizeX + x];
+         int alpha = 255 - lightLevel * (255/4);
+         int blended = fmin(255, alpha + daylight);
+         DrawRectangleRec(R4(x, y, 1, 1), RGBA(0, 0, 0, blended));
       }
    }
-
-   EndBlendMode();
-   EndTextureMode();
-
-   BeginBlendMode(BLEND_MULTIPLIED);
-   DrawTexturePro(lightmap.texture, {0, 0, (float)lightmap.texture.width, -(float)lightmap.texture.height}, {0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()}, {0, 0}, 0, WHITE);
-   EndBlendMode();
-
-   BeginMode2D(camera); // EndTextureMode disables it for some reason
 }

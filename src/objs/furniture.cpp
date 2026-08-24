@@ -309,7 +309,6 @@ Furniture getFurniture(int x, int y, const Map &map, furnitureid_t id, bool play
       int topHeight = (data.treeIsCactus ? 0 : (isPalm ? 3 : 2));
       int middle = treeWidth / 2;
 
-      printf("THEIGHT BEFORE %d\n", treeHeight);
       for (int dy = 0; dy < treeHeight; ++dy) {
          if (data.treeIsCactus) {
             if (!map.isNotSolid(x, y - dy)) {
@@ -328,7 +327,6 @@ Furniture getFurniture(int x, int y, const Map &map, furnitureid_t id, bool play
          }
       }
    BREAK_OUT:
-      printf("THEIGHT AFTER %d\n", treeHeight);
 
       if (!previewing && (treeHeight < data.treeSizeMin || !isTreeSoilCompatible(map.getBlock(x, y + 1).id, id))) {
          return {};
