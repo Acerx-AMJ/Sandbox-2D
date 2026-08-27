@@ -1,3 +1,4 @@
+#include "SRU/audio.hpp"
 #include "SRU/util.hpp"
 #include "game/gameState.hpp"
 #include "game/menuState.hpp"
@@ -391,11 +392,19 @@ void MenuState::updateLevelCreation() {
             return;
          }
       }
+      worldName.typing = false;
+
+      // if flat world then avoid this whole song and dance and just generate it directly. it's only 5 fills and a file write.
+      if (shouldWorldBeFlat.checked) {
+         generateFlatWorld(worldName.text, defaultMapSizeX, defaultMapSizeY);
+         loadWorldButtons();
+         phase = Phase::levelSelection;
+         playSound("success");
+         return;
+      }
 
       generationSplash = getRandomLineFromFile("assets/config/splash.txt");
       wrapInPlace(generationSplash, font, GetScreenWidth() - mapRatioToX(0.05f, WINDOW_AREA, CUBIC_RATIO), getFontSizeScaled(40.0f));
-
-      worldName.typing = false;
       phase = Phase::generatingLevel;
    }
 }
@@ -461,7 +470,7 @@ void MenuState::updateGeneratingLevel() {
       generatedWorld = false;
       generationProgressBar.progressInterpolation = generationProgressBar.progress = 0.0f;
 
-      generator = new MapGenerator(worldName.text, defaultMapSizeX, defaultMapSizeY, shouldWorldBeFlat.checked, generationInfoTextMutex, generationInfoText, generationProgressBar.progress);
+      generator = new MapGenerator(worldName.text, defaultMapSizeX, defaultMapSizeY, generationInfoTextMutex, generationInfoText, generationProgressBar.progress);
       std::thread thread(&MapGenerator::generate, generator);
       thread.detach();
    }

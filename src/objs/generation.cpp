@@ -40,8 +40,8 @@ static inline const std::array<BiomeData, biomeCount> biomeData {{
 
 // Constructors
 
-MapGenerator::MapGenerator(const std::string &name, int sizeX, int sizeY, bool isFlat, std::mutex &infoTextMutex, std::string &infoText, float &progress)
-   : infoTextMutex(infoTextMutex), infoText(infoText), progress(progress), name(name), isFlat(isFlat) {
+MapGenerator::MapGenerator(const std::string &name, int sizeX, int sizeY, std::mutex &infoTextMutex, std::string &infoText, float &progress)
+   : infoTextMutex(infoTextMutex), infoText(infoText), progress(progress), name(name) {
    map.sizeX = sizeX;
    map.sizeY = sizeY;
    map.initThreadSafe();
@@ -55,24 +55,18 @@ void MapGenerator::generate() {
    rockStartHeights.resize(map.sizeX);
 
    setInfo("Seeding Noise...", 0.0f);
-   if (!isFlat) {
-      biomeTemperatureNoise.reseed(rand());
-      biomeMoistureNoise.reseed(rand());
-      heightNoise.reseed(rand());
-      sandDebriNoise.reseed(rand());
-      dirtDebriNoise.reseed(rand());
-      oreNoise1.reseed(rand());
-      oreNoise2.reseed(rand());
-   }
+   biomeTemperatureNoise.reseed(rand());
+   biomeMoistureNoise.reseed(rand());
+   heightNoise.reseed(rand());
+   sandDebriNoise.reseed(rand());
+   dirtDebriNoise.reseed(rand());
+   oreNoise1.reseed(rand());
+   oreNoise2.reseed(rand());
 
-   if (isFlat) {
-      generateFlatWorld();
-   } else {
-      generateTerrain();
-      generateDebri();
-      generateWater();
-      generateTrees();
-   }
+   generateTerrain();
+   generateDebri();
+   generateWater();
+   generateTrees();
 
    const Vector2 spawnLocation = findPlayerSpawnLocation();
 
@@ -243,25 +237,6 @@ void MapGenerator::generateTrees() {
    }
 }
 
-// Generation functions for flat worlds
-
-void MapGenerator::generateFlatWorld() {
-   setInfo("Generating Flat Terrain...", 0.1f);
-   int startingPointY = startY * map.sizeY;
-   int rockStart = rockOffsetStart + startingPointY;
-
-   map.setRow(startingPointY, "grass");
-   for (int y = startingPointY + 1; y < map.sizeY; ++y) {
-      if (y < rockStart) {
-         map.setRow(y, "dirt");
-         map.setWallRow(y, "dirt");
-      } else {
-         map.setRow(y, "stone");
-         map.setWallRow(y, "stone");
-      }
-   }
-}
-
 // Find a perfect spawn location for the player
 
 Vector2 MapGenerator::findPlayerSpawnLocation() {
@@ -342,4 +317,29 @@ void MapGenerator::setInfo(const std::string &text, float progress) {
    std::lock_guard<std::mutex> lock(infoTextMutex);
    infoText = text;
    this->progress = progress;
+}
+
+// generate flat world
+void generateFlatWorld(const std::string &name, int sizeX, int sizeY) {
+   Map map;
+   map.sizeX = sizeX;
+   map.sizeY = sizeY;
+   map.init();
+   
+   int startingPointY = startY * sizeY;
+   int dirtEndY = (startingPointY + rockOffsetStart + 1) * sizeX;
+
+   blockid_t grass = getBlockIdFromName("grass");
+   blockid_t dirt = getBlockIdFromName("dirt");
+   blockid_t stone = getBlockIdFromName("stone");
+
+   map.fill(startingPointY * sizeX, sizeX, grass);
+   map.fill((startingPointY + 1) * sizeX, sizeX * rockOffsetStart, dirt);
+   map.fill(dirtEndY, (sizeX * sizeY) - dirtEndY, stone);
+
+   map.fillWalls((startingPointY + 1) * sizeX, sizeX * rockOffsetStart, dirt);
+   map.fillWalls(dirtEndY, (sizeX * sizeY) - dirtEndY, stone);
+
+   Vector2 spawnLocation = {sizeX / 2.0f, startingPointY - 3.0f};
+   saveWorldData(name, spawnLocation, spawnLocation, false, 100, 100, 100, 50.f, map, nullptr, nullptr, nullptr);
 }

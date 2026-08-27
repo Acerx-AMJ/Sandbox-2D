@@ -178,20 +178,20 @@ void Map::setColumnFromPoint(int x, int y, const std::string &name) {
 
 void Map::fill(int i, int n, blockid_t id) {
    Block block = {id, 0, TileType::root, blockData[id].attributes};
-   std::fill_n(&blocks[i], n, block);
+   std::uninitialized_fill_n(&blocks[i], n, block);
 }
 
 void Map::fillWalls(int i, int n, blockid_t id) {
    Wall wall = {id, blockData[id].attributes};
-   std::fill_n(&walls[i], n, wall);
+   std::uninitialized_fill_n(&walls[i], n, wall);
 }
 
 void Map::fillLiquids(int i, int n, liquidid_t id) {
-   std::fill_n(&liquidTypes[i], n, id);
+   std::uninitialized_fill_n(&liquidTypes[i], n, id);
 }
 
 void Map::fillLiquidHeights(int i, int n, liquidlayer_t height) {
-   std::fill_n(&liquidHeights[i], n, height);
+   std::uninitialized_fill_n(&liquidHeights[i], n, height);
 }
 
 void Map::setBlock(int x, int y, const std::string &name) {

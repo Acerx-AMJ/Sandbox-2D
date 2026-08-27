@@ -9,7 +9,7 @@ struct MapGenerator {
    enum class Biome { plains, forest, mountains, desert_oasis, desert, tundra, jungle, count };
    enum class BiomeWarmth { cold, warm, hot };
 
-   MapGenerator(const std::string &name, int sizeX, int sizeY, bool isFlat, std::mutex &infoTextMutex, std::string &infoText, float &progress);
+   MapGenerator(const std::string &name, int sizeX, int sizeY, std::mutex &infoTextMutex, std::string &infoText, float &progress);
 
    // Generation functions
 
@@ -18,10 +18,6 @@ struct MapGenerator {
    void generateWater();
    void generateDebri();
    void generateTrees();
-
-   // Generation functions for flat worlds
-
-   void generateFlatWorld();
 
    // Find a perfect spawn location for the player
 
@@ -48,7 +44,6 @@ struct MapGenerator {
    Map map;
 
    std::atomic<bool> isCompleted = false;
-   bool isFlat = false;
 
    siv::PerlinNoise biomeTemperatureNoise;
    siv::PerlinNoise biomeMoistureNoise;
@@ -58,3 +53,6 @@ struct MapGenerator {
    siv::PerlinNoise oreNoise1;
    siv::PerlinNoise oreNoise2;
 };
+
+// This is so cheap that it is useless to do it in a different thread
+void generateFlatWorld(const std::string &name, int sizeX, int sizeY);
