@@ -144,6 +144,7 @@ struct Map {
    void deleteWall(int x, int y);
    void deleteBlockWithoutDeletingLiquids(int x, int y);
    void swapBlocks(int oldX, int oldY, int newX, int newY);
+   void swapLiquids(int oldX, int oldY, int newX, int newY);
 
    // furniture
 

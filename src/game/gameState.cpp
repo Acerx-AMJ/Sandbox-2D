@@ -333,20 +333,20 @@ void GameState::updateDying() {
 
 // Block physic update functions
 
-static constexpr unsigned char calculateFlowDown(unsigned char flow1, unsigned char flow2) {
-   unsigned char availableSpace = maxLiquidLayers - flow2;
+static constexpr liquidlayer_t calculateFlowDown(liquidlayer_t flow1, liquidlayer_t flow2) {
+   liquidlayer_t availableSpace = maxLiquidLayers - flow2;
    return std::min(availableSpace, flow1);
 }
 
-static void applyFlowDown(unsigned char &flow1, unsigned char &flow2) {
-   unsigned char flowDown = calculateFlowDown(flow1, flow2);
+static void applyFlowDown(liquidlayer_t &flow1, liquidlayer_t &flow2) {
+   liquidlayer_t flowDown = calculateFlowDown(flow1, flow2);
    flow1 -= flowDown;
    flow2 += flowDown;
 }
 
-static void applyHalfFlowDown(unsigned char &flow1, unsigned char &flow2) {
-   unsigned char flowDown = calculateFlowDown(flow1, flow2);
-   unsigned char halfFlowDown = (flowDown == 1 ? 1 : flowDown / 2);
+static void applyHalfFlowDown(liquidlayer_t &flow1, liquidlayer_t &flow2) {
+   liquidlayer_t flowDown = calculateFlowDown(flow1, flow2);
+   liquidlayer_t halfFlowDown = (flowDown == 1 ? 1 : flowDown / 2);
    flow1 -= halfFlowDown;
    flow2 += halfFlowDown;
 }
@@ -384,8 +384,7 @@ void GameState::updateLiquid(int x, int y, liquidid_t id) {
 
    // Handle liquid going down
    if ((map.getBlock(x, y + 1).tile == TileType::ghost || map.is(x, y + 1, BlockType::flowable)) && !map.isAnyLiquid(x, y + 1)) {
-      std::swap(map.liquidTypes[y * map.sizeX + x], map.liquidTypes[(y + 1) * map.sizeX + x]);
-      std::swap(map.liquidHeights[y * map.sizeX + x], map.liquidHeights[(y + 1) * map.sizeX + x]);
+      map.swapLiquids(x, y, x, y + 1);
       return;
    } else if (map.isAnyLiquid(x, y + 1) && map.isLiquidOfType(x, y + 1, id) && map.getLiquidHeight(x, y + 1) < maxLiquidLayers) {
       applyFlowDown(map.liquidHeights[y * map.sizeX + x], map.liquidHeights[(y + 1) * map.sizeX + x]);

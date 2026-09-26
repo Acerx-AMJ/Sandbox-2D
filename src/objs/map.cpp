@@ -259,6 +259,13 @@ void Map::swapBlocks(int oldX, int oldY, int newX, int newY) {
    std::swap(liquidTypes[oldI], liquidTypes[newI]);
 }
 
+void Map::swapLiquids(int oldX, int oldY, int newX, int newY) {
+   int oldI = oldY * sizeX + oldX;
+   int newI = newY * sizeX + newX;
+   std::swap(liquidHeights[oldI], liquidHeights[newI]);
+   std::swap(liquidTypes[oldI], liquidTypes[newI]);
+}
+
 void Map::updateFurniture(Player &player, Vector2 mousePos, float dt) {
    for (Furniture &object: furniture) {
       if (object.id != 0) {
