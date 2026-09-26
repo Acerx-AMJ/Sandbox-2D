@@ -11,5 +11,5 @@ float getTimeOfDay();
 void setMoonPhase(int moonPhase);
 void setTimeOfDay(float timeOfDay);
 
-unsigned char getLightBasedOnTime();
+Color getLightBasedOnTime();
 void setCurrentBackgroundBiome(MapGenerator::Biome biome);

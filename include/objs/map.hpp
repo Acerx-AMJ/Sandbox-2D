@@ -1,6 +1,5 @@
 #pragma once
 #include "objs/furniture.hpp"
-#include <queue>
 #include <unordered_map>
 
 // constants
@@ -116,20 +115,13 @@ void reserveLiquidContainers(size_t estimate);
 void pushLiquid(const std::string &name);
 void setLiquid(const std::string &name, const LiquidData &data);
 
-// Light data
-
-struct LightData {
-   LightData(int i, unsigned char v): i(i), v(v) {}
-   int i;
-   unsigned char v;
-};
-
 // Map
 
 struct Map {   
    void init();
    void initThreadSafe();
    void initContainers();
+   ~Map();
 
    // setters
 
@@ -152,17 +144,6 @@ struct Map {
    void deleteWall(int x, int y);
    void deleteBlockWithoutDeletingLiquids(int x, int y);
    void swapBlocks(int oldX, int oldY, int newX, int newY);
-   void swapLiquids(int oldX, int oldY, int newX, int newY);
-
-   // lighting
-
-   unsigned char getLightLevel(int i);
-   unsigned char getLightPassLevel(int i, int lightLevel);
-
-   void popLight();
-   void addLight(int i);
-   void removeLight(int i);
-   void calculateLighting();
 
    // furniture
 
@@ -195,14 +176,12 @@ struct Map {
 
    // render
 
-   void render(const std::vector<struct DroppedItem> &droppedItems, const struct Player &player, float accumulator, const Rectangle &cameraBounds);
+   void renderLight(const Camera2D &camera, Texture2D &texture, float x, float y, const Vector2 &size, const Color &color);
+   void render(const std::vector<struct DroppedItem> &droppedItems, const struct Player &player, float accumulator, const Rectangle &cameraBounds, const Camera2D &camera, const struct Inventory &inventory);
 
    // Members
 
-   std::vector<unsigned char> lightmap;
-   std::queue<int> lightBfsQueue;
-   std::queue<LightData> lightRemovalBfsQueue;
-
+   RenderTexture lightmap;
    std::vector<Block> blocks;
    std::vector<Wall> walls;
    std::vector<liquidlayer_t> liquidHeights;
