@@ -39,7 +39,7 @@ The game is a WIP, so stay tuned for new features! Currently it includes;
 - F11 - toggle fullscreen
 
 ## Installation
-This project depends on Raylib 5.5 and SRU-Lib, which are fetched by CMake, and it uses C++17 standard. You must have CMake and a C++17 compiler installed to build this game.
+This project depends on Raylib 5.5 and SRU-Lib and it uses C++17 standard. You must have CMake, Raylib and a C++17 compiler installed to build this game. SRU-Lib is fetched automatically.
 
 #### Installation
 1. Clone the repository (or download as ZIP if not using git):

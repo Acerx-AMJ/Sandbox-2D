@@ -201,7 +201,7 @@ void saveWorldData(const std::string &name, const Vector2 &playerSpawnPosition, 
    auto end = std::chrono::steady_clock::now();
    file.close();
    size_t writeSize = std::filesystem::file_size(filename);
-   printf("Successfully wrote %lluB (%lluKB) to '%s'. Took %lldms.\n", writeSize, writeSize / 1000, filename.c_str(), std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
+   printf("Successfully wrote %zuB (%zuKB) to '%s'. Took %ldms.\n", writeSize, writeSize / 1000, filename.c_str(), std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
 }
 
 void loadWorldData(const std::string &name, Player &player, float &zoom, Map &map, Console &console, Inventory &inventory, std::vector<DroppedItem> &droppedItems) {
@@ -350,7 +350,7 @@ void loadWorldData(const std::string &name, Player &player, float &zoom, Map &ma
    auto end = std::chrono::steady_clock::now();
    file.close();
    size_t writeSize = std::filesystem::file_size(filename);
-   printf("Successfully read %lluB (%lluKB) from '%s'. Took %lldms.\n", writeSize, writeSize / 1000, filename.c_str(), std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
+   printf("Successfully read %zuB (%zuKB) from '%s'. Took %ldms.\n", writeSize, writeSize / 1000, filename.c_str(), std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
 }
 
 // delete a world
@@ -360,7 +360,7 @@ bool deleteWorld(const std::string &name) {
    uintmax_t deleteCount = std::filesystem::remove_all(filename);
 
    if (deleteCount > 0) {
-      printf("Successfully deleted world '%s' (%lluKB).\n", filename.c_str(), size / 1000);
+      printf("Successfully deleted world '%s' (%zuKB).\n", filename.c_str(), size / 1000);
       return true;
    }
    printf("Failed to delete world '%s'.\n", filename.c_str());
