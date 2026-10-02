@@ -12,7 +12,6 @@ Sandbox-2D is an open-source 2D sandbox survival game where you can build, destr
 - [Credits](#credits)
 
 ## Features
-
 The game is a WIP, so stay tuned for new features! Currently it includes;
 - Building and destroying.
 - Water, lava and sand physics.
@@ -24,7 +23,6 @@ The game is a WIP, so stay tuned for new features! Currently it includes;
 ![Game Screenshot](assets/screenshots/2026-03-11_13-54.png)
 
 ## Controls
-
 - A, D - move left/right
 - SPACE - jump
 
@@ -60,14 +58,12 @@ cmake --build build
 The executable will be found in `build/sandbox`. If something didn't work as expected, feel free to open an issue.
 
 ## Usage
-
 Simply run the executable after building. Assets folder must be in the same directory in which the executable is ran. CMake does not place assets in the build folder and if you run it from there it will throw an error. That's why you must run from the project directory (Sandbox-2D/):
 ```bash
 ./build/sandbox
 ```
 
 ## Contributing
-
 Feel free to fork and create PRs or issues. Please read [contribution guidelines](CONTRIBUTING.md) before doing so.
 1. Fork the repository.
 2. Create a new branch (don't use the braces):
